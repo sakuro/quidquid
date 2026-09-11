@@ -46,7 +46,7 @@ end
 local function request_missing_translations(player, locale)
   local missing = missing_items(collect_items(), locale)
   for _, item in ipairs(missing) do
-    local id = player:request_translation(item.localised_name)
+    local id = player.request_translation(item.localised_name)
     in_flight[id] = { locale = locale, item_name = item.name }
   end
 end
@@ -57,7 +57,7 @@ local function notify_and_clear_pending(locale)
     for player_index in pairs(waiting) do
       local player = game.get_player(player_index)
       if player ~= nil then
-        player:print({"quidquid.item-source-translations-ready"})
+        player.print({"quidquid.item-source-translations-ready"})
       end
     end
   end
