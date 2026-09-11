@@ -92,5 +92,20 @@ describe("ItemSource", function()
 
       assert.are.equal(1, #candidates)
     end)
+
+    it("filters a mixed list down to only the matching, visible items", function()
+      local items = {
+        { name = "iron-plate", localised_name = {"item-name.iron-plate"}, hidden = false },
+        { name = "copper-plate", localised_name = {"item-name.copper-plate"}, hidden = false },
+        { name = "iron-ore", localised_name = {"item-name.iron-ore"}, hidden = false },
+        { name = "secret-plate", localised_name = {"item-name.secret-plate"}, hidden = true },
+      }
+
+      local candidates = ItemSource.build_candidates("plate", items, "en", fake_translation_cache(), false)
+
+      assert.are.equal(2, #candidates)
+      assert.are.equal("iron-plate", candidates[1].id)
+      assert.are.equal("copper-plate", candidates[2].id)
+    end)
   end)
 end)
