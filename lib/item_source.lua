@@ -72,8 +72,20 @@ local function check_locale_completion(locale)
   notify_and_clear_pending(locale)
 end
 
+local function remove_from_other_pending(player_index, current_locale)
+  for locale, waiting in pairs(pending) do
+    if locale ~= current_locale and waiting[player_index] then
+      waiting[player_index] = nil
+      if next(waiting) == nil then
+        pending[locale] = nil
+      end
+    end
+  end
+end
+
 local function ensure_locale_progress(player)
   local locale = player.locale
+  remove_from_other_pending(player.index, locale)
   if TranslationCache:is_complete(locale) then
     return
   end
