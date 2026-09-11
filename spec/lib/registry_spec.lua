@@ -58,4 +58,36 @@ describe("Registry", function()
       assert.are.equal(1, #messages)
     end)
   end)
+
+  describe(":register_action", function()
+    it("accepts a definition with the current contract version", function()
+      local registry = Registry.new()
+
+      local ok = registry:register_action({
+        version = 1,
+        id = "logistics-request",
+        types = {"item"},
+        key = "confirm",
+        interface = "my-mod.action-logistics-request",
+      })
+
+      assert.is_true(ok)
+    end)
+
+    it("rejects a definition with an unsupported contract version", function()
+      local logger, messages = spy_logger()
+      local registry = Registry.new(logger)
+
+      local ok = registry:register_action({
+        version = 2,
+        id = "logistics-request",
+        types = {"item"},
+        key = "confirm",
+        interface = "my-mod.action-logistics-request",
+      })
+
+      assert.is_false(ok)
+      assert.are.equal(1, #messages)
+    end)
+  end)
 end)
