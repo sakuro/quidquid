@@ -107,6 +107,36 @@ describe("Registry", function()
       assert.is_false(ok)
       assert.are.equal(1, #messages)
     end)
+
+    it("rejects a definition with no key", function()
+      local logger, messages = spy_logger()
+      local registry = Registry.new(logger)
+
+      local ok = registry:register_action({
+        version = 1,
+        id = "logistics-request",
+        types = {"item"},
+        interface = "my-mod.action-logistics-request",
+      })
+
+      assert.is_false(ok)
+      assert.are.equal(1, #messages)
+    end)
+
+    it("rejects a definition with no types", function()
+      local logger, messages = spy_logger()
+      local registry = Registry.new(logger)
+
+      local ok = registry:register_action({
+        version = 1,
+        id = "logistics-request",
+        key = "confirm",
+        interface = "my-mod.action-logistics-request",
+      })
+
+      assert.is_false(ok)
+      assert.are.equal(1, #messages)
+    end)
   end)
 
   describe(":resolve_actions", function()

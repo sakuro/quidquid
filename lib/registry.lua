@@ -43,16 +43,19 @@ function Registry:register_action(definition)
     return false
   end
 
-  for _, candidate_type in ipairs(definition.types or {}) do
-    if definition.key ~= nil then
-      self.action_slots[candidate_type] = self.action_slots[candidate_type] or {}
-      local slots = self.action_slots[candidate_type]
-      if slots[definition.key] == nil then
-        slots[definition.key] = definition
-      else
-        self.logger(("quidquid: action '%s' key '%s' for type '%s' ignored: already registered by '%s'"):format(
-          tostring(definition.id), definition.key, candidate_type, tostring(slots[definition.key].id)))
-      end
+  if definition.key == nil or definition.types == nil or #definition.types == 0 then
+    self.logger(("quidquid: action '%s' rejected: missing key or types"):format(tostring(definition.id)))
+    return false
+  end
+
+  for _, candidate_type in ipairs(definition.types) do
+    self.action_slots[candidate_type] = self.action_slots[candidate_type] or {}
+    local slots = self.action_slots[candidate_type]
+    if slots[definition.key] == nil then
+      slots[definition.key] = definition
+    else
+      self.logger(("quidquid: action '%s' key '%s' for type '%s' ignored: already registered by '%s'"):format(
+        tostring(definition.id), definition.key, candidate_type, tostring(slots[definition.key].id)))
     end
   end
 
