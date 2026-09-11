@@ -99,4 +99,49 @@ function ItemSource.on_string_translated(event)
   check_locale_completion(entry.locale)
 end
 
+function ItemSource.on_player_joined_game(event)
+  local player = game.get_player(event.player_index)
+  if player ~= nil then
+    ensure_locale_progress(player)
+  end
+end
+
+-- on_player_locale_changed only tells us who changed locale, not the new value (read via
+-- player.locale, already current by the time the event fires) — otherwise identical to
+-- on_player_joined_game, so they share one handler.
+ItemSource.on_player_locale_changed = ItemSource.on_player_joined_game
+
+function ItemSource.on_player_left_game(event)
+  local player_index = event.player_index
+  for locale, waiting in pairs(pending) do
+    if waiting[player_index] then
+      waiting[player_index] = nil
+      local successor_index = next(waiting)
+      if successor_index == nil then
+        pending[locale] = nil
+      else
+        local successor = game.get_player(successor_index)
+        if successor ~= nil then
+          request_missing_translations(successor, locale)
+        end
+      end
+    end
+  end
+end
+
+function ItemSource.on_init()
+  for _, player in pairs(game.players) do
+    ensure_locale_progress(player)
+  end
+end
+
+function ItemSource.on_configuration_changed()
+  TranslationCache:clear()
+  in_flight = {}
+  pending = {}
+  for _, player in pairs(game.players) do
+    ensure_locale_progress(player)
+  end
+end
+
 return ItemSource
