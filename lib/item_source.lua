@@ -1,4 +1,5 @@
 local substring_match = require("lib.substring_match")
+local TranslationCache = require("lib.translation_cache")
 
 local ItemSource = {}
 
@@ -19,6 +20,83 @@ function ItemSource.build_candidates(query, items, locale, translation_cache, in
     end
   end
   return candidates
+end
+
+local pending = {}
+local in_flight = {}
+
+local function collect_items()
+  local items = {}
+  for _, item in pairs(prototypes.item) do
+    table.insert(items, item)
+  end
+  return items
+end
+
+local function missing_items(items, locale)
+  local missing = {}
+  for _, item in ipairs(items) do
+    if TranslationCache:get(locale, item.name) == nil then
+      table.insert(missing, item)
+    end
+  end
+  return missing
+end
+
+local function request_missing_translations(player, locale)
+  local missing = missing_items(collect_items(), locale)
+  for _, item in ipairs(missing) do
+    local id = player:request_translation(item.localised_name)
+    in_flight[id] = { locale = locale, item_name = item.name }
+  end
+end
+
+local function notify_and_clear_pending(locale)
+  local waiting = pending[locale]
+  if waiting ~= nil then
+    for player_index in pairs(waiting) do
+      local player = game.get_player(player_index)
+      if player ~= nil then
+        player:print({"quidquid.item-source-translations-ready"})
+      end
+    end
+  end
+  pending[locale] = nil
+end
+
+local function check_locale_completion(locale)
+  if #missing_items(collect_items(), locale) > 0 then
+    return
+  end
+  TranslationCache:mark_complete(locale)
+  notify_and_clear_pending(locale)
+end
+
+local function ensure_locale_progress(player)
+  local locale = player.locale
+  if TranslationCache:is_complete(locale) then
+    return
+  end
+  local already_pending = pending[locale] ~= nil and next(pending[locale]) ~= nil
+  pending[locale] = pending[locale] or {}
+  pending[locale][player.index] = true
+  if not already_pending then
+    request_missing_translations(player, locale)
+  end
+end
+
+function ItemSource.on_string_translated(event)
+  local entry = in_flight[event.id]
+  if entry == nil then
+    return
+  end
+  in_flight[event.id] = nil
+  if event.translated then
+    TranslationCache:set(entry.locale, entry.item_name, event.result)
+  else
+    TranslationCache:set(entry.locale, entry.item_name, false)
+  end
+  check_locale_completion(entry.locale)
 end
 
 return ItemSource
