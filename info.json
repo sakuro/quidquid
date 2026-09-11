@@ -1,0 +1,11 @@
+{
+  "name": "quidquid",
+  "version": "0.0.1",
+  "title": "Quidquid",
+  "author": "sakuro",
+  "description": "Quidquid",
+  "factorio_version": "2.1",
+  "dependencies": [
+    "base >= 2.1"
+  ]
+}
