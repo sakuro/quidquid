@@ -156,4 +156,25 @@ function ItemSource.on_configuration_changed()
   end
 end
 
+local function search(query, player_index, _context)
+  local player = game.get_player(player_index)
+  if player == nil then
+    return {}
+  end
+  local include_hidden = player.mod_settings["quidquid-item-source-include-hidden"].value
+  return ItemSource.build_candidates(query, collect_items(), player.locale, TranslationCache, include_hidden)
+end
+
+function ItemSource.register()
+  remote.add_interface("quidquid.item-source", { search = search })
+  remote.call("quidquid", "register_source", {
+    version = 1,
+    id = "items",
+    label = {"quidquid.source-items"},
+    prefixes = {"i", "item"},
+    default_active = true,
+    interface = "quidquid.item-source",
+  })
+end
+
 return ItemSource
