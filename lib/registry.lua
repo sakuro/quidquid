@@ -60,4 +60,24 @@ function Registry:register_action(definition)
   return true
 end
 
+function Registry:resolve_actions(selected_candidate, player_index, caller)
+  local slots = self.action_slots[selected_candidate.type]
+  local resolved = {}
+  if slots == nil then
+    return resolved
+  end
+
+  for key, definition in pairs(slots) do
+    local applicable = true
+    if caller:has(definition.interface, "is_applicable") then
+      applicable = caller:call(definition.interface, "is_applicable", selected_candidate, player_index)
+    end
+    if applicable then
+      resolved[key] = definition
+    end
+  end
+
+  return resolved
+end
+
 return Registry
