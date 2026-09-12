@@ -1,2 +1,4 @@
 ---------------------------------------------------------------------------------------------------
 Version: Unreleased
+  Features:
+    - Add Ctrl+K command palette for searching and acting on items (open in Factoriopedia)
