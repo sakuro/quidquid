@@ -5,29 +5,39 @@ local function ensure_stores()
   storage.translated_locales = storage.translated_locales or {}
 end
 
-function TranslationCache:get(locale, internal_name)
+function TranslationCache:get(namespace, locale, internal_name)
   ensure_stores()
-  local locale_cache = storage.translation_cache[locale]
+  local namespace_cache = storage.translation_cache[namespace]
+  if namespace_cache == nil then
+    return nil
+  end
+  local locale_cache = namespace_cache[locale]
   if locale_cache == nil then
     return nil
   end
   return locale_cache[internal_name]
 end
 
-function TranslationCache:set(locale, internal_name, translated)
+function TranslationCache:set(namespace, locale, internal_name, translated)
   ensure_stores()
-  storage.translation_cache[locale] = storage.translation_cache[locale] or {}
-  storage.translation_cache[locale][internal_name] = translated
+  storage.translation_cache[namespace] = storage.translation_cache[namespace] or {}
+  storage.translation_cache[namespace][locale] = storage.translation_cache[namespace][locale] or {}
+  storage.translation_cache[namespace][locale][internal_name] = translated
 end
 
-function TranslationCache:is_complete(locale)
+function TranslationCache:is_complete(namespace, locale)
   ensure_stores()
-  return storage.translated_locales[locale] == true
+  local namespace_locales = storage.translated_locales[namespace]
+  if namespace_locales == nil then
+    return false
+  end
+  return namespace_locales[locale] == true
 end
 
-function TranslationCache:mark_complete(locale)
+function TranslationCache:mark_complete(namespace, locale)
   ensure_stores()
-  storage.translated_locales[locale] = true
+  storage.translated_locales[namespace] = storage.translated_locales[namespace] or {}
+  storage.translated_locales[namespace][locale] = true
 end
 
 function TranslationCache:clear()
