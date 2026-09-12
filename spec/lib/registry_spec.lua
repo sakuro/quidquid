@@ -45,6 +45,7 @@ describe("Registry", function()
       local ok = registry:register_source({
         version = 1,
         id = "items",
+        type = "item",
         prefixes = {"i", "item"},
         interface = "my-mod.source-items",
       })
@@ -58,6 +59,22 @@ describe("Registry", function()
 
       local ok = registry:register_source({
         version = 2,
+        id = "items",
+        type = "item",
+        prefixes = {"i"},
+        interface = "my-mod.source-items",
+      })
+
+      assert.is_false(ok)
+      assert.are.equal(1, #messages)
+    end)
+
+    it("rejects a definition with no type", function()
+      local logger, messages = spy_logger()
+      local registry = Registry.new(logger)
+
+      local ok = registry:register_source({
+        version = 1,
         id = "items",
         prefixes = {"i"},
         interface = "my-mod.source-items",
@@ -74,17 +91,71 @@ describe("Registry", function()
       registry:register_source({
         version = 1,
         id = "items",
+        type = "item",
         prefixes = {"i"},
         interface = "my-mod.source-items",
       })
       registry:register_source({
         version = 1,
         id = "recipes",
+        type = "recipe",
         prefixes = {"i"},
         interface = "my-mod.source-recipes",
       })
 
       assert.are.equal(1, #messages)
+    end)
+
+    it("rejects a second source claiming an already-registered type, keeping the first", function()
+      local logger, messages = spy_logger()
+      local registry = Registry.new(logger)
+
+      local first_ok = registry:register_source({
+        version = 1,
+        id = "items",
+        type = "item",
+        default_active = true,
+        prefixes = {"i"},
+        interface = "my-mod.source-items",
+      })
+      local second_ok = registry:register_source({
+        version = 1,
+        id = "duplicate-items",
+        type = "item",
+        default_active = true,
+        prefixes = {"d"},
+        interface = "my-mod.source-duplicate-items",
+      })
+
+      assert.is_true(first_ok)
+      assert.is_false(second_ok)
+      assert.are.equal(1, #messages)
+
+      local active = registry:default_active_sources()
+      assert.are.equal(1, #active)
+      assert.are.equal("items", active[1].id)
+    end)
+
+    it("allows two sources to register for different types", function()
+      local registry = Registry.new()
+
+      local item_ok = registry:register_source({
+        version = 1,
+        id = "items",
+        type = "item",
+        prefixes = {"i"},
+        interface = "my-mod.source-items",
+      })
+      local fluid_ok = registry:register_source({
+        version = 1,
+        id = "fluids",
+        type = "fluid",
+        prefixes = {"f"},
+        interface = "my-mod.source-fluids",
+      })
+
+      assert.is_true(item_ok)
+      assert.is_true(fluid_ok)
     end)
   end)
 
@@ -154,7 +225,7 @@ describe("Registry", function()
     it("returns sources registered with default_active = true", function()
       local registry = Registry.new()
       registry:register_source({
-        version = 1, id = "items", prefixes = {"i"}, default_active = true,
+        version = 1, id = "items", type = "item", prefixes = {"i"}, default_active = true,
         interface = "my-mod.source-items",
       })
 
@@ -167,7 +238,7 @@ describe("Registry", function()
     it("excludes sources without default_active", function()
       local registry = Registry.new()
       registry:register_source({
-        version = 1, id = "items", prefixes = {"i"},
+        version = 1, id = "items", type = "item", prefixes = {"i"},
         interface = "my-mod.source-items",
       })
 

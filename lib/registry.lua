@@ -11,6 +11,7 @@ function Registry.new(logger)
     sources = {},
     actions = {},
     prefix_owners = {},
+    type_owners = {},
     action_slots = {},
     logger = logger or noop_logger,
   }, Registry)
@@ -23,6 +24,17 @@ function Registry:register_source(definition)
     return false
   end
 
+  if definition.type == nil then
+    self.logger(("quidquid: source '%s' rejected: missing type"):format(tostring(definition.id)))
+    return false
+  end
+
+  if self.type_owners[definition.type] ~= nil then
+    self.logger(("quidquid: source '%s' rejected: type '%s' already registered by '%s'"):format(
+      tostring(definition.id), definition.type, tostring(self.type_owners[definition.type].id)))
+    return false
+  end
+
   for _, prefix in ipairs(definition.prefixes or {}) do
     if self.prefix_owners[prefix] == nil then
       self.prefix_owners[prefix] = definition
@@ -32,6 +44,7 @@ function Registry:register_source(definition)
     end
   end
 
+  self.type_owners[definition.type] = definition
   table.insert(self.sources, definition)
   return true
 end
