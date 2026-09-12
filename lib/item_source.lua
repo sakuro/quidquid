@@ -3,6 +3,8 @@ local build_candidates = require("lib.prototype_candidate")
 
 local ItemSource = {}
 
+local SOURCE_LABEL = {"quidquid.source-items"}
+
 local function collect_items()
   local items = {}
   for _, item in pairs(prototypes.item) do
@@ -11,7 +13,7 @@ local function collect_items()
   return items
 end
 
-local translation = TranslatedPrototypeSource.new("items", collect_items, {"quidquid.source-items"})
+local translation = TranslatedPrototypeSource.new("items", collect_items, SOURCE_LABEL)
 
 function ItemSource.build_candidates(query, items, locale, translation_cache, include_hidden)
   return build_candidates("item", "item", query, items, locale, translation_cache, include_hidden)
@@ -54,7 +56,7 @@ function ItemSource.register()
     version = 1,
     id = "items",
     type = "item",
-    label = {"quidquid.source-items"},
+    label = SOURCE_LABEL,
     prefixes = {"i", "item"},
     default_active = true,
     interface = "quidquid.item-source",
