@@ -128,10 +128,11 @@ function Palette.open(player)
     direction = "vertical",
   }
 
-  content_frame.add{
+  local input = content_frame.add{
     type = "textfield",
     name = INPUT_NAME,
   }
+  input.style.horizontally_stretchable = true
 
   local results_scroll_pane = content_frame.add{
     type = "scroll-pane",
