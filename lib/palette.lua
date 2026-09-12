@@ -134,6 +134,7 @@ function Palette.open(player)
     type = "textfield",
     name = INPUT_NAME,
   }
+  input.style.width = 0
   input.style.horizontally_stretchable = true
 
   local results_scroll_pane = content_frame.add{
