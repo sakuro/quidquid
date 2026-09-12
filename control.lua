@@ -1,7 +1,9 @@
 -- control.lua
 local Registry = require("lib.registry")
 local ItemSource = require("lib.item_source")
+local TechnologySource = require("lib.technology_source")
 local OpenFactoriopediaAction = require("lib.actions.open_factoriopedia_action")
+local OpenTechnologyAction = require("lib.actions.open_technology_action")
 local CraftAction = require("lib.actions.craft_action")
 local Palette = require("lib.palette")
 
@@ -43,16 +45,31 @@ remote.add_interface("quidquid", {
 script.on_event(defines.events.on_tick, function()
   script.on_event(defines.events.on_tick, nil)
   ItemSource.register()
+  TechnologySource.register()
   OpenFactoriopediaAction.register()
+  OpenTechnologyAction.register()
   CraftAction.register()
 end)
 
-script.on_init(ItemSource.on_init)
-script.on_configuration_changed(ItemSource.on_configuration_changed)
-script.on_event(defines.events.on_player_joined_game, ItemSource.on_player_joined_game)
-script.on_event(defines.events.on_player_locale_changed, ItemSource.on_player_locale_changed)
-script.on_event(defines.events.on_player_left_game, ItemSource.on_player_left_game)
-script.on_event(defines.events.on_string_translated, ItemSource.on_string_translated)
+-- Both ItemSource and TechnologySource need every one of these lifecycle events, but each of
+-- script.on_init/on_configuration_changed/on_event accepts only one handler per event for the
+-- whole mod (no stacking) — so a single dispatcher fans each event out to every source.
+local translated_sources = {ItemSource, TechnologySource}
+
+local function for_each_translated_source(method_name)
+  return function(event)
+    for _, source in ipairs(translated_sources) do
+      source[method_name](event)
+    end
+  end
+end
+
+script.on_init(for_each_translated_source("on_init"))
+script.on_configuration_changed(for_each_translated_source("on_configuration_changed"))
+script.on_event(defines.events.on_player_joined_game, for_each_translated_source("on_player_joined_game"))
+script.on_event(defines.events.on_player_locale_changed, for_each_translated_source("on_player_locale_changed"))
+script.on_event(defines.events.on_player_left_game, for_each_translated_source("on_player_left_game"))
+script.on_event(defines.events.on_string_translated, for_each_translated_source("on_string_translated"))
 
 script.on_event("quidquid-toggle", Palette.on_toggle)
 script.on_event(defines.events.on_gui_text_changed, Palette.on_gui_text_changed)
