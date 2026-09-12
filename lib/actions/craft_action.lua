@@ -19,9 +19,9 @@ end
 
 local function report_failure(player, recipe)
   if player.force.get_hand_crafting_disabled_for_recipe(recipe) then
-    player.create_local_flying_text{text = {"core.recipe-not-craftable-in-hand"}, create_at_cursor = true}
+    player.create_local_flying_text{text = {"recipe-not-craftable-in-hand"}, create_at_cursor = true}
   else
-    player.create_local_flying_text{text = {"core.not-enough-ingredients"}, create_at_cursor = true}
+    player.create_local_flying_text{text = {"not-enough-ingredients"}, create_at_cursor = true}
   end
 end
 
