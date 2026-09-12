@@ -144,4 +144,144 @@ function Palette.toggle(player)
   end
 end
 
+local function candidate_at(player, index)
+  local pane = results_pane(player)
+  if pane == nil or index == nil then
+    return nil
+  end
+  local row = pane.children[index]
+  if row == nil then
+    return nil
+  end
+  return row.tags.quidquid_candidate
+end
+
+local function dispatch(player, selected_candidate, key)
+  if selected_candidate == nil then
+    return
+  end
+  local resolved = registry:resolve_actions(selected_candidate, player.index, RemoteCaller)
+  local action = resolved[key]
+  if action == nil then
+    return
+  end
+  local ok, err = pcall(remote.call, action.interface, "execute", selected_candidate, {}, player.index)
+  if not ok then
+    log(("quidquid: action '%s' execute failed: %s"):format(tostring(action.id), tostring(err)))
+  end
+  Palette.close(player)
+end
+
+local function is_palette_input(element)
+  return element ~= nil and element.valid and element.name == INPUT_NAME
+end
+
+function Palette.on_gui_text_changed(event)
+  if not is_palette_input(event.element) then
+    return
+  end
+  local player = game.get_player(event.player_index)
+  if player == nil then
+    return
+  end
+  selection_mode[player.index] = nil
+  if event.text == "" then
+    clear_candidates(player)
+  else
+    render_candidates(player, search_all_sources(event.text, event.player_index))
+  end
+end
+
+function Palette.on_gui_confirmed(event)
+  if not is_palette_input(event.element) then
+    return
+  end
+  local player = game.get_player(event.player_index)
+  if player == nil then
+    return
+  end
+  local pane = results_pane(player)
+  if pane == nil or #pane.children == 0 then
+    return
+  end
+  selection_mode[player.index] = true
+  pane.focus()
+end
+
+function Palette.on_action_key(event)
+  local player = game.get_player(event.player_index)
+  if player == nil then
+    return
+  end
+  if not selection_mode[player.index] then
+    return
+  end
+  local candidate = candidate_at(player, highlighted_index[player.index])
+  dispatch(player, candidate, event.input_name)
+end
+
+function Palette.on_gui_click(event)
+  local element = event.element
+  if element == nil or not element.valid or element.tags.quidquid_candidate == nil then
+    return
+  end
+  local player = game.get_player(event.player_index)
+  if player == nil then
+    return
+  end
+  dispatch(player, element.tags.quidquid_candidate, "quidquid-confirm")
+end
+
+function Palette.on_gui_closed(event)
+  if event.element == nil or not event.element.valid or event.element.name ~= FRAME_NAME then
+    return
+  end
+  local player = game.get_player(event.player_index)
+  if player == nil then
+    return
+  end
+  Palette.close(player)
+end
+
+function Palette.on_toggle(event)
+  local player = game.get_player(event.player_index)
+  if player ~= nil then
+    Palette.toggle(player)
+  end
+end
+
+function Palette.on_select_previous(event)
+  local player = game.get_player(event.player_index)
+  if player == nil then
+    return
+  end
+  if not selection_mode[player.index] then
+    return
+  end
+  local index = highlighted_index[player.index]
+  if index ~= nil and index > 1 then
+    highlighted_index[player.index] = index - 1
+    apply_highlight(player)
+  end
+end
+
+function Palette.on_select_next(event)
+  local player = game.get_player(event.player_index)
+  if player == nil then
+    return
+  end
+  if not selection_mode[player.index] then
+    return
+  end
+  local pane = results_pane(player)
+  if pane == nil then
+    return
+  end
+  local index = highlighted_index[player.index]
+  if index ~= nil and index < #pane.children then
+    highlighted_index[player.index] = index + 1
+    apply_highlight(player)
+  end
+end
+
 return Palette
