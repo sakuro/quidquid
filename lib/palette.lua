@@ -148,7 +148,10 @@ local function dispatch(player, selected_candidate, key)
   if action == nil then
     return
   end
-  remote.call(action.interface, "execute", selected_candidate, {}, player.index)
+  local ok, err = pcall(remote.call, action.interface, "execute", selected_candidate, {}, player.index)
+  if not ok then
+    log(("quidquid: action '%s' execute failed: %s"):format(tostring(action.id), tostring(err)))
+  end
   Palette.close(player)
 end
 
