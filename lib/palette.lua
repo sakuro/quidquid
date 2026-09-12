@@ -73,6 +73,7 @@ local function clear_candidates(player)
     return
   end
   pane.clear()
+  pane.style.height = 0
   highlighted_index[player.index] = nil
 end
 
@@ -85,6 +86,7 @@ local function render_candidates(player, candidates)
   for index, candidate in ipairs(candidates) do
     build_candidate_button(pane, candidate, index == 1)
   end
+  pane.style.height = ROW_HEIGHT * math.min(#candidates, VISIBLE_ROWS)
   highlighted_index[player.index] = #candidates > 0 and 1 or nil
 end
 
@@ -132,7 +134,7 @@ function Palette.open(player)
     name = RESULTS_NAME,
     direction = "vertical",
   }
-  results_scroll_pane.style.height = ROW_HEIGHT * VISIBLE_ROWS
+  results_scroll_pane.style.height = 0
 
   player.opened = frame
   content_frame[INPUT_NAME].focus()
