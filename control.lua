@@ -1,8 +1,12 @@
 -- control.lua
 local Registry = require("lib.registry")
 local ItemSource = require("lib.item_source")
+local OpenFactoriopediaAction = require("lib.open_factoriopedia_action")
+local Palette = require("lib.palette")
 
 local registry = Registry.new(log)
+
+Palette.init(registry)
 
 remote.add_interface("quidquid", {
   register_source = function(definition)
@@ -21,6 +25,7 @@ remote.add_interface("quidquid", {
 script.on_event(defines.events.on_tick, function()
   script.on_event(defines.events.on_tick, nil)
   ItemSource.register()
+  OpenFactoriopediaAction.register()
 end)
 
 script.on_init(ItemSource.on_init)
@@ -29,3 +34,23 @@ script.on_event(defines.events.on_player_joined_game, ItemSource.on_player_joine
 script.on_event(defines.events.on_player_locale_changed, ItemSource.on_player_locale_changed)
 script.on_event(defines.events.on_player_left_game, ItemSource.on_player_left_game)
 script.on_event(defines.events.on_string_translated, ItemSource.on_string_translated)
+
+script.on_event("quidquid-toggle", Palette.on_toggle)
+script.on_event({
+  "quidquid-select-1",
+  "quidquid-select-2",
+  "quidquid-select-3",
+  "quidquid-select-4",
+  "quidquid-select-5",
+  "quidquid-select-6",
+  "quidquid-select-7",
+  "quidquid-select-8",
+  "quidquid-select-9",
+  "quidquid-select-0",
+}, Palette.on_select_digit)
+script.on_event("quidquid-select-previous", Palette.on_select_previous)
+script.on_event("quidquid-select-next", Palette.on_select_next)
+script.on_event(defines.events.on_gui_text_changed, Palette.on_gui_text_changed)
+script.on_event(defines.events.on_gui_confirmed, Palette.on_gui_confirmed)
+script.on_event(defines.events.on_gui_click, Palette.on_gui_click)
+script.on_event(defines.events.on_gui_closed, Palette.on_gui_closed)
