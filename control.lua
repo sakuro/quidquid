@@ -8,11 +8,26 @@ local registry = Registry.new(log)
 
 Palette.init(registry)
 
+-- These custom-input names are quidquid's own hotkeys, wired to fixed handlers below.
+-- script.on_event has last-registration-wins, no-stacking semantics, so an action that
+-- registered under one of these keys would silently steal the event and break the hotkey.
+local RESERVED_ACTION_KEYS = {
+  ["quidquid-toggle"] = true,
+  ["quidquid-select-previous"] = true,
+  ["quidquid-select-next"] = true,
+}
+
 remote.add_interface("quidquid", {
   register_source = function(definition)
     return registry:register_source(definition)
   end,
   register_action = function(definition)
+    if RESERVED_ACTION_KEYS[definition.key] then
+      log(("quidquid: action '%s' rejected: key '%s' is reserved for quidquid's own hotkeys"):format(
+        tostring(definition.id), tostring(definition.key)))
+      return false
+    end
+
     local ok = registry:register_action(definition)
     if ok then
       script.on_event(definition.key, Palette.on_action_key)
