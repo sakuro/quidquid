@@ -57,8 +57,5 @@ script.on_event(defines.events.on_player_left_game, ItemSource.on_player_left_ga
 script.on_event(defines.events.on_string_translated, ItemSource.on_string_translated)
 
 script.on_event("quidquid-toggle", Palette.on_toggle)
-script.on_event("quidquid-select-previous", Palette.on_select_previous)
-script.on_event("quidquid-select-next", Palette.on_select_next)
 script.on_event(defines.events.on_gui_text_changed, Palette.on_gui_text_changed)
-script.on_event(defines.events.on_gui_confirmed, Palette.on_gui_confirmed)
 script.on_event(defines.events.on_gui_closed, Palette.on_gui_closed)

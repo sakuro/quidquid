@@ -12,18 +12,6 @@ data:extend({
   },
   {
     type = "custom-input",
-    name = "quidquid-select-previous",
-    key_sequence = "UP",
-    alternative_key_sequence = "K",
-  },
-  {
-    type = "custom-input",
-    name = "quidquid-select-next",
-    key_sequence = "DOWN",
-    alternative_key_sequence = "J",
-  },
-  {
-    type = "custom-input",
     name = "quidquid-craft-5",
     key_sequence = "mouse-button-2",
   },
