@@ -17,14 +17,6 @@ local function is_applicable(selected_candidate, player_index)
   return not player.force.get_hand_crafting_disabled_for_recipe(recipe)
 end
 
-local function report_failure(player, recipe)
-  if player.force.get_hand_crafting_disabled_for_recipe(recipe) then
-    player.create_local_flying_text{text = {"recipe-not-craftable-in-hand"}, create_at_cursor = true}
-  else
-    player.create_local_flying_text{text = {"not-enough-ingredients"}, create_at_cursor = true}
-  end
-end
-
 local function count_of(n)
   return function(_player, _recipe)
     return n
@@ -32,7 +24,7 @@ local function count_of(n)
 end
 
 local function max_craftable(player, recipe)
-  return player.get_craftable_count(recipe)
+  return math.max(1, player.get_craftable_count(recipe))
 end
 
 local function craft(count_for)
@@ -45,15 +37,7 @@ local function craft(count_for)
     if recipe == nil then
       return
     end
-    local requested = count_for(player, recipe)
-    if requested == 0 then
-      report_failure(player, recipe)
-      return
-    end
-    local started = player.begin_crafting{count = requested, recipe = recipe}
-    if started == 0 then
-      report_failure(player, recipe)
-    end
+    player.begin_crafting{count = count_for(player, recipe), recipe = recipe}
   end
 end
 
