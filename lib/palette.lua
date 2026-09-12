@@ -263,23 +263,18 @@ function Palette.on_action_key(event)
   if player == nil then
     return
   end
+
+  local element = event.element
+  if element ~= nil and element.valid and element.tags.quidquid_candidate ~= nil then
+    dispatch(player, element.tags.quidquid_candidate, event.input_name)
+    return
+  end
+
   if not selection_mode[player.index] then
     return
   end
   local candidate = candidate_at(player, highlighted_index[player.index])
   dispatch(player, candidate, event.input_name)
-end
-
-function Palette.on_gui_click(event)
-  local element = event.element
-  if element == nil or not element.valid or element.tags.quidquid_candidate == nil then
-    return
-  end
-  local player = game.get_player(event.player_index)
-  if player == nil then
-    return
-  end
-  dispatch(player, element.tags.quidquid_candidate, "quidquid-confirm")
 end
 
 function Palette.on_gui_closed(event)
