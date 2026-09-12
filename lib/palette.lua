@@ -11,6 +11,7 @@ function Palette.init(registry_instance)
 end
 
 local FRAME_NAME = "quidquid-palette-frame"
+local CONTENT_NAME = "quidquid-palette-content"
 local INPUT_NAME = "quidquid-palette-input"
 local RESULTS_NAME = "quidquid-palette-results"
 local DISPLAY_LIMIT = 30
@@ -33,7 +34,7 @@ local function results_pane(player)
   if frame == nil then
     return nil
   end
-  return frame[RESULTS_NAME]
+  return frame[CONTENT_NAME][RESULTS_NAME]
 end
 
 local function search_all_sources(query, player_index)
@@ -114,12 +115,19 @@ function Palette.open(player)
   }
   frame.auto_center = true
 
-  frame.add{
+  local content_frame = frame.add{
+    type = "frame",
+    name = CONTENT_NAME,
+    style = "inside_shallow_frame_with_padding",
+    direction = "vertical",
+  }
+
+  content_frame.add{
     type = "textfield",
     name = INPUT_NAME,
   }
 
-  local results_scroll_pane = frame.add{
+  local results_scroll_pane = content_frame.add{
     type = "scroll-pane",
     name = RESULTS_NAME,
     direction = "vertical",
@@ -127,7 +135,7 @@ function Palette.open(player)
   results_scroll_pane.style.height = ROW_HEIGHT * VISIBLE_ROWS
 
   player.opened = frame
-  frame[INPUT_NAME].focus()
+  content_frame[INPUT_NAME].focus()
 end
 
 function Palette.close(player)
