@@ -36,6 +36,16 @@ function Registry:register_source(definition)
   return true
 end
 
+function Registry:default_active_sources()
+  local active = {}
+  for _, source in ipairs(self.sources) do
+    if source.default_active then
+      table.insert(active, source)
+    end
+  end
+  return active
+end
+
 function Registry:register_action(definition)
   if definition.version ~= ACTION_CONTRACT_VERSION then
     self.logger(("quidquid: action '%s' rejected: unsupported version %s (expected %d)"):format(

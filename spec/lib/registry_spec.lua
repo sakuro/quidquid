@@ -223,4 +223,44 @@ describe("Registry", function()
       assert.are.equal("logistics-request", resolved["confirm"].id)
     end)
   end)
+
+  describe(":default_active_sources", function()
+    it("returns nothing when no sources are registered", function()
+      local registry = Registry.new()
+
+      assert.are.same({}, registry:default_active_sources())
+    end)
+
+    it("returns only sources registered with default_active = true", function()
+      local registry = Registry.new()
+      registry:register_source({
+        version = 1, id = "items", prefixes = {"i"}, default_active = true,
+        interface = "my-mod.source-items",
+      })
+      registry:register_source({
+        version = 1, id = "hidden-source", prefixes = {"h"}, default_active = false,
+        interface = "my-mod.source-hidden",
+      })
+
+      local sources = registry:default_active_sources()
+
+      assert.are.equal(1, #sources)
+      assert.are.equal("items", sources[1].id)
+    end)
+
+    it("preserves registration order", function()
+      local registry = Registry.new()
+      registry:register_source({
+        version = 1, id = "first", default_active = true, interface = "my-mod.source-first",
+      })
+      registry:register_source({
+        version = 1, id = "second", default_active = true, interface = "my-mod.source-second",
+      })
+
+      local sources = registry:default_active_sources()
+
+      assert.are.equal("first", sources[1].id)
+      assert.are.equal("second", sources[2].id)
+    end)
+  end)
 end)
