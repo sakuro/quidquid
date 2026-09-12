@@ -16,6 +16,8 @@ local function execute(selected_candidate, _params, player_index)
   end
   local prototype = prototype_table[selected_candidate.id]
   if prototype == nil then
+    log(("quidquid: open-factoriopedia could not resolve prototype '%s' of type '%s'"):format(
+      tostring(selected_candidate.id), tostring(selected_candidate.type)))
     return
   end
   player.open_factoriopedia_gui(prototype)
