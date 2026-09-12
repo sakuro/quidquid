@@ -1,4 +1,4 @@
-local TechnologySource = require("lib.technology_source")
+local TechnologySource = require("lib.sources.technology_source")
 
 local function fake_translation_cache(entries)
   entries = entries or {}

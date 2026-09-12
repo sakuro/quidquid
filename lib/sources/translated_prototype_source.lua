@@ -1,4 +1,4 @@
-local TranslationCache = require("lib.translation_cache")
+local TranslationCache = require("lib.sources.translation_cache")
 
 local TranslatedPrototypeSource = {}
 TranslatedPrototypeSource.__index = TranslatedPrototypeSource

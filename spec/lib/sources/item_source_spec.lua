@@ -1,4 +1,4 @@
-local ItemSource = require("lib.item_source")
+local ItemSource = require("lib.sources.item_source")
 
 local function fake_translation_cache(entries)
   entries = entries or {}

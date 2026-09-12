@@ -1,4 +1,4 @@
-local TranslationCache = require("lib.translation_cache")
+local TranslationCache = require("lib.sources.translation_cache")
 
 describe("TranslationCache", function()
   before_each(function()
