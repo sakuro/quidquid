@@ -110,6 +110,7 @@ function Palette.open(player)
     type = "frame",
     name = FRAME_NAME,
     direction = "vertical",
+    caption = {"mod-name.quidquid"},
   }
   frame.auto_center = true
 
