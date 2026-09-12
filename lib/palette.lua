@@ -14,6 +14,7 @@ local FRAME_NAME = "quidquid-palette-frame"
 local CONTENT_NAME = "quidquid-palette-content"
 local INPUT_NAME = "quidquid-palette-input"
 local RESULTS_NAME = "quidquid-palette-results"
+local RESULTS_TABLE_NAME = "quidquid-palette-results-table"
 local DISPLAY_LIMIT = 30
 
 local ROW_HEIGHT = 28
@@ -21,6 +22,7 @@ local VISIBLE_ROWS = 5
 
 local DEFAULT_FONT_COLOR = {r = 255, g = 255, b = 255}
 local ACCENT_FONT_COLOR = {r = 255, g = 142, b = 42}
+local MUTED_FONT_COLOR = {r = 160, g = 160, b = 160}
 
 local highlighted_index = {}
 local selection_mode = {}
@@ -37,12 +39,24 @@ local function results_pane(player)
   return frame[CONTENT_NAME][RESULTS_NAME]
 end
 
+local function results_table(player)
+  local pane = results_pane(player)
+  if pane == nil then
+    return nil
+  end
+  return pane[RESULTS_TABLE_NAME]
+end
+
 local function search_all_sources(query, player_index)
   local results = {}
   for _, source in ipairs(registry:default_active_sources()) do
     local ok, candidates = pcall(remote.call, source.interface, "search", query, player_index, nil)
     if ok then
-      table.insert(results, candidates)
+      local wrapped = {}
+      for _, candidate in ipairs(candidates) do
+        table.insert(wrapped, { candidate = candidate, source_label = source.label })
+      end
+      table.insert(results, wrapped)
     else
       log(("quidquid: source '%s' search failed: %s"):format(tostring(source.id), tostring(candidates)))
     end
@@ -54,37 +68,46 @@ local function row_caption(candidate)
   return {"", "[img=", candidate.icon, "] ", candidate.label}
 end
 
-local function build_candidate_button(pane, candidate, is_highlighted)
+local function build_candidate_row(pane, wrapped, is_highlighted)
   local button = pane.add{
     type = "button",
     style = "transparent_button",
-    caption = row_caption(candidate),
-    tags = { quidquid_candidate = candidate },
+    caption = row_caption(wrapped.candidate),
+    tags = { quidquid_candidate = wrapped.candidate },
   }
   button.style.horizontally_stretchable = true
   button.style.horizontal_align = "left"
   button.style.hovered_font_color = ACCENT_FONT_COLOR
   button.style.font_color = is_highlighted and ACCENT_FONT_COLOR or DEFAULT_FONT_COLOR
+
+  local source_label = pane.add{
+    type = "label",
+    caption = wrapped.source_label,
+  }
+  source_label.style.horizontal_align = "right"
+  source_label.style.font_color = MUTED_FONT_COLOR
 end
 
 local function clear_candidates(player)
   local pane = results_pane(player)
-  if pane == nil then
+  local table_element = results_table(player)
+  if pane == nil or table_element == nil then
     return
   end
-  pane.clear()
+  table_element.clear()
   pane.style.height = 0
   highlighted_index[player.index] = nil
 end
 
 local function render_candidates(player, candidates)
   local pane = results_pane(player)
-  if pane == nil then
+  local table_element = results_table(player)
+  if pane == nil or table_element == nil then
     return
   end
-  pane.clear()
-  for index, candidate in ipairs(candidates) do
-    build_candidate_button(pane, candidate, index == 1)
+  table_element.clear()
+  for index, wrapped in ipairs(candidates) do
+    build_candidate_row(table_element, wrapped, index == 1)
   end
   pane.style.height = ROW_HEIGHT * math.min(#candidates, VISIBLE_ROWS)
   highlighted_index[player.index] = #candidates > 0 and 1 or nil
@@ -92,14 +115,17 @@ end
 
 local function apply_highlight(player)
   local pane = results_pane(player)
-  if pane == nil then
+  local table_element = results_table(player)
+  if pane == nil or table_element == nil then
     return
   end
   local index = highlighted_index[player.index]
-  for i, row in ipairs(pane.children) do
-    row.style.font_color = (i == index) and ACCENT_FONT_COLOR or DEFAULT_FONT_COLOR
+  local row_count = #table_element.children / 2
+  for i = 1, row_count do
+    local button = table_element.children[(i - 1) * 2 + 1]
+    button.style.font_color = (i == index) and ACCENT_FONT_COLOR or DEFAULT_FONT_COLOR
     if i == index then
-      pane.scroll_to_element(row)
+      pane.scroll_to_element(button)
     end
   end
 end
@@ -136,6 +162,12 @@ function Palette.open(player)
   }
   results_scroll_pane.style.height = 0
 
+  results_scroll_pane.add{
+    type = "table",
+    name = RESULTS_TABLE_NAME,
+    column_count = 2,
+  }
+
   player.opened = frame
   content_frame[INPUT_NAME].focus()
 end
@@ -159,15 +191,15 @@ function Palette.toggle(player)
 end
 
 local function candidate_at(player, index)
-  local pane = results_pane(player)
-  if pane == nil or index == nil then
+  local table_element = results_table(player)
+  if table_element == nil or index == nil then
     return nil
   end
-  local row = pane.children[index]
-  if row == nil then
+  local button = table_element.children[(index - 1) * 2 + 1]
+  if button == nil then
     return nil
   end
-  return row.tags.quidquid_candidate
+  return button.tags.quidquid_candidate
 end
 
 local function dispatch(player, selected_candidate, key)
@@ -215,7 +247,8 @@ function Palette.on_gui_confirmed(event)
     return
   end
   local pane = results_pane(player)
-  if pane == nil or #pane.children == 0 then
+  local table_element = results_table(player)
+  if pane == nil or table_element == nil or #table_element.children == 0 then
     return
   end
   selection_mode[player.index] = true
@@ -287,12 +320,13 @@ function Palette.on_select_next(event)
   if not selection_mode[player.index] then
     return
   end
-  local pane = results_pane(player)
-  if pane == nil then
+  local table_element = results_table(player)
+  if table_element == nil then
     return
   end
   local index = highlighted_index[player.index]
-  if index ~= nil and index < #pane.children then
+  local row_count = #table_element.children / 2
+  if index ~= nil and index < row_count then
     highlighted_index[player.index] = index + 1
     apply_highlight(player)
   end
