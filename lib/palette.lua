@@ -24,9 +24,6 @@ local DEFAULT_FONT_COLOR = {r = 255, g = 255, b = 255}
 local ACCENT_FONT_COLOR = {r = 255, g = 142, b = 42}
 local MUTED_FONT_COLOR = {r = 160, g = 160, b = 160}
 
-local highlighted_index = {}
-local selection_mode = {}
-
 local function get_frame(player)
   return player.gui.screen[FRAME_NAME]
 end
@@ -68,7 +65,7 @@ local function row_caption(candidate)
   return {"", "[img=", candidate.icon, "] ", candidate.label}
 end
 
-local function build_candidate_row(pane, wrapped, is_highlighted)
+local function build_candidate_row(pane, wrapped)
   local button = pane.add{
     type = "button",
     style = "transparent_button",
@@ -77,9 +74,8 @@ local function build_candidate_row(pane, wrapped, is_highlighted)
   }
   button.style.horizontally_stretchable = true
   button.style.horizontal_align = "left"
-  local font_color = is_highlighted and ACCENT_FONT_COLOR or DEFAULT_FONT_COLOR
-  button.style.font_color = font_color
-  button.style.hovered_font_color = font_color
+  button.style.font_color = DEFAULT_FONT_COLOR
+  button.style.hovered_font_color = ACCENT_FONT_COLOR
 
   local source_label = pane.add{
     type = "label",
@@ -97,7 +93,6 @@ local function clear_candidates(player)
   end
   table_element.clear()
   pane.style.height = 0
-  highlighted_index[player.index] = nil
 end
 
 local function render_candidates(player, candidates)
@@ -107,30 +102,10 @@ local function render_candidates(player, candidates)
     return
   end
   table_element.clear()
-  for index, wrapped in ipairs(candidates) do
-    build_candidate_row(table_element, wrapped, index == 1)
+  for _, wrapped in ipairs(candidates) do
+    build_candidate_row(table_element, wrapped)
   end
   pane.style.height = ROW_HEIGHT * math.min(#candidates, VISIBLE_ROWS)
-  highlighted_index[player.index] = #candidates > 0 and 1 or nil
-end
-
-local function apply_highlight(player)
-  local pane = results_pane(player)
-  local table_element = results_table(player)
-  if pane == nil or table_element == nil then
-    return
-  end
-  local index = highlighted_index[player.index]
-  local row_count = #table_element.children / 2
-  for i = 1, row_count do
-    local button = table_element.children[(i - 1) * 2 + 1]
-    local font_color = (i == index) and ACCENT_FONT_COLOR or DEFAULT_FONT_COLOR
-    button.style.font_color = font_color
-    button.style.hovered_font_color = font_color
-    if i == index then
-      pane.scroll_to_element(button)
-    end
-  end
 end
 
 function Palette.open(player)
@@ -180,8 +155,6 @@ function Palette.close(player)
   if frame == nil then
     return
   end
-  highlighted_index[player.index] = nil
-  selection_mode[player.index] = nil
   frame.destroy()
 end
 
@@ -191,18 +164,6 @@ function Palette.toggle(player)
   else
     Palette.open(player)
   end
-end
-
-local function candidate_at(player, index)
-  local table_element = results_table(player)
-  if table_element == nil or index == nil then
-    return nil
-  end
-  local button = table_element.children[(index - 1) * 2 + 1]
-  if button == nil then
-    return nil
-  end
-  return button.tags.quidquid_candidate
 end
 
 local function dispatch(player, selected_candidate, key)
@@ -233,7 +194,6 @@ function Palette.on_gui_text_changed(event)
   if player == nil then
     return
   end
-  selection_mode[player.index] = nil
   if event.text == "" then
     clear_candidates(player)
   else
@@ -241,45 +201,17 @@ function Palette.on_gui_text_changed(event)
   end
 end
 
-function Palette.on_gui_confirmed(event)
-  if not is_palette_input(event.element) then
-    return
-  end
-  local player = game.get_player(event.player_index)
-  if player == nil then
-    return
-  end
-  local pane = results_pane(player)
-  local table_element = results_table(player)
-  if pane == nil or table_element == nil or #table_element.children == 0 then
-    return
-  end
-  selection_mode[player.index] = true
-  pane.focus()
-end
-
 function Palette.on_action_key(event)
   local player = game.get_player(event.player_index)
   if player == nil then
     return
   end
-  if not selection_mode[player.index] then
-    return
-  end
-  local candidate = candidate_at(player, highlighted_index[player.index])
-  dispatch(player, candidate, event.input_name)
-end
 
-function Palette.on_gui_click(event)
   local element = event.element
   if element == nil or not element.valid or element.tags.quidquid_candidate == nil then
     return
   end
-  local player = game.get_player(event.player_index)
-  if player == nil then
-    return
-  end
-  dispatch(player, element.tags.quidquid_candidate, "quidquid-confirm")
+  dispatch(player, element.tags.quidquid_candidate, event.input_name)
 end
 
 function Palette.on_gui_closed(event)
@@ -297,41 +229,6 @@ function Palette.on_toggle(event)
   local player = game.get_player(event.player_index)
   if player ~= nil then
     Palette.toggle(player)
-  end
-end
-
-function Palette.on_select_previous(event)
-  local player = game.get_player(event.player_index)
-  if player == nil then
-    return
-  end
-  if not selection_mode[player.index] then
-    return
-  end
-  local index = highlighted_index[player.index]
-  if index ~= nil and index > 1 then
-    highlighted_index[player.index] = index - 1
-    apply_highlight(player)
-  end
-end
-
-function Palette.on_select_next(event)
-  local player = game.get_player(event.player_index)
-  if player == nil then
-    return
-  end
-  if not selection_mode[player.index] then
-    return
-  end
-  local table_element = results_table(player)
-  if table_element == nil then
-    return
-  end
-  local index = highlighted_index[player.index]
-  local row_count = #table_element.children / 2
-  if index ~= nil and index < row_count then
-    highlighted_index[player.index] = index + 1
-    apply_highlight(player)
   end
 end
 

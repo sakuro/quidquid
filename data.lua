@@ -8,18 +8,21 @@ data:extend({
   {
     type = "custom-input",
     name = "quidquid-confirm",
-    key_sequence = "E",
+    key_sequence = "mouse-button-1",
   },
   {
     type = "custom-input",
-    name = "quidquid-select-previous",
-    key_sequence = "UP",
-    alternative_key_sequence = "K",
+    name = "quidquid-craft-5",
+    key_sequence = "mouse-button-2",
   },
   {
     type = "custom-input",
-    name = "quidquid-select-next",
-    key_sequence = "DOWN",
-    alternative_key_sequence = "J",
+    name = "quidquid-craft-max",
+    key_sequence = "SHIFT + mouse-button-1",
+  },
+  {
+    type = "custom-input",
+    name = "quidquid-open-factoriopedia",
+    key_sequence = "ALT + mouse-button-1",
   },
 })

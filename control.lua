@@ -1,7 +1,8 @@
 -- control.lua
 local Registry = require("lib.registry")
 local ItemSource = require("lib.item_source")
-local OpenFactoriopediaAction = require("lib.open_factoriopedia_action")
+local OpenFactoriopediaAction = require("lib.actions.open_factoriopedia_action")
+local CraftAction = require("lib.actions.craft_action")
 local Palette = require("lib.palette")
 
 local registry = Registry.new(log)
@@ -13,8 +14,6 @@ Palette.init(registry)
 -- registered under one of these keys would silently steal the event and break the hotkey.
 local RESERVED_ACTION_KEYS = {
   ["quidquid-toggle"] = true,
-  ["quidquid-select-previous"] = true,
-  ["quidquid-select-next"] = true,
 }
 
 remote.add_interface("quidquid", {
@@ -45,6 +44,7 @@ script.on_event(defines.events.on_tick, function()
   script.on_event(defines.events.on_tick, nil)
   ItemSource.register()
   OpenFactoriopediaAction.register()
+  CraftAction.register()
 end)
 
 script.on_init(ItemSource.on_init)
@@ -55,9 +55,5 @@ script.on_event(defines.events.on_player_left_game, ItemSource.on_player_left_ga
 script.on_event(defines.events.on_string_translated, ItemSource.on_string_translated)
 
 script.on_event("quidquid-toggle", Palette.on_toggle)
-script.on_event("quidquid-select-previous", Palette.on_select_previous)
-script.on_event("quidquid-select-next", Palette.on_select_next)
 script.on_event(defines.events.on_gui_text_changed, Palette.on_gui_text_changed)
-script.on_event(defines.events.on_gui_confirmed, Palette.on_gui_confirmed)
-script.on_event(defines.events.on_gui_click, Palette.on_gui_click)
 script.on_event(defines.events.on_gui_closed, Palette.on_gui_closed)
