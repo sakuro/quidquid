@@ -77,7 +77,9 @@ local function build_candidate_row(pane, wrapped, is_highlighted)
   }
   button.style.horizontally_stretchable = true
   button.style.horizontal_align = "left"
-  button.style.font_color = is_highlighted and ACCENT_FONT_COLOR or DEFAULT_FONT_COLOR
+  local font_color = is_highlighted and ACCENT_FONT_COLOR or DEFAULT_FONT_COLOR
+  button.style.font_color = font_color
+  button.style.hovered_font_color = font_color
 
   local source_label = pane.add{
     type = "label",
@@ -122,7 +124,9 @@ local function apply_highlight(player)
   local row_count = #table_element.children / 2
   for i = 1, row_count do
     local button = table_element.children[(i - 1) * 2 + 1]
-    button.style.font_color = (i == index) and ACCENT_FONT_COLOR or DEFAULT_FONT_COLOR
+    local font_color = (i == index) and ACCENT_FONT_COLOR or DEFAULT_FONT_COLOR
+    button.style.font_color = font_color
+    button.style.hovered_font_color = font_color
     if i == index then
       pane.scroll_to_element(button)
     end
