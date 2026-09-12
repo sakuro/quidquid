@@ -123,4 +123,18 @@ describe("prototype_candidate", function()
       candidates[1]
     )
   end)
+
+  it("keeps candidate_type and icon_prefix independent even when they differ", function()
+    -- Every other case uses the same string for both, which would let a transposed
+    -- `type`/`icon` assignment in the implementation slip past unnoticed.
+    local prototype_list = {
+      { name = "steam-power", localised_name = {"technology-name.steam-power"}, hidden = false },
+    }
+
+    local candidates = build_candidates("technology", "tech-icon", "steam", prototype_list, "en", fake_translation_cache(), false)
+
+    assert.are.equal(1, #candidates)
+    assert.are.equal("technology", candidates[1].type)
+    assert.are.equal("tech-icon/steam-power", candidates[1].icon)
+  end)
 end)
