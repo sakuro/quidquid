@@ -77,7 +77,6 @@ local function build_candidate_row(pane, wrapped, is_highlighted)
   }
   button.style.horizontally_stretchable = true
   button.style.horizontal_align = "left"
-  button.style.hovered_font_color = ACCENT_FONT_COLOR
   button.style.font_color = is_highlighted and ACCENT_FONT_COLOR or DEFAULT_FONT_COLOR
 
   local source_label = pane.add{
