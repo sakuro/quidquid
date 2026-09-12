@@ -14,8 +14,6 @@ Palette.init(registry)
 -- registered under one of these keys would silently steal the event and break the hotkey.
 local RESERVED_ACTION_KEYS = {
   ["quidquid-toggle"] = true,
-  ["quidquid-select-previous"] = true,
-  ["quidquid-select-next"] = true,
 }
 
 remote.add_interface("quidquid", {
