@@ -30,7 +30,7 @@ function OpenFactoriopediaAction.register()
     id = "open-factoriopedia",
     types = {"item"},
     label = {"quidquid.action-open-factoriopedia"},
-    key = "quidquid-confirm",
+    key = "quidquid-open-factoriopedia",
     interface = "quidquid.open-factoriopedia-action",
   })
 end
