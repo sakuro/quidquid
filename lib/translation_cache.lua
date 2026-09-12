@@ -40,6 +40,9 @@ function TranslationCache:mark_complete(namespace, locale)
   storage.translated_locales[namespace][locale] = true
 end
 
+-- Intentionally namespace-less: resets every namespace at once. Only called from
+-- on_configuration_changed, where wiping all sources' cached translations is the desired
+-- behavior, not just the caller's own namespace.
 function TranslationCache:clear()
   storage.translation_cache = {}
   storage.translated_locales = {}

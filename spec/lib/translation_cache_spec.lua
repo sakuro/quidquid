@@ -75,5 +75,17 @@ describe("TranslationCache", function()
       assert.is_nil(TranslationCache:get("items", "en", "iron-plate"))
       assert.is_false(TranslationCache:is_complete("items", "en"))
     end)
+
+    it("resets every namespace at once, not just one", function()
+      TranslationCache:set("items", "en", "iron-plate", "Iron Plate")
+      TranslationCache:mark_complete("items", "en")
+      TranslationCache:set("technologies", "en", "steam-power", "Steam power")
+      TranslationCache:mark_complete("technologies", "en")
+
+      TranslationCache:clear()
+
+      assert.is_nil(TranslationCache:get("technologies", "en", "steam-power"))
+      assert.is_false(TranslationCache:is_complete("technologies", "en"))
+    end)
   end)
 end)
