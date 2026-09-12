@@ -83,7 +83,13 @@ function Registry:resolve_actions(selected_candidate, player_index, caller)
   for key, definition in pairs(slots) do
     local applicable = true
     if caller:has(definition.interface, "is_applicable") then
-      applicable = caller:call(definition.interface, "is_applicable", selected_candidate, player_index)
+      local ok, result = pcall(caller.call, caller, definition.interface, "is_applicable", selected_candidate, player_index)
+      if ok then
+        applicable = result
+      else
+        applicable = false
+        self.logger(("quidquid: action '%s' is_applicable check failed: %s"):format(tostring(definition.id), tostring(result)))
+      end
     end
     if applicable then
       resolved[key] = definition
