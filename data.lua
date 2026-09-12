@@ -14,12 +14,12 @@ data:extend({
     type = "custom-input",
     name = "quidquid-select-previous",
     key_sequence = "UP",
-    alternative_key_sequence = "SHIFT + J",
+    alternative_key_sequence = "SHIFT + K",
   },
   {
     type = "custom-input",
     name = "quidquid-select-next",
     key_sequence = "DOWN",
-    alternative_key_sequence = "SHIFT + K",
+    alternative_key_sequence = "SHIFT + J",
   },
 })
