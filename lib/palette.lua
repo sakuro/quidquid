@@ -35,6 +35,8 @@ local function search_all_sources(query, player_index)
     local ok, candidates = pcall(remote.call, source.interface, "search", query, player_index, nil)
     if ok then
       table.insert(results, candidates)
+    else
+      log(("quidquid: source '%s' search failed: %s"):format(tostring(source.id), tostring(candidates)))
     end
   end
   return PaletteLogic.merge_candidates(results, DISPLAY_LIMIT)
