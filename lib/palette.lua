@@ -19,7 +19,7 @@ local DISPLAY_LIMIT = 30
 
 local ROW_HEIGHT = 28
 local VISIBLE_ROWS = 5
-local CONTENT_WIDTH = 600
+local CONTENT_WIDTH = 400
 
 local DEFAULT_FONT_COLOR = {r = 255, g = 255, b = 255}
 local ACCENT_FONT_COLOR = {r = 255, g = 142, b = 42}
