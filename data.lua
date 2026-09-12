@@ -8,8 +8,7 @@ data:extend({
   {
     type = "custom-input",
     name = "quidquid-confirm",
-    key_sequence = "E",
-    alternative_key_sequence = "mouse-button-1",
+    key_sequence = "mouse-button-1",
   },
   {
     type = "custom-input",
