@@ -170,6 +170,7 @@ function ItemSource.register()
   remote.call("quidquid", "register_source", {
     version = 1,
     id = "items",
+    type = "item",
     label = {"quidquid.source-items"},
     prefixes = {"i", "item"},
     default_active = true,
