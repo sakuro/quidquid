@@ -19,6 +19,7 @@ local DISPLAY_LIMIT = 30
 
 local ROW_HEIGHT = 28
 local VISIBLE_ROWS = 5
+local CONTENT_WIDTH = 600
 
 local DEFAULT_FONT_COLOR = {r = 255, g = 255, b = 255}
 local ACCENT_FONT_COLOR = {r = 255, g = 142, b = 42}
@@ -127,6 +128,7 @@ function Palette.open(player)
     style = "inside_shallow_frame_with_padding",
     direction = "vertical",
   }
+  content_frame.style.width = CONTENT_WIDTH
 
   local input = content_frame.add{
     type = "textfield",
@@ -139,13 +141,15 @@ function Palette.open(player)
     name = RESULTS_NAME,
     direction = "vertical",
   }
+  results_scroll_pane.style.horizontally_stretchable = true
   results_scroll_pane.style.height = 0
 
-  results_scroll_pane.add{
+  local results_table = results_scroll_pane.add{
     type = "table",
     name = RESULTS_TABLE_NAME,
     column_count = 2,
   }
+  results_table.style.horizontally_stretchable = true
 
   player.opened = frame
   content_frame[INPUT_NAME].focus()
