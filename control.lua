@@ -41,7 +41,7 @@ remote.add_interface("quidquid", {
 -- in-game: "Attempt to remote call outside of an event"). Neither on_init (only fires for a
 -- brand-new save) nor on_configuration_changed (only fires when something actually changed)
 -- nor on_load (no game/remote API access at all) covers an ordinary continued load, so
--- ItemSource.register()'s remote.call runs on the first tick after any load instead.
+-- each source/action's remote.call runs on the first tick after any load instead.
 script.on_event(defines.events.on_tick, function()
   script.on_event(defines.events.on_tick, nil)
   ItemSource.register()
