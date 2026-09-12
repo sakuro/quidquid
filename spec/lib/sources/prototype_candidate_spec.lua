@@ -1,4 +1,4 @@
-local build_candidates = require("lib.prototype_candidate")
+local build_candidates = require("lib.sources.prototype_candidate")
 
 local function fake_translation_cache(entries)
   entries = entries or {}

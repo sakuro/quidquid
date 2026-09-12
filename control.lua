@@ -1,7 +1,7 @@
 -- control.lua
 local Registry = require("lib.registry")
-local ItemSource = require("lib.item_source")
-local TechnologySource = require("lib.technology_source")
+local ItemSource = require("lib.sources.item_source")
+local TechnologySource = require("lib.sources.technology_source")
 local OpenFactoriopediaAction = require("lib.actions.open_factoriopedia_action")
 local OpenTechnologyAction = require("lib.actions.open_technology_action")
 local CraftAction = require("lib.actions.craft_action")

@@ -1,5 +1,5 @@
-local TranslatedPrototypeSource = require("lib.translated_prototype_source")
-local build_candidates = require("lib.prototype_candidate")
+local TranslatedPrototypeSource = require("lib.sources.translated_prototype_source")
+local build_candidates = require("lib.sources.prototype_candidate")
 
 local TechnologySource = {}
 
