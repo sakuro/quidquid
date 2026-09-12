@@ -36,6 +36,16 @@ function Registry:register_source(definition)
   return true
 end
 
+function Registry:default_active_sources()
+  local active = {}
+  for _, source in ipairs(self.sources) do
+    if source.default_active then
+      table.insert(active, source)
+    end
+  end
+  return active
+end
+
 function Registry:register_action(definition)
   if definition.version ~= ACTION_CONTRACT_VERSION then
     self.logger(("quidquid: action '%s' rejected: unsupported version %s (expected %d)"):format(
@@ -73,7 +83,13 @@ function Registry:resolve_actions(selected_candidate, player_index, caller)
   for key, definition in pairs(slots) do
     local applicable = true
     if caller:has(definition.interface, "is_applicable") then
-      applicable = caller:call(definition.interface, "is_applicable", selected_candidate, player_index)
+      local ok, result = pcall(caller.call, caller, definition.interface, "is_applicable", selected_candidate, player_index)
+      if ok then
+        applicable = result
+      else
+        applicable = false
+        self.logger(("quidquid: action '%s' is_applicable check failed: %s"):format(tostring(definition.id), tostring(result)))
+      end
     end
     if applicable then
       resolved[key] = definition

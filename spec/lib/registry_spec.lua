@@ -26,6 +26,17 @@ local function caller_with_is_applicable(result)
   }
 end
 
+local function caller_with_throwing_is_applicable(error_message)
+  return {
+    has = function(_, _, function_name)
+      return function_name == "is_applicable"
+    end,
+    call = function(_, _, _, ...)
+      error(error_message)
+    end,
+  }
+end
+
 describe("Registry", function()
   describe(":register_source", function()
     it("accepts a definition with the current contract version", function()
@@ -139,6 +150,41 @@ describe("Registry", function()
     end)
   end)
 
+  describe(":default_active_sources", function()
+    it("returns sources registered with default_active = true", function()
+      local registry = Registry.new()
+      registry:register_source({
+        version = 1, id = "items", prefixes = {"i"}, default_active = true,
+        interface = "my-mod.source-items",
+      })
+
+      local active = registry:default_active_sources()
+
+      assert.are.equal(1, #active)
+      assert.are.equal("items", active[1].id)
+    end)
+
+    it("excludes sources without default_active", function()
+      local registry = Registry.new()
+      registry:register_source({
+        version = 1, id = "items", prefixes = {"i"},
+        interface = "my-mod.source-items",
+      })
+
+      local active = registry:default_active_sources()
+
+      assert.are.same({}, active)
+    end)
+
+    it("returns an empty list when no sources are registered", function()
+      local registry = Registry.new()
+
+      local active = registry:default_active_sources()
+
+      assert.are.same({}, active)
+    end)
+  end)
+
   describe(":resolve_actions", function()
     it("returns nothing for a type with no registered actions", function()
       local registry = Registry.new()
@@ -221,6 +267,21 @@ describe("Registry", function()
       local resolved = registry:resolve_actions({type = "item", id = "iron-plate"}, 1, always_true_caller())
 
       assert.are.equal("logistics-request", resolved["confirm"].id)
+    end)
+
+    it("omits an action whose is_applicable check throws, and logs the failure", function()
+      local logger, messages = spy_logger()
+      local registry = Registry.new(logger)
+      registry:register_action({
+        version = 1, id = "logistics-request", types = {"item"}, key = "confirm",
+        interface = "my-mod.action-logistics-request",
+      })
+
+      local resolved = registry:resolve_actions(
+        {type = "item", id = "iron-plate"}, 1, caller_with_throwing_is_applicable("boom"))
+
+      assert.is_nil(resolved["confirm"])
+      assert.are.equal(1, #messages)
     end)
   end)
 end)
