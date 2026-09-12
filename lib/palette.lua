@@ -95,6 +95,9 @@ local function apply_highlight(player)
   local index = highlighted_index[player.index]
   for i, row in ipairs(pane.children) do
     row.style.font_color = (i == index) and ACCENT_FONT_COLOR or DEFAULT_FONT_COLOR
+    if i == index then
+      pane.scroll_to_element(row)
+    end
   end
 end
 
