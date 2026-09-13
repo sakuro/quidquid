@@ -1,5 +1,6 @@
 -- lib/temporary_request_editor.lua
 local TemporaryRequestAction = require("lib.actions.temporary_request_action")
+local TemporaryRequestEditorLogic = require("lib.temporary_request_editor_logic")
 
 local TemporaryRequestEditor = {}
 
@@ -218,6 +219,53 @@ function TemporaryRequestEditor.on_gui_checked_state_changed(event)
     return
   end
   select_quality(player, element.tags.quidquid_quality)
+end
+
+function TemporaryRequestEditor.on_gui_value_changed(event)
+  local element = event.element
+  if element == nil or not element.valid or element.name ~= SLIDER_NAME then
+    return
+  end
+  local textfield = element.parent[TEXTFIELD_NAME]
+  textfield.text = tostring(element.slider_value)
+  textfield.style.font_color = DEFAULT_FONT_COLOR
+end
+
+function TemporaryRequestEditor.on_gui_text_changed(event)
+  local element = event.element
+  if element == nil or not element.valid or element.name ~= TEXTFIELD_NAME then
+    return
+  end
+  local quantity = tonumber(element.text) or 0
+  local slider = element.parent[SLIDER_NAME]
+  if quantity > slider.get_slider_maximum() then
+    slider.slider_value = slider.get_slider_maximum()
+    element.style.font_color = OVERFLOW_FONT_COLOR
+  else
+    slider.slider_value = quantity
+    element.style.font_color = DEFAULT_FONT_COLOR
+  end
+end
+
+function TemporaryRequestEditor.on_gui_click(event)
+  local element = event.element
+  if element == nil or not element.valid or element.name ~= STACK_BUTTON_NAME then
+    return
+  end
+  local player = game.get_player(event.player_index)
+  if player == nil then
+    return
+  end
+  local content = content_of(player)
+  if content == nil then
+    return
+  end
+  local item_name = content.tags.quidquid_item_name
+  local stack_size = prototypes.item[item_name].stack_size
+  local textfield = content[QUANTITY_ROW_NAME][TEXTFIELD_NAME]
+  local current = tonumber(textfield.text) or 0
+  local next_quantity = TemporaryRequestEditorLogic.next_stack_multiple(current, stack_size)
+  set_quantity_controls(content, next_quantity, stack_size)
 end
 
 return TemporaryRequestEditor
