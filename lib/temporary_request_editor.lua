@@ -176,14 +176,8 @@ function TemporaryRequestEditor.open(player, item_name)
   button_spacer.style.horizontally_stretchable = true
   button_row.add{
     type = "button",
-    style = "button",
+    style = "green_button",
     name = CONFIRM_BUTTON_NAME,
-    -- green_button's style bakes in tooltip = "gui.confirm-instruction" ("Confirm (E)"),
-    -- a vanilla-dialog convention where the engine itself wires E to that dialog's own
-    -- confirm button. This mod never binds E to anything, so that promise would be false
-    -- here -- E's real default action (toggle inventory) just closes this custom frame,
-    -- as it would any player.opened GUI. Overridden blank to avoid the misleading hint.
-    tooltip = "",
     caption = { "quidquid.temporary-request-editor-confirm" },
   }
 
@@ -354,6 +348,17 @@ function TemporaryRequestEditor.on_gui_closed(event)
     return
   end
   TemporaryRequestEditor.close(player)
+end
+
+-- Wired to the "E" custom-input so it actually does what green_button's own baked-in
+-- tooltip ("Confirm (E)") promises. confirm() already no-ops safely if this player's
+-- editor isn't open (content_of returns nil), so no extra guard is needed here.
+function TemporaryRequestEditor.on_confirm_key(event)
+  local player = game.get_player(event.player_index)
+  if player == nil then
+    return
+  end
+  TemporaryRequestEditor.confirm(player)
 end
 
 return TemporaryRequestEditor

@@ -96,6 +96,7 @@ end)
 script.on_event(defines.events.on_gui_click, TemporaryRequestEditor.on_gui_click)
 script.on_event(defines.events.on_gui_checked_state_changed, TemporaryRequestEditor.on_gui_checked_state_changed)
 script.on_event(defines.events.on_gui_value_changed, TemporaryRequestEditor.on_gui_value_changed)
+script.on_event("quidquid-temporary-request-editor-confirm", TemporaryRequestEditor.on_confirm_key)
 
 -- Every event that can change what LuaControl:get_item_count sees for a player's
 -- character — confirmed empirically that get_item_count aggregates across all of these
