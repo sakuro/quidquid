@@ -1,6 +1,9 @@
 -- lib/actions/temporary_request_action.lua
 local TemporaryRequestAction = {}
 
+local GROUP = "[virtual-signal=signal-Q] Quidquid: Temporary requests"
+local QUALITY = "normal"
+
 -- pure, testable: `existing_groups` is a plain array of group-name strings already
 -- extracted from real sections by the caller
 function TemporaryRequestAction.find_section_index_by_group(existing_groups, group)
@@ -34,6 +37,88 @@ function TemporaryRequestAction.combined_target(filters, item_name, quality)
     end
   end
   return 0
+end
+
+local function section_index(point)
+  local groups = {}
+  for i = 1, point.sections_count do
+    groups[i] = point.sections[i].group
+  end
+  return TemporaryRequestAction.find_section_index_by_group(groups, GROUP)
+end
+
+local function temporary_request_section(point)
+  local index = section_index(point)
+  if index ~= nil then
+    return point.sections[index]
+  end
+  return point.add_section(GROUP)
+end
+
+local function logistic_point_for(player)
+  if player.character == nil then
+    return nil
+  end
+  return player.character.get_logistic_point(defines.logistic_member_index.character_requester)
+end
+
+local function is_applicable(_selected_candidate, player_index)
+  local player = game.get_player(player_index)
+  if player == nil then
+    return false
+  end
+  return logistic_point_for(player) ~= nil
+end
+
+local function execute(selected_candidate, _params, player_index)
+  local player = game.get_player(player_index)
+  if player == nil then
+    return
+  end
+  local point = logistic_point_for(player)
+  if point == nil then
+    return
+  end
+
+  local item_name = selected_candidate.id
+  local stack_size = prototypes.item[item_name].stack_size
+
+  local already_have = player.character.get_item_count({ name = item_name, quality = QUALITY })
+  if already_have >= stack_size then
+    player.create_local_flying_text({
+      text = { "quidquid.action-temporary-request-already-satisfied" },
+      create_at_cursor = true,
+    })
+    return
+  end
+
+  local section = temporary_request_section(point)
+  local existing = {}
+  for i = 1, section.filters_count do
+    existing[i] = section.get_slot(i)
+  end
+  local slot_index = TemporaryRequestAction.find_slot_index(existing, item_name, QUALITY)
+
+  section.set_slot(slot_index, {
+    value = { type = "item", name = item_name, quality = QUALITY },
+    min = stack_size,
+    max = stack_size,
+  })
+end
+
+function TemporaryRequestAction.register()
+  remote.add_interface("quidquid.temporary-request-action", {
+    is_applicable = is_applicable,
+    execute = execute,
+  })
+  remote.call("quidquid", "register_action", {
+    version = 1,
+    id = "temporary-request",
+    types = {"item"},
+    label = {"quidquid.action-temporary-request"},
+    key = "quidquid-temporary-request",
+    interface = "quidquid.temporary-request-action",
+  })
 end
 
 return TemporaryRequestAction
