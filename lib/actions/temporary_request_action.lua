@@ -43,27 +43,36 @@ function TemporaryRequestAction.combined_target(filters, item_name, quality)
   return 0
 end
 
-local function section_index(point)
-  local groups = {}
-  for i = 1, point.sections_count do
-    groups[i] = point.sections[i].group
-  end
-  return TemporaryRequestAction.find_section_index_by_group(groups, GROUP)
-end
-
-local function temporary_request_section(point)
-  local index = section_index(point)
-  if index ~= nil then
-    return point.sections[index]
-  end
-  return point.add_section(GROUP)
-end
-
-local function logistic_point_for(player)
+function TemporaryRequestAction.logistic_point_for(player)
   if player.character == nil then
     return nil
   end
   return player.character.get_logistic_point(defines.logistic_member_index.character_requester)
+end
+
+-- Returns the shared section, or nil if it doesn't exist yet for this player -- unlike
+-- get_or_create_section, never creates one. Used by callers that only want to look at
+-- existing requests without side effects (e.g. the editor prefilling its fields).
+function TemporaryRequestAction.find_existing_section(point)
+  local groups = {}
+  for i = 1, point.sections_count do
+    groups[i] = point.sections[i].group
+  end
+  local index = TemporaryRequestAction.find_section_index_by_group(groups, GROUP)
+  if index == nil then
+    return nil
+  end
+  return point.sections[index]
+end
+
+-- Creates an empty section as a side effect if none exists yet -- only call this when
+-- about to write a slot. Use find_existing_section for read-only lookups (e.g. prefill).
+function TemporaryRequestAction.get_or_create_section(point)
+  local section = TemporaryRequestAction.find_existing_section(point)
+  if section ~= nil then
+    return section
+  end
+  return point.add_section(GROUP)
 end
 
 local function is_applicable(_selected_candidate, player_index)
@@ -71,7 +80,7 @@ local function is_applicable(_selected_candidate, player_index)
   if player == nil then
     return false
   end
-  return logistic_point_for(player) ~= nil
+  return TemporaryRequestAction.logistic_point_for(player) ~= nil
 end
 
 local function execute(selected_candidate, _params, player_index)
@@ -79,7 +88,7 @@ local function execute(selected_candidate, _params, player_index)
   if player == nil then
     return
   end
-  local point = logistic_point_for(player)
+  local point = TemporaryRequestAction.logistic_point_for(player)
   if point == nil then
     return
   end
@@ -97,7 +106,7 @@ local function execute(selected_candidate, _params, player_index)
     return
   end
 
-  local section = temporary_request_section(point)
+  local section = TemporaryRequestAction.get_or_create_section(point)
   local existing = {}
   for i = 1, section.filters_count do
     existing[i] = section.get_slot(i)
@@ -117,15 +126,14 @@ local function execute(selected_candidate, _params, player_index)
 end
 
 local function check_and_clear(player)
-  local point = logistic_point_for(player)
+  local point = TemporaryRequestAction.logistic_point_for(player)
   if point == nil then
     return
   end
-  local index = section_index(point)
-  if index == nil then
+  local section = TemporaryRequestAction.find_existing_section(point)
+  if section == nil then
     return
   end
-  local section = point.sections[index]
 
   local filters = point.filters
   for i = 1, section.filters_count do
