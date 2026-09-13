@@ -138,7 +138,7 @@ function TemporaryRequestEditor.open(player, item_name)
       quality_row.add{
         type = "radiobutton",
         name = QUALITY_RADIO_PREFIX .. quality,
-        caption = { "", "[quality=" .. quality .. "] ", prototypes.quality[quality].localised_name },
+        caption = "[quality=" .. quality .. "]",
         state = (quality == "normal"),
         tags = { quidquid_quality = quality },
       }
@@ -172,8 +172,11 @@ function TemporaryRequestEditor.open(player, item_name)
   set_quantity_controls(content, quantity, stack_size)
 
   local button_row = content.add{ type = "flow", name = BUTTON_ROW_NAME, direction = "horizontal" }
+  local button_spacer = button_row.add{ type = "empty-widget" }
+  button_spacer.style.horizontally_stretchable = true
   button_row.add{
     type = "button",
+    style = "green_button",
     name = CONFIRM_BUTTON_NAME,
     caption = { "quidquid.temporary-request-editor-confirm" },
   }
