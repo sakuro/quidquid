@@ -106,7 +106,7 @@ local function render_candidates(player, candidates)
   for _, wrapped in ipairs(candidates) do
     build_candidate_row(table_element, wrapped)
   end
-  pane.style.height = ROW_HEIGHT * math.min(#candidates, VISIBLE_ROWS)
+  pane.style.height = nil
 end
 
 function Palette.open(player)
@@ -144,6 +144,7 @@ function Palette.open(player)
   }
   results_scroll_pane.style.horizontally_stretchable = true
   results_scroll_pane.style.height = 0
+  results_scroll_pane.style.maximal_height = ROW_HEIGHT * VISIBLE_ROWS
 
   local results_table = results_scroll_pane.add{
     type = "table",
