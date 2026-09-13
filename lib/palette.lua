@@ -12,7 +12,10 @@ end
 
 local FRAME_NAME = "quidquid-palette-frame"
 local CONTENT_NAME = "quidquid-palette-content"
+local INPUT_ROW_NAME = "quidquid-palette-input-row"
 local INPUT_NAME = "quidquid-palette-input"
+local LOCK_LABEL_NAME = "quidquid-palette-lock-label"
+local LOCK_CLOSE_NAME = "quidquid-palette-lock-close"
 local RESULTS_NAME = "quidquid-palette-results"
 local RESULTS_TABLE_NAME = "quidquid-palette-results-table"
 local DISPLAY_LIMIT = 30
@@ -27,6 +30,14 @@ local MUTED_FONT_COLOR = {r = 160, g = 160, b = 160}
 
 local function get_frame(player)
   return player.gui.screen[FRAME_NAME]
+end
+
+local function content_frame_of(player)
+  local frame = get_frame(player)
+  if frame == nil then
+    return nil
+  end
+  return frame[CONTENT_NAME]
 end
 
 local function results_pane(player)
@@ -45,9 +56,10 @@ local function results_table(player)
   return pane[RESULTS_TABLE_NAME]
 end
 
-function Palette.search_all_sources(query, player_index)
+function Palette.search_all_sources(query, player_index, locked_source)
   local results = {}
-  for _, source in ipairs(registry:default_active_sources()) do
+  local sources = locked_source and {locked_source} or registry:default_active_sources()
+  for _, source in ipairs(sources) do
     local ok, candidates = pcall(remote.call, source.interface, "search", query, player_index, nil)
     if ok then
       local wrapped = {}
@@ -130,7 +142,30 @@ function Palette.open(player)
   }
   content_frame.style.width = CONTENT_WIDTH
 
-  local input = content_frame.add{
+  local input_row = content_frame.add{
+    type = "flow",
+    name = INPUT_ROW_NAME,
+    direction = "horizontal",
+  }
+  input_row.style.horizontally_stretchable = true
+
+  local lock_label = input_row.add{
+    type = "label",
+    name = LOCK_LABEL_NAME,
+    visible = false,
+  }
+  lock_label.style.vertical_align = "center"
+
+  input_row.add{
+    type = "sprite-button",
+    name = LOCK_CLOSE_NAME,
+    style = "frame_action_button",
+    sprite = "utility/close",
+    visible = false,
+    tags = { quidquid_close_lock = true },
+  }
+
+  local input = input_row.add{
     type = "textfield",
     name = INPUT_NAME,
   }
@@ -154,7 +189,7 @@ function Palette.open(player)
   results_table.style.horizontally_stretchable = true
 
   player.opened = frame
-  content_frame[INPUT_NAME].focus()
+  input_row[INPUT_NAME].focus()
 end
 
 function Palette.close(player)
@@ -193,6 +228,34 @@ function Palette.is_palette_input(element)
   return element ~= nil and element.valid and element.name == INPUT_NAME
 end
 
+function Palette.trigger_prefix(text)
+  if text:sub(-1) ~= " " then
+    return nil
+  end
+  return text:sub(1, -2)
+end
+
+local function get_locked_source(player)
+  local content = content_frame_of(player)
+  if content == nil then
+    return nil
+  end
+  return content.tags.quidquid_locked_source
+end
+
+local function lock_to_source(player, source)
+  local content = content_frame_of(player)
+  if content == nil then
+    return
+  end
+  content.tags = { quidquid_locked_source = source }
+  content[INPUT_ROW_NAME][INPUT_NAME].text = ""
+  content[INPUT_ROW_NAME][LOCK_LABEL_NAME].caption = source.label
+  content[INPUT_ROW_NAME][LOCK_LABEL_NAME].visible = true
+  content[INPUT_ROW_NAME][LOCK_CLOSE_NAME].visible = true
+  clear_candidates(player)
+end
+
 function Palette.on_gui_text_changed(event)
   if not Palette.is_palette_input(event.element) then
     return
@@ -201,10 +264,21 @@ function Palette.on_gui_text_changed(event)
   if player == nil then
     return
   end
+
+  local locked_source = get_locked_source(player)
+  if locked_source == nil then
+    local prefix = Palette.trigger_prefix(event.text)
+    local source = prefix and registry:source_for_prefix(prefix)
+    if source ~= nil then
+      lock_to_source(player, source)
+      return
+    end
+  end
+
   if event.text == "" then
     clear_candidates(player)
   else
-    render_candidates(player, Palette.search_all_sources(event.text, event.player_index))
+    render_candidates(player, Palette.search_all_sources(event.text, event.player_index, locked_source))
   end
 end
 
@@ -219,6 +293,33 @@ function Palette.on_action_key(event)
     return
   end
   dispatch(player, element.tags.quidquid_candidate, event.input_name)
+end
+
+function Palette.on_clear_source_lock(event)
+  local element = event.element
+  if element == nil or not element.valid or element.tags.quidquid_close_lock == nil then
+    return
+  end
+  local player = game.get_player(event.player_index)
+  if player == nil then
+    return
+  end
+
+  local content = content_frame_of(player)
+  if content == nil then
+    return
+  end
+
+  local current_text = content[INPUT_ROW_NAME][INPUT_NAME].text
+  content.tags = {}
+  content[INPUT_ROW_NAME][LOCK_LABEL_NAME].visible = false
+  content[INPUT_ROW_NAME][LOCK_CLOSE_NAME].visible = false
+
+  if current_text == "" then
+    clear_candidates(player)
+  else
+    render_candidates(player, Palette.search_all_sources(current_text, player.index))
+  end
 end
 
 function Palette.on_gui_closed(event)

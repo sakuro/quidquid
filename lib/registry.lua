@@ -59,6 +59,10 @@ function Registry:default_active_sources()
   return active
 end
 
+function Registry:source_for_prefix(prefix)
+  return self.prefix_owners[prefix]
+end
+
 function Registry:register_action(definition)
   if definition.version ~= ACTION_CONTRACT_VERSION then
     self.logger(("quidquid: action '%s' rejected: unsupported version %s (expected %d)"):format(

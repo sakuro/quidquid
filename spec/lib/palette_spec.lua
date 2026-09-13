@@ -34,6 +34,20 @@ describe("Palette", function()
     end)
   end)
 
+  describe(".trigger_prefix", function()
+    it("returns the text with its trailing space stripped", function()
+      assert.are.equal("item", Palette.trigger_prefix("item "))
+    end)
+
+    it("returns nil when the text does not end in a space", function()
+      assert.is_nil(Palette.trigger_prefix("item"))
+    end)
+
+    it("returns nil for an empty string", function()
+      assert.is_nil(Palette.trigger_prefix(""))
+    end)
+  end)
+
   describe(".search_all_sources", function()
     local function fake_registry(sources)
       return {
@@ -83,6 +97,28 @@ describe("Palette", function()
       assert.are.equal(1, #results)
       assert.are.equal("automation", results[1].candidate.id)
       assert.are.equal(1, #logged)
+    end)
+
+    it("searches only the locked source, ignoring default_active_sources", function()
+      local default_active_called = false
+      Palette.init({
+        default_active_sources = function()
+          default_active_called = true
+          return {}
+        end,
+      })
+      _G.remote = {
+        call = function(_interface, _fn, _query, _player_index, _context)
+          return { { type = "technology", id = "automation", label = {"technology-name.automation"}, icon = "technology/automation" } }
+        end,
+      }
+      local locked_source = { id = "technologies", interface = "quidquid.technology-source", label = {"quidquid.source-technologies"} }
+
+      local results = Palette.search_all_sources("auto", 1, locked_source)
+
+      assert.is_false(default_active_called)
+      assert.are.equal(1, #results)
+      assert.are.equal("automation", results[1].candidate.id)
     end)
   end)
 end)
