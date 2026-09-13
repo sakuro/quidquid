@@ -102,9 +102,10 @@ local function set_quantity_controls(content, quantity, stack_size)
 end
 
 function TemporaryRequestEditor.open(player, item_name)
-  if get_frame(player) ~= nil then
-    return
-  end
+  -- Retriggering the action on a different item while the editor is already open
+  -- retargets it to the new item rather than silently doing nothing -- consistent with
+  -- Cancel/Escape already treating any unconfirmed edit as safe to discard.
+  TemporaryRequestEditor.close(player)
 
   local item_prototype = prototypes.item[item_name]
   local stack_size = item_prototype.stack_size
