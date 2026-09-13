@@ -187,4 +187,37 @@ function TemporaryRequestEditor.close(player)
   frame.destroy()
 end
 
+local function select_quality(player, quality)
+  local content = content_of(player)
+  if content == nil then
+    return
+  end
+  local item_name = content.tags.quidquid_item_name
+  content.tags = { quidquid_item_name = item_name, quidquid_quality = quality }
+
+  local quality_row = content[QUALITY_ROW_NAME]
+  if quality_row ~= nil then
+    for _, radio in ipairs(quality_row.children) do
+      radio.state = (radio.tags.quidquid_quality == quality)
+    end
+  end
+
+  local item_prototype = prototypes.item[item_name]
+  local found = existing_request(player, item_name, quality)
+  local quantity = found.quantity or item_prototype.stack_size
+  set_quantity_controls(content, quantity, item_prototype.stack_size)
+end
+
+function TemporaryRequestEditor.on_gui_checked_state_changed(event)
+  local element = event.element
+  if element == nil or not element.valid or element.tags.quidquid_quality == nil then
+    return
+  end
+  local player = game.get_player(event.player_index)
+  if player == nil then
+    return
+  end
+  select_quality(player, element.tags.quidquid_quality)
+end
+
 return TemporaryRequestEditor
