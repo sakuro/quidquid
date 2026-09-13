@@ -176,7 +176,7 @@ function TemporaryRequestEditor.open(player, item_name)
   button_spacer.style.horizontally_stretchable = true
   button_row.add{
     type = "button",
-    style = "green_button",
+    style = "button",
     name = CONFIRM_BUTTON_NAME,
     -- green_button's style bakes in tooltip = "gui.confirm-instruction" ("Confirm (E)"),
     -- a vanilla-dialog convention where the engine itself wires E to that dialog's own
