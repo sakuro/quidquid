@@ -12,6 +12,7 @@ local Palette = require("lib.palette")
 local registry = Registry.new(log)
 
 Palette.init(registry)
+TemporaryRequestAction.init(TemporaryRequestEditor)
 
 -- These custom-input names are quidquid's own hotkeys, wired to fixed handlers below.
 -- script.on_event has last-registration-wins, no-stacking semantics, so an action that

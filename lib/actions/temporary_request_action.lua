@@ -1,6 +1,19 @@
 -- lib/actions/temporary_request_action.lua
 local TemporaryRequestAction = {}
 
+-- Injected from control.lua (see TemporaryRequestAction.init) rather than required
+-- directly: lib/temporary_request_editor.lua already requires this module (to reuse its
+-- section/slot helpers), and Factorio only allows `require` during control.lua's initial
+-- parsing, not later from inside an event handler like `execute` -- so a mutual
+-- require between the two files isn't resolvable by deferring one side to call time
+-- (confirmed in-game: "Require can't be used outside of control.lua parsing."). Both
+-- modules are required once, up front, in control.lua, which then wires this one in.
+local editor = nil
+
+function TemporaryRequestAction.init(editor_module)
+  editor = editor_module
+end
+
 -- Deliberately a plain string, not a LocalisedString: `find_section_index_by_group`
 -- identifies this mod's section by exact string match, and LuaLogisticSection has no
 -- other stable identifier. Localizing this per-locale would orphan existing sections
@@ -87,12 +100,7 @@ local function execute(selected_candidate, _params, player_index)
   if player == nil then
     return
   end
-  -- Required lazily (not at module top) because temporary_request_editor.lua requires this
-  -- module back, to use its public section/slot helpers -- a top-level require on both sides
-  -- would deadlock in Lua's module loader (package.loaded isn't set until a chunk finishes
-  -- running, so mutual top-level requires recurse until the C stack is exhausted).
-  local TemporaryRequestEditor = require("lib.temporary_request_editor")
-  TemporaryRequestEditor.open(player, selected_candidate.id)
+  editor.open(player, selected_candidate.id)
 end
 
 local function check_and_clear(player)
