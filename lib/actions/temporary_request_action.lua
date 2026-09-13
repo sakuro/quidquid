@@ -106,6 +106,38 @@ local function execute(selected_candidate, _params, player_index)
   })
 end
 
+local function check_and_clear(player)
+  local point = logistic_point_for(player)
+  if point == nil then
+    return
+  end
+  local index = section_index(point)
+  if index == nil then
+    return
+  end
+  local section = point.sections[index]
+
+  local filters = point.filters
+  for i = 1, section.filters_count do
+    local slot = section.get_slot(i)
+    if slot.value ~= nil then
+      local target = TemporaryRequestAction.combined_target(filters, slot.value.name, slot.value.quality)
+      local count = player.character.get_item_count({ name = slot.value.name, quality = slot.value.quality })
+      if count >= target then
+        section.clear_slot(i)
+      end
+    end
+  end
+end
+
+function TemporaryRequestAction.on_inventory_changed(event)
+  local player = game.get_player(event.player_index)
+  if player == nil then
+    return
+  end
+  check_and_clear(player)
+end
+
 function TemporaryRequestAction.register()
   remote.add_interface("quidquid.temporary-request-action", {
     is_applicable = is_applicable,
