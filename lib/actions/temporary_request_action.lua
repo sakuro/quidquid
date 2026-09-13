@@ -6,7 +6,6 @@ local TemporaryRequestAction = {}
 -- other stable identifier. Localizing this per-locale would orphan existing sections
 -- whenever a player's locale changed.
 local GROUP = "[virtual-signal=signal-Q] Quidquid: Temporary requests"
-local QUALITY = "normal"
 
 -- pure, testable: `existing_groups` is a plain array of group-name strings already
 -- extracted from real sections by the caller
@@ -88,41 +87,12 @@ local function execute(selected_candidate, _params, player_index)
   if player == nil then
     return
   end
-  local point = TemporaryRequestAction.logistic_point_for(player)
-  if point == nil then
-    return
-  end
-
-  local item_name = selected_candidate.id
-  local item_prototype = prototypes.item[item_name]
-  local stack_size = item_prototype.stack_size
-
-  local already_have = player.character.get_item_count({ name = item_name, quality = QUALITY })
-  if already_have >= stack_size then
-    player.create_local_flying_text({
-      text = { "quidquid.action-temporary-request-already-satisfied" },
-      create_at_cursor = true,
-    })
-    return
-  end
-
-  local section = TemporaryRequestAction.get_or_create_section(point)
-  local existing = {}
-  for i = 1, section.filters_count do
-    existing[i] = section.get_slot(i)
-  end
-  local slot_index = TemporaryRequestAction.find_slot_index(existing, item_name, QUALITY)
-
-  section.set_slot(slot_index, {
-    value = { type = "item", name = item_name, quality = QUALITY },
-    min = stack_size,
-    max = stack_size,
-  })
-
-  player.create_local_flying_text({
-    text = { "quidquid.action-temporary-request-created", item_name, item_prototype.localised_name, stack_size, stack_size },
-    create_at_cursor = true,
-  })
+  -- Required lazily (not at module top) because temporary_request_editor.lua requires this
+  -- module back, to use its public section/slot helpers -- a top-level require on both sides
+  -- would deadlock in Lua's module loader (package.loaded isn't set until a chunk finishes
+  -- running, so mutual top-level requires recurse until the C stack is exhausted).
+  local TemporaryRequestEditor = require("lib.temporary_request_editor")
+  TemporaryRequestEditor.open(player, selected_candidate.id)
 end
 
 local function check_and_clear(player)
