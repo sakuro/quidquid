@@ -85,7 +85,8 @@ local function execute(selected_candidate, _params, player_index)
   end
 
   local item_name = selected_candidate.id
-  local stack_size = prototypes.item[item_name].stack_size
+  local item_prototype = prototypes.item[item_name]
+  local stack_size = item_prototype.stack_size
 
   local already_have = player.character.get_item_count({ name = item_name, quality = QUALITY })
   if already_have >= stack_size then
@@ -107,6 +108,11 @@ local function execute(selected_candidate, _params, player_index)
     value = { type = "item", name = item_name, quality = QUALITY },
     min = stack_size,
     max = stack_size,
+  })
+
+  player.create_local_flying_text({
+    text = { "quidquid.action-temporary-request-created", item_prototype.localised_name, stack_size, stack_size },
+    create_at_cursor = true,
   })
 end
 
