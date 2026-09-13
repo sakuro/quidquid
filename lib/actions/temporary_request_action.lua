@@ -111,7 +111,7 @@ local function execute(selected_candidate, _params, player_index)
   })
 
   player.create_local_flying_text({
-    text = { "quidquid.action-temporary-request-created", item_prototype.localised_name, stack_size, stack_size },
+    text = { "quidquid.action-temporary-request-created", item_name, item_prototype.localised_name, stack_size, stack_size },
     create_at_cursor = true,
   })
 end
