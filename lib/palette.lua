@@ -45,7 +45,7 @@ local function results_table(player)
   return pane[RESULTS_TABLE_NAME]
 end
 
-local function search_all_sources(query, player_index)
+function Palette.search_all_sources(query, player_index)
   local results = {}
   for _, source in ipairs(registry:default_active_sources()) do
     local ok, candidates = pcall(remote.call, source.interface, "search", query, player_index, nil)
@@ -62,7 +62,7 @@ local function search_all_sources(query, player_index)
   return PaletteLogic.merge_candidates(results, DISPLAY_LIMIT)
 end
 
-local function row_caption(candidate)
+function Palette.row_caption(candidate)
   return {"", "[img=", candidate.icon, "] ", candidate.label}
 end
 
@@ -70,7 +70,7 @@ local function build_candidate_row(pane, wrapped)
   local button = pane.add{
     type = "button",
     style = "transparent_button",
-    caption = row_caption(wrapped.candidate),
+    caption = Palette.row_caption(wrapped.candidate),
     tags = { quidquid_candidate = wrapped.candidate },
   }
   button.style.horizontally_stretchable = true
@@ -188,12 +188,12 @@ local function dispatch(player, selected_candidate, key)
   Palette.close(player)
 end
 
-local function is_palette_input(element)
+function Palette.is_palette_input(element)
   return element ~= nil and element.valid and element.name == INPUT_NAME
 end
 
 function Palette.on_gui_text_changed(event)
-  if not is_palette_input(event.element) then
+  if not Palette.is_palette_input(event.element) then
     return
   end
   local player = game.get_player(event.player_index)
@@ -203,7 +203,7 @@ function Palette.on_gui_text_changed(event)
   if event.text == "" then
     clear_candidates(player)
   else
-    render_candidates(player, search_all_sources(event.text, event.player_index))
+    render_candidates(player, Palette.search_all_sources(event.text, event.player_index))
   end
 end
 
