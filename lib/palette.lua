@@ -12,7 +12,10 @@ end
 
 local FRAME_NAME = "quidquid-palette-frame"
 local CONTENT_NAME = "quidquid-palette-content"
+local INPUT_ROW_NAME = "quidquid-palette-input-row"
 local INPUT_NAME = "quidquid-palette-input"
+local LOCK_LABEL_NAME = "quidquid-palette-lock-label"
+local LOCK_CLOSE_NAME = "quidquid-palette-lock-close"
 local RESULTS_NAME = "quidquid-palette-results"
 local RESULTS_TABLE_NAME = "quidquid-palette-results-table"
 local DISPLAY_LIMIT = 30
@@ -27,6 +30,14 @@ local MUTED_FONT_COLOR = {r = 160, g = 160, b = 160}
 
 local function get_frame(player)
   return player.gui.screen[FRAME_NAME]
+end
+
+local function content_frame_of(player)
+  local frame = get_frame(player)
+  if frame == nil then
+    return nil
+  end
+  return frame[CONTENT_NAME]
 end
 
 local function results_pane(player)
@@ -131,7 +142,30 @@ function Palette.open(player)
   }
   content_frame.style.width = CONTENT_WIDTH
 
-  local input = content_frame.add{
+  local input_row = content_frame.add{
+    type = "flow",
+    name = INPUT_ROW_NAME,
+    direction = "horizontal",
+  }
+  input_row.style.horizontally_stretchable = true
+
+  local lock_label = input_row.add{
+    type = "label",
+    name = LOCK_LABEL_NAME,
+    visible = false,
+  }
+  lock_label.style.vertical_align = "center"
+
+  input_row.add{
+    type = "sprite-button",
+    name = LOCK_CLOSE_NAME,
+    style = "frame_action_button",
+    sprite = "utility/close",
+    visible = false,
+    tags = { quidquid_close_lock = true },
+  }
+
+  local input = input_row.add{
     type = "textfield",
     name = INPUT_NAME,
   }
@@ -155,7 +189,7 @@ function Palette.open(player)
   results_table.style.horizontally_stretchable = true
 
   player.opened = frame
-  content_frame[INPUT_NAME].focus()
+  input_row[INPUT_NAME].focus()
 end
 
 function Palette.close(player)
