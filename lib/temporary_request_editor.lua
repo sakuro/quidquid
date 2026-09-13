@@ -247,25 +247,102 @@ function TemporaryRequestEditor.on_gui_text_changed(event)
   end
 end
 
+function TemporaryRequestEditor.confirm(player)
+  local content = content_of(player)
+  if content == nil then
+    return
+  end
+  local item_name = content.tags.quidquid_item_name
+  local quality = content.tags.quidquid_quality
+  local item_prototype = prototypes.item[item_name]
+  local quantity = tonumber(content[QUANTITY_ROW_NAME][TEXTFIELD_NAME].text) or 0
+
+  TemporaryRequestEditor.close(player)
+
+  local point = TemporaryRequestAction.logistic_point_for(player)
+  if point == nil then
+    return
+  end
+
+  local already_have = player.character.get_item_count({ name = item_name, quality = quality })
+  local action = TemporaryRequestEditorLogic.decide_confirm_action(quantity, already_have)
+
+  if action == "set" then
+    local section = TemporaryRequestAction.get_or_create_section(point)
+    local existing = {}
+    for i = 1, section.filters_count do
+      existing[i] = section.get_slot(i)
+    end
+    local slot_index = TemporaryRequestAction.find_slot_index(existing, item_name, quality)
+    section.set_slot(slot_index, {
+      value = { type = "item", name = item_name, quality = quality },
+      min = quantity,
+    })
+    player.create_local_flying_text({
+      text = { "quidquid.action-temporary-request-created", item_name, quality, item_prototype.localised_name, quantity },
+      create_at_cursor = true,
+    })
+    return
+  end
+
+  local section = TemporaryRequestAction.find_existing_section(point)
+  if section ~= nil then
+    local existing = {}
+    for i = 1, section.filters_count do
+      existing[i] = section.get_slot(i)
+    end
+    local slot_index = TemporaryRequestAction.find_slot_index(existing, item_name, quality)
+    if slot_index <= #existing then
+      section.clear_slot(slot_index)
+    end
+  end
+
+  local message_key = (action == "remove_zero")
+    and "quidquid.action-temporary-request-removed"
+    or "quidquid.action-temporary-request-already-satisfied"
+  player.create_local_flying_text({
+    text = { message_key, item_name, quality, item_prototype.localised_name },
+    create_at_cursor = true,
+  })
+end
+
 function TemporaryRequestEditor.on_gui_click(event)
   local element = event.element
-  if element == nil or not element.valid or element.name ~= STACK_BUTTON_NAME then
+  if element == nil or not element.valid then
     return
   end
   local player = game.get_player(event.player_index)
   if player == nil then
     return
   end
-  local content = content_of(player)
-  if content == nil then
+
+  if element.name == STACK_BUTTON_NAME then
+    local content = content_of(player)
+    if content == nil then
+      return
+    end
+    local item_name = content.tags.quidquid_item_name
+    local stack_size = prototypes.item[item_name].stack_size
+    local textfield = content[QUANTITY_ROW_NAME][TEXTFIELD_NAME]
+    local current = tonumber(textfield.text) or 0
+    local next_quantity = TemporaryRequestEditorLogic.next_stack_multiple(current, stack_size)
+    set_quantity_controls(content, next_quantity, stack_size)
+  elseif element.name == CONFIRM_BUTTON_NAME then
+    TemporaryRequestEditor.confirm(player)
+  elseif element.name == CANCEL_BUTTON_NAME then
+    TemporaryRequestEditor.close(player)
+  end
+end
+
+function TemporaryRequestEditor.on_gui_closed(event)
+  if event.element == nil or not event.element.valid or event.element.name ~= FRAME_NAME then
     return
   end
-  local item_name = content.tags.quidquid_item_name
-  local stack_size = prototypes.item[item_name].stack_size
-  local textfield = content[QUANTITY_ROW_NAME][TEXTFIELD_NAME]
-  local current = tonumber(textfield.text) or 0
-  local next_quantity = TemporaryRequestEditorLogic.next_stack_multiple(current, stack_size)
-  set_quantity_controls(content, next_quantity, stack_size)
+  local player = game.get_player(event.player_index)
+  if player == nil then
+    return
+  end
+  TemporaryRequestEditor.close(player)
 end
 
 return TemporaryRequestEditor
