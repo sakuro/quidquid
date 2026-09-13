@@ -193,6 +193,13 @@ function Palette.is_palette_input(element)
   return element ~= nil and element.valid and element.name == INPUT_NAME
 end
 
+function Palette.trigger_prefix(text)
+  if text:sub(-1) ~= " " then
+    return nil
+  end
+  return text:sub(1, -2)
+end
+
 function Palette.on_gui_text_changed(event)
   if not Palette.is_palette_input(event.element) then
     return

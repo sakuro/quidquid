@@ -34,6 +34,20 @@ describe("Palette", function()
     end)
   end)
 
+  describe(".trigger_prefix", function()
+    it("returns the text with its trailing space stripped", function()
+      assert.are.equal("item", Palette.trigger_prefix("item "))
+    end)
+
+    it("returns nil when the text does not end in a space", function()
+      assert.is_nil(Palette.trigger_prefix("item"))
+    end)
+
+    it("returns nil for an empty string", function()
+      assert.is_nil(Palette.trigger_prefix(""))
+    end)
+  end)
+
   describe(".search_all_sources", function()
     local function fake_registry(sources)
       return {
