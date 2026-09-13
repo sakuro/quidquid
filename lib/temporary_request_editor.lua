@@ -14,7 +14,6 @@ local TEXTFIELD_NAME = "quidquid-temporary-request-editor-textfield"
 local STACK_BUTTON_NAME = "quidquid-temporary-request-editor-stack-button"
 local BUTTON_ROW_NAME = "quidquid-temporary-request-editor-button-row"
 local CONFIRM_BUTTON_NAME = "quidquid-temporary-request-editor-confirm-button"
-local CANCEL_BUTTON_NAME = "quidquid-temporary-request-editor-cancel-button"
 
 local SLIDER_MAX_STACKS = 10
 local RESERVED_QUALITY_NAME = "quality-unknown"
@@ -32,6 +31,12 @@ local function content_of(player)
     return nil
   end
   return frame[CONTENT_NAME]
+end
+
+-- [item=..,quality=..] renders the item's icon tinted/badged for that quality -- the
+-- window title updates this whenever the selected quality changes (see select_quality).
+local function title_caption(item_name, quality)
+  return { "", "[item=" .. item_name .. ",quality=" .. quality .. "] ", prototypes.item[item_name].localised_name }
 end
 
 -- Confirmed empirically: `prototypes.quality` always has at least these two reserved
@@ -115,7 +120,7 @@ function TemporaryRequestEditor.open(player, item_name)
     type = "frame",
     name = FRAME_NAME,
     direction = "vertical",
-    caption = item_prototype.localised_name,
+    caption = title_caption(item_name, "normal"),
   }
   frame.auto_center = true
 
@@ -133,7 +138,7 @@ function TemporaryRequestEditor.open(player, item_name)
       quality_row.add{
         type = "radiobutton",
         name = QUALITY_RADIO_PREFIX .. quality,
-        caption = prototypes.quality[quality].localised_name,
+        caption = { "", "[quality=" .. quality .. "] ", prototypes.quality[quality].localised_name },
         state = (quality == "normal"),
         tags = { quidquid_quality = quality },
       }
@@ -172,13 +177,9 @@ function TemporaryRequestEditor.open(player, item_name)
     name = CONFIRM_BUTTON_NAME,
     caption = { "quidquid.temporary-request-editor-confirm" },
   }
-  button_row.add{
-    type = "button",
-    name = CANCEL_BUTTON_NAME,
-    caption = { "quidquid.temporary-request-editor-cancel" },
-  }
 
   player.opened = frame
+  quantity_row[TEXTFIELD_NAME].focus()
 end
 
 function TemporaryRequestEditor.close(player)
@@ -190,12 +191,14 @@ function TemporaryRequestEditor.close(player)
 end
 
 local function select_quality(player, quality)
-  local content = content_of(player)
-  if content == nil then
+  local frame = get_frame(player)
+  if frame == nil then
     return
   end
+  local content = frame[CONTENT_NAME]
   local item_name = content.tags.quidquid_item_name
   content.tags = { quidquid_item_name = item_name, quidquid_quality = quality }
+  frame.caption = title_caption(item_name, quality)
 
   local quality_row = content[QUALITY_ROW_NAME]
   if quality_row ~= nil then
@@ -330,8 +333,6 @@ function TemporaryRequestEditor.on_gui_click(event)
     set_quantity_controls(content, next_quantity, stack_size)
   elseif element.name == CONFIRM_BUTTON_NAME then
     TemporaryRequestEditor.confirm(player)
-  elseif element.name == CANCEL_BUTTON_NAME then
-    TemporaryRequestEditor.close(player)
   end
 end
 
