@@ -16,6 +16,7 @@ Palette.init(registry)
 -- registered under one of these keys would silently steal the event and break the hotkey.
 local RESERVED_ACTION_KEYS = {
   ["quidquid-toggle"] = true,
+  ["quidquid-clear-source-lock"] = true,
 }
 
 remote.add_interface("quidquid", {
@@ -72,5 +73,6 @@ script.on_event(defines.events.on_player_left_game, for_each_translated_source("
 script.on_event(defines.events.on_string_translated, for_each_translated_source("on_string_translated"))
 
 script.on_event("quidquid-toggle", Palette.on_toggle)
+script.on_event("quidquid-clear-source-lock", Palette.on_clear_source_lock)
 script.on_event(defines.events.on_gui_text_changed, Palette.on_gui_text_changed)
 script.on_event(defines.events.on_gui_closed, Palette.on_gui_closed)

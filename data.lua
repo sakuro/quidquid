@@ -25,4 +25,9 @@ data:extend({
     name = "quidquid-open-factoriopedia",
     key_sequence = "ALT + mouse-button-1",
   },
+  {
+    type = "custom-input",
+    name = "quidquid-clear-source-lock",
+    key_sequence = "mouse-button-1",
+  },
 })

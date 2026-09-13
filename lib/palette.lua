@@ -295,6 +295,33 @@ function Palette.on_action_key(event)
   dispatch(player, element.tags.quidquid_candidate, event.input_name)
 end
 
+function Palette.on_clear_source_lock(event)
+  local element = event.element
+  if element == nil or not element.valid or element.tags.quidquid_close_lock == nil then
+    return
+  end
+  local player = game.get_player(event.player_index)
+  if player == nil then
+    return
+  end
+
+  local content = content_frame_of(player)
+  if content == nil then
+    return
+  end
+
+  local current_text = content[INPUT_ROW_NAME][INPUT_NAME].text
+  content.tags = {}
+  content[INPUT_ROW_NAME][LOCK_LABEL_NAME].visible = false
+  content[INPUT_ROW_NAME][LOCK_CLOSE_NAME].visible = false
+
+  if current_text == "" then
+    clear_candidates(player)
+  else
+    render_candidates(player, Palette.search_all_sources(current_text, player.index))
+  end
+end
+
 function Palette.on_gui_closed(event)
   if event.element == nil or not event.element.valid or event.element.name ~= FRAME_NAME then
     return
