@@ -1,6 +1,10 @@
 -- lib/actions/temporary_request_action.lua
 local TemporaryRequestAction = {}
 
+-- Deliberately a plain string, not a LocalisedString: `find_section_index_by_group`
+-- identifies this mod's section by exact string match, and LuaLogisticSection has no
+-- other stable identifier. Localizing this per-locale would orphan existing sections
+-- whenever a player's locale changed.
 local GROUP = "[virtual-signal=signal-Q] Quidquid: Temporary requests"
 local QUALITY = "normal"
 
