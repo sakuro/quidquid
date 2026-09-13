@@ -5,6 +5,7 @@ local TechnologySource = require("lib.sources.technology_source")
 local OpenFactoriopediaAction = require("lib.actions.open_factoriopedia_action")
 local OpenTechnologyAction = require("lib.actions.open_technology_action")
 local CraftAction = require("lib.actions.craft_action")
+local TemporaryRequestAction = require("lib.actions.temporary_request_action")
 local Palette = require("lib.palette")
 
 local registry = Registry.new(log)
@@ -50,6 +51,7 @@ script.on_event(defines.events.on_tick, function()
   OpenFactoriopediaAction.register()
   OpenTechnologyAction.register()
   CraftAction.register()
+  TemporaryRequestAction.register()
 end)
 
 -- Both ItemSource and TechnologySource need every one of these lifecycle events, but each of
@@ -76,3 +78,15 @@ script.on_event("quidquid-toggle", Palette.on_toggle)
 script.on_event("quidquid-clear-source-lock", Palette.on_clear_source_lock)
 script.on_event(defines.events.on_gui_text_changed, Palette.on_gui_text_changed)
 script.on_event(defines.events.on_gui_closed, Palette.on_gui_closed)
+
+-- Every event that can change what LuaControl:get_item_count sees for a player's
+-- character — confirmed empirically that get_item_count aggregates across all of these
+-- (main inventory, cursor stack, guns, ammo), so a temporary request can become
+-- satisfied via any one of them.
+script.on_event({
+  defines.events.on_player_main_inventory_changed,
+  defines.events.on_player_ammo_inventory_changed,
+  defines.events.on_player_armor_inventory_changed,
+  defines.events.on_player_gun_inventory_changed,
+  defines.events.on_player_cursor_stack_changed,
+}, TemporaryRequestAction.on_inventory_changed)

@@ -30,4 +30,9 @@ data:extend({
     name = "quidquid-clear-source-lock",
     key_sequence = "mouse-button-1",
   },
+  {
+    type = "custom-input",
+    name = "quidquid-temporary-request",
+    key_sequence = "CONTROL + mouse-button-1",
+  },
 })
