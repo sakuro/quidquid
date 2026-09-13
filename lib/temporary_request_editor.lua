@@ -176,7 +176,7 @@ function TemporaryRequestEditor.open(player, item_name)
   button_spacer.style.horizontally_stretchable = true
   button_row.add{
     type = "button",
-    style = "green_button",
+    style = "confirm_button",
     name = CONFIRM_BUTTON_NAME,
     caption = { "quidquid.temporary-request-editor-confirm" },
   }
