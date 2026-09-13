@@ -2,7 +2,7 @@ local TranslationCache = require("lib.sources.translation_cache")
 
 describe("TranslationCache", function()
   before_each(function()
-    storage = {}
+    _G.storage = {}
   end)
 
   describe(":get", function()
