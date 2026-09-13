@@ -235,6 +235,27 @@ function Palette.trigger_prefix(text)
   return text:sub(1, -2)
 end
 
+local function get_locked_source(player)
+  local content = content_frame_of(player)
+  if content == nil then
+    return nil
+  end
+  return content.tags.quidquid_locked_source
+end
+
+local function lock_to_source(player, source)
+  local content = content_frame_of(player)
+  if content == nil then
+    return
+  end
+  content.tags = { quidquid_locked_source = source }
+  content[INPUT_ROW_NAME][INPUT_NAME].text = ""
+  content[INPUT_ROW_NAME][LOCK_LABEL_NAME].caption = source.label
+  content[INPUT_ROW_NAME][LOCK_LABEL_NAME].visible = true
+  content[INPUT_ROW_NAME][LOCK_CLOSE_NAME].visible = true
+  clear_candidates(player)
+end
+
 function Palette.on_gui_text_changed(event)
   if not Palette.is_palette_input(event.element) then
     return
@@ -243,10 +264,21 @@ function Palette.on_gui_text_changed(event)
   if player == nil then
     return
   end
+
+  local locked_source = get_locked_source(player)
+  if locked_source == nil then
+    local prefix = Palette.trigger_prefix(event.text)
+    local source = prefix and registry:source_for_prefix(prefix)
+    if source ~= nil then
+      lock_to_source(player, source)
+      return
+    end
+  end
+
   if event.text == "" then
     clear_candidates(player)
   else
-    render_candidates(player, Palette.search_all_sources(event.text, event.player_index))
+    render_candidates(player, Palette.search_all_sources(event.text, event.player_index, locked_source))
   end
 end
 
