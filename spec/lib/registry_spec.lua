@@ -159,6 +159,26 @@ describe("Registry", function()
     end)
   end)
 
+  describe(":source_for_prefix", function()
+    it("returns the source definition registered for a prefix", function()
+      local registry = Registry.new()
+      registry:register_source({
+        version = 1, id = "items", type = "item", prefixes = {"i", "item"},
+        interface = "my-mod.source-items",
+      })
+
+      local source = registry:source_for_prefix("item")
+
+      assert.are.equal("items", source.id)
+    end)
+
+    it("returns nil for an unregistered prefix", function()
+      local registry = Registry.new()
+
+      assert.is_nil(registry:source_for_prefix("nope"))
+    end)
+  end)
+
   describe(":register_action", function()
     it("accepts a definition with the current contract version", function()
       local registry = Registry.new()
