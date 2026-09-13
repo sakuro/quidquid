@@ -18,7 +18,7 @@ local CONFIRM_BUTTON_NAME = "quidquid-temporary-request-editor-confirm-button"
 local SLIDER_MAX_STACKS = 10
 local RESERVED_QUALITY_NAME = "quality-unknown"
 
-local DEFAULT_FONT_COLOR = {r = 255, g = 255, b = 255}
+local DEFAULT_FONT_COLOR = {r = 0, g = 0, b = 0}
 local OVERFLOW_FONT_COLOR = {r = 255, g = 142, b = 42}
 
 local function get_frame(player)
