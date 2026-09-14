@@ -181,6 +181,7 @@ function TemporaryRequestEditor.open(player, item_name)
     type = "sprite-button",
     name = MINUS_STACK_BUTTON_NAME,
     sprite = "quidquid-temporary-request-editor-stack-minus",
+    tooltip = { "quidquid.temporary-request-editor-stack-minus-tooltip" },
   }
   local textfield = quantity_row.add{
     type = "textfield",
@@ -190,6 +191,7 @@ function TemporaryRequestEditor.open(player, item_name)
     type = "sprite-button",
     name = PLUS_STACK_BUTTON_NAME,
     sprite = "quidquid-temporary-request-editor-stack-plus",
+    tooltip = { "quidquid.temporary-request-editor-stack-plus-tooltip" },
   }
 
   local button_row = content.add{ type = "flow", name = BUTTON_ROW_NAME, direction = "horizontal" }
