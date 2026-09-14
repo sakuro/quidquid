@@ -2,6 +2,8 @@
 local Registry = require("lib.registry")
 local ItemSource = require("lib.sources.item_source")
 local TechnologySource = require("lib.sources.technology_source")
+local SurfaceSource = require("lib.sources.surface_source")
+local OpenRemoteViewAction = require("lib.actions.open_remote_view_action")
 local OpenFactoriopediaAction = require("lib.actions.open_factoriopedia_action")
 local OpenTechnologyAction = require("lib.actions.open_technology_action")
 local CraftAction = require("lib.actions.craft_action")
@@ -50,16 +52,18 @@ script.on_event(defines.events.on_tick, function()
   script.on_event(defines.events.on_tick, nil)
   ItemSource.register()
   TechnologySource.register()
+  SurfaceSource.register()
+  OpenRemoteViewAction.register()
   OpenFactoriopediaAction.register()
   OpenTechnologyAction.register()
   CraftAction.register()
   TemporaryRequestAction.register()
 end)
 
--- Both ItemSource and TechnologySource need every one of these lifecycle events, but each of
+-- All translated sources need these lifecycle events, but each of
 -- script.on_init/on_configuration_changed/on_event accepts only one handler per event for the
 -- whole mod (no stacking) — so a single dispatcher fans each event out to every source.
-local translated_sources = {ItemSource, TechnologySource}
+local translated_sources = {ItemSource, TechnologySource, SurfaceSource}
 
 local function for_each_translated_source(method_name)
   return function(event)
@@ -108,3 +112,9 @@ script.on_event({
   defines.events.on_player_gun_inventory_changed,
   defines.events.on_player_cursor_stack_changed,
 }, TemporaryRequestAction.on_inventory_changed)
+
+-- Track viewed tile positions for surface navigation; discard references when their
+-- player or surface is removed so reused indices cannot inherit old positions.
+script.on_event(defines.events.on_player_changed_position, OpenRemoteViewAction.on_player_changed_position)
+script.on_event(defines.events.on_pre_surface_deleted, OpenRemoteViewAction.on_pre_surface_deleted)
+script.on_event(defines.events.on_player_removed, OpenRemoteViewAction.on_player_removed)
