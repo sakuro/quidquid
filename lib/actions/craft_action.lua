@@ -59,7 +59,7 @@ end
 function CraftAction.register()
   register("craft-1", "quidquid-confirm", "quidquid.craft-1-action", {"quidquid.action-craft-1"}, CraftAction.count_of(1))
   register("craft-5", "quidquid-craft-5", "quidquid.craft-5-action", {"quidquid.action-craft-5"}, CraftAction.count_of(5))
-  register("craft-max", "quidquid-craft-max", "quidquid.craft-max-action", {"quidquid.action-craft-max"}, CraftAction.max_craftable)
+  register("craft-all", "quidquid-craft-all", "quidquid.craft-all-action", {"quidquid.action-craft-all"}, CraftAction.max_craftable)
 end
 
 return CraftAction

@@ -19,7 +19,7 @@ data:extend({
   },
   {
     type = "custom-input",
-    name = "quidquid-craft-max",
+    name = "quidquid-craft-all",
     key_sequence = "SHIFT + mouse-button-1",
   },
   {
