@@ -1,12 +1,24 @@
 -- lib/actions/temporary_request_action.lua
 local TemporaryRequestAction = {}
 
+-- Injected from control.lua (see TemporaryRequestAction.init) rather than required
+-- directly: lib/temporary_request_editor.lua already requires this module (to reuse its
+-- section/slot helpers), and Factorio only allows `require` during control.lua's initial
+-- parsing, not later from inside an event handler like `execute` -- so a mutual
+-- require between the two files isn't resolvable by deferring one side to call time
+-- (confirmed in-game: "Require can't be used outside of control.lua parsing."). Both
+-- modules are required once, up front, in control.lua, which then wires this one in.
+local editor = nil
+
+function TemporaryRequestAction.init(editor_module)
+  editor = editor_module
+end
+
 -- Deliberately a plain string, not a LocalisedString: `find_section_index_by_group`
 -- identifies this mod's section by exact string match, and LuaLogisticSection has no
 -- other stable identifier. Localizing this per-locale would orphan existing sections
 -- whenever a player's locale changed.
 local GROUP = "[virtual-signal=signal-Q] Quidquid: Temporary requests"
-local QUALITY = "normal"
 
 -- pure, testable: `existing_groups` is a plain array of group-name strings already
 -- extracted from real sections by the caller
@@ -43,27 +55,36 @@ function TemporaryRequestAction.combined_target(filters, item_name, quality)
   return 0
 end
 
-local function section_index(point)
-  local groups = {}
-  for i = 1, point.sections_count do
-    groups[i] = point.sections[i].group
-  end
-  return TemporaryRequestAction.find_section_index_by_group(groups, GROUP)
-end
-
-local function temporary_request_section(point)
-  local index = section_index(point)
-  if index ~= nil then
-    return point.sections[index]
-  end
-  return point.add_section(GROUP)
-end
-
-local function logistic_point_for(player)
+function TemporaryRequestAction.logistic_point_for(player)
   if player.character == nil then
     return nil
   end
   return player.character.get_logistic_point(defines.logistic_member_index.character_requester)
+end
+
+-- Returns the shared section, or nil if it doesn't exist yet for this player -- unlike
+-- get_or_create_section, never creates one. Used by callers that only want to look at
+-- existing requests without side effects (e.g. the editor prefilling its fields).
+function TemporaryRequestAction.find_existing_section(point)
+  local groups = {}
+  for i = 1, point.sections_count do
+    groups[i] = point.sections[i].group
+  end
+  local index = TemporaryRequestAction.find_section_index_by_group(groups, GROUP)
+  if index == nil then
+    return nil
+  end
+  return point.sections[index]
+end
+
+-- Creates an empty section as a side effect if none exists yet -- only call this when
+-- about to write a slot. Use find_existing_section for read-only lookups (e.g. prefill).
+function TemporaryRequestAction.get_or_create_section(point)
+  local section = TemporaryRequestAction.find_existing_section(point)
+  if section ~= nil then
+    return section
+  end
+  return point.add_section(GROUP)
 end
 
 local function is_applicable(_selected_candidate, player_index)
@@ -71,7 +92,7 @@ local function is_applicable(_selected_candidate, player_index)
   if player == nil then
     return false
   end
-  return logistic_point_for(player) ~= nil
+  return TemporaryRequestAction.logistic_point_for(player) ~= nil
 end
 
 local function execute(selected_candidate, _params, player_index)
@@ -79,53 +100,18 @@ local function execute(selected_candidate, _params, player_index)
   if player == nil then
     return
   end
-  local point = logistic_point_for(player)
-  if point == nil then
-    return
-  end
-
-  local item_name = selected_candidate.id
-  local item_prototype = prototypes.item[item_name]
-  local stack_size = item_prototype.stack_size
-
-  local already_have = player.character.get_item_count({ name = item_name, quality = QUALITY })
-  if already_have >= stack_size then
-    player.create_local_flying_text({
-      text = { "quidquid.action-temporary-request-already-satisfied" },
-      create_at_cursor = true,
-    })
-    return
-  end
-
-  local section = temporary_request_section(point)
-  local existing = {}
-  for i = 1, section.filters_count do
-    existing[i] = section.get_slot(i)
-  end
-  local slot_index = TemporaryRequestAction.find_slot_index(existing, item_name, QUALITY)
-
-  section.set_slot(slot_index, {
-    value = { type = "item", name = item_name, quality = QUALITY },
-    min = stack_size,
-    max = stack_size,
-  })
-
-  player.create_local_flying_text({
-    text = { "quidquid.action-temporary-request-created", item_name, item_prototype.localised_name, stack_size, stack_size },
-    create_at_cursor = true,
-  })
+  editor.open(player, selected_candidate.id)
 end
 
 local function check_and_clear(player)
-  local point = logistic_point_for(player)
+  local point = TemporaryRequestAction.logistic_point_for(player)
   if point == nil then
     return
   end
-  local index = section_index(point)
-  if index == nil then
+  local section = TemporaryRequestAction.find_existing_section(point)
+  if section == nil then
     return
   end
-  local section = point.sections[index]
 
   local filters = point.filters
   for i = 1, section.filters_count do

@@ -1,4 +1,6 @@
 -- data.lua
+require("prototypes.sprites")
+
 data:extend({
   {
     type = "custom-input",
@@ -34,5 +36,10 @@ data:extend({
     type = "custom-input",
     name = "quidquid-temporary-request",
     key_sequence = "CONTROL + mouse-button-1",
+  },
+  {
+    type = "custom-input",
+    name = "quidquid-temporary-request-editor-confirm",
+    key_sequence = "E",
   },
 })
