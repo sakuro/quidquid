@@ -91,12 +91,17 @@ local function existing_request(player, item_name, quality)
   return { index = index, quantity = existing[index].min }
 end
 
+-- k/M suffixes for typing large quantities (e.g. "5k" -> 5000, "2M" -> 2000000) --
+-- confirmed empirically that evaluate_expression's variable substitution also covers
+-- bare juxtaposition ("5k"), not just explicit multiplication ("5*k").
+local QUANTITY_VARIABLES = { k = 1000, M = 1000000 }
+
 -- helpers.evaluate_expression raises a Lua error for anything it can't parse (not a
 -- typed math expression at all, e.g. "abc") rather than returning a sentinel -- pcall
 -- turns that into a plain nil, same "couldn't parse" outcome TemporaryRequestEditorLogic
 -- .valid_quantity already treats a nil value as.
 local function parse_quantity(text)
-  local ok, result = pcall(helpers.evaluate_expression, text)
+  local ok, result = pcall(helpers.evaluate_expression, text, QUANTITY_VARIABLES)
   if not ok then
     return nil
   end
