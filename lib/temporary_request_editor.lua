@@ -91,8 +91,37 @@ local function existing_request(player, item_name, quality)
   return { index = index, quantity = existing[index].min }
 end
 
+-- helpers.evaluate_expression raises a Lua error for anything it can't parse (not a
+-- typed math expression at all, e.g. "abc") rather than returning a sentinel -- pcall
+-- turns that into a plain nil, same "couldn't parse" outcome TemporaryRequestEditorLogic
+-- .valid_quantity already treats a nil value as.
+local function parse_quantity(text)
+  local ok, result = pcall(helpers.evaluate_expression, text)
+  if not ok then
+    return nil
+  end
+  return result
+end
+
+-- Re-applies the textfield's error/normal style (and the per-instance overrides that a
+-- style switch wipes) and the Confirm button's enabled state, based on whether the
+-- textfield's current text currently parses to a valid quantity. Called after every
+-- programmatic or player-driven change to the textfield's text.
+local function refresh_quantity_validity(content)
+  local textfield = content[QUANTITY_ROW_NAME][TEXTFIELD_NAME]
+  local valid = TemporaryRequestEditorLogic.valid_quantity(parse_quantity(textfield.text))
+
+  textfield.style = valid and "textbox" or "invalid_value_textfield"
+  textfield.style.font_color = DEFAULT_FONT_COLOR
+  textfield.style.horizontal_align = "center"
+  textfield.style.width = 100
+
+  content[BUTTON_ROW_NAME][CONFIRM_BUTTON_NAME].enabled = valid
+end
+
 local function set_quantity_controls(content, quantity)
   content[QUANTITY_ROW_NAME][TEXTFIELD_NAME].text = tostring(quantity)
+  refresh_quantity_validity(content)
 end
 
 function TemporaryRequestEditor.open(player, item_name)
@@ -151,19 +180,12 @@ function TemporaryRequestEditor.open(player, item_name)
   local textfield = quantity_row.add{
     type = "textfield",
     name = TEXTFIELD_NAME,
-    numeric = true,
-    allow_decimal = true,
-    allow_negative = false,
   }
-  textfield.style.font_color = DEFAULT_FONT_COLOR
-  textfield.style.horizontal_align = "center"
-  textfield.style.width = 100
   quantity_row.add{
     type = "sprite-button",
     name = PLUS_STACK_BUTTON_NAME,
     sprite = "quidquid-temporary-request-editor-stack-plus",
   }
-  set_quantity_controls(content, quantity)
 
   local button_row = content.add{ type = "flow", name = BUTTON_ROW_NAME, direction = "horizontal" }
   local button_spacer = button_row.add{ type = "empty-widget" }
@@ -174,6 +196,8 @@ function TemporaryRequestEditor.open(player, item_name)
     name = CONFIRM_BUTTON_NAME,
     caption = { "quidquid.temporary-request-editor-confirm" },
   }
+
+  set_quantity_controls(content, quantity)
 
   player.opened = frame
   textfield.focus()
@@ -230,7 +254,12 @@ function TemporaryRequestEditor.confirm(player)
   local item_name = content.tags.quidquid_item_name
   local quality = content.tags.quidquid_quality
   local item_prototype = prototypes.item[item_name]
-  local quantity = tonumber(content[QUANTITY_ROW_NAME][TEXTFIELD_NAME].text) or 0
+  local quantity = parse_quantity(content[QUANTITY_ROW_NAME][TEXTFIELD_NAME].text)
+  -- The Confirm button is disabled whenever this is false, but the "E" shortcut
+  -- (on_confirm_key) bypasses button state entirely, so this guard is still needed here.
+  if not TemporaryRequestEditorLogic.valid_quantity(quantity) then
+    return
+  end
 
   TemporaryRequestEditor.close(player)
 
@@ -308,7 +337,7 @@ function TemporaryRequestEditor.on_gui_click(event)
     local item_name = content.tags.quidquid_item_name
     local stack_size = prototypes.item[item_name].stack_size
     local textfield = content[QUANTITY_ROW_NAME][TEXTFIELD_NAME]
-    local current = tonumber(textfield.text) or 0
+    local current = parse_quantity(textfield.text) or 0
     local next_quantity
     if element.name == PLUS_STACK_BUTTON_NAME then
       next_quantity = TemporaryRequestEditorLogic.next_stack_multiple(current, stack_size)
@@ -319,6 +348,22 @@ function TemporaryRequestEditor.on_gui_click(event)
   elseif element.name == CONFIRM_BUTTON_NAME then
     TemporaryRequestEditor.confirm(player)
   end
+end
+
+function TemporaryRequestEditor.on_gui_text_changed(event)
+  local element = event.element
+  if element == nil or not element.valid or element.name ~= TEXTFIELD_NAME then
+    return
+  end
+  local player = game.get_player(event.player_index)
+  if player == nil then
+    return
+  end
+  local content = content_of(player)
+  if content == nil then
+    return
+  end
+  refresh_quantity_validity(content)
 end
 
 function TemporaryRequestEditor.on_gui_closed(event)

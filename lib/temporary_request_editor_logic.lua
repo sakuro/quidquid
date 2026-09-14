@@ -30,4 +30,19 @@ function TemporaryRequestEditorLogic.decide_confirm_action(quantity, already_hav
   return "set"
 end
 
+-- pure, testable: decides whether a parsed quantity value (the result of evaluating
+-- whatever the player typed, or nil if that failed to parse at all) is acceptable as a
+-- temporary-request quantity -- a non-negative whole number. Doesn't know about GUI,
+-- helpers.evaluate_expression, or textfield styles at all -- the caller maps this to the
+-- error-background/Confirm-enabled state.
+function TemporaryRequestEditorLogic.valid_quantity(value)
+  if value == nil then
+    return false
+  end
+  if value ~= math.floor(value) then
+    return false
+  end
+  return value >= 0
+end
+
 return TemporaryRequestEditorLogic

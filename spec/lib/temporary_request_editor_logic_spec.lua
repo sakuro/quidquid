@@ -58,4 +58,26 @@ describe("TemporaryRequestEditorLogic", function()
       assert.are.equal("set", TemporaryRequestEditorLogic.decide_confirm_action(50, 10))
     end)
   end)
+
+  describe(".valid_quantity", function()
+    it("rejects nil (failed to parse at all)", function()
+      assert.is_false(TemporaryRequestEditorLogic.valid_quantity(nil))
+    end)
+
+    it("rejects a non-whole number", function()
+      assert.is_false(TemporaryRequestEditorLogic.valid_quantity(1.5))
+    end)
+
+    it("rejects a negative whole number", function()
+      assert.is_false(TemporaryRequestEditorLogic.valid_quantity(-1))
+    end)
+
+    it("accepts zero", function()
+      assert.is_true(TemporaryRequestEditorLogic.valid_quantity(0))
+    end)
+
+    it("accepts a positive whole number", function()
+      assert.is_true(TemporaryRequestEditorLogic.valid_quantity(200))
+    end)
+  end)
 end)
