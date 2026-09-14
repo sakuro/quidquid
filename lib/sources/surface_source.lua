@@ -17,9 +17,26 @@ end
 
 local translation = TranslatedPrototypeSource.new("surfaces", collect_planets, SOURCE_LABEL)
 
-for _, method in ipairs({"on_init", "on_configuration_changed", "on_player_joined_game",
-  "on_player_locale_changed", "on_player_left_game", "on_string_translated"}) do
-  SurfaceSource[method] = function(event) translation[method](translation, event) end
+function SurfaceSource.on_string_translated(event)
+  translation:on_string_translated(event)
+end
+
+function SurfaceSource.on_player_joined_game(event)
+  translation:on_player_joined_game(event)
+end
+
+SurfaceSource.on_player_locale_changed = SurfaceSource.on_player_joined_game
+
+function SurfaceSource.on_player_left_game(event)
+  translation:on_player_left_game(event)
+end
+
+function SurfaceSource.on_init()
+  translation:on_init()
+end
+
+function SurfaceSource.on_configuration_changed()
+  translation:on_configuration_changed()
 end
 
 local function search(query, player_index, _context)
