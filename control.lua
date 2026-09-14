@@ -5,11 +5,14 @@ local TechnologySource = require("lib.sources.technology_source")
 local OpenFactoriopediaAction = require("lib.actions.open_factoriopedia_action")
 local OpenTechnologyAction = require("lib.actions.open_technology_action")
 local CraftAction = require("lib.actions.craft_action")
+local TemporaryRequestAction = require("lib.actions.temporary_request_action")
+local TemporaryRequestEditor = require("lib.temporary_request_editor")
 local Palette = require("lib.palette")
 
 local registry = Registry.new(log)
 
 Palette.init(registry)
+TemporaryRequestAction.init(TemporaryRequestEditor)
 
 -- These custom-input names are quidquid's own hotkeys, wired to fixed handlers below.
 -- script.on_event has last-registration-wins, no-stacking semantics, so an action that
@@ -50,6 +53,7 @@ script.on_event(defines.events.on_tick, function()
   OpenFactoriopediaAction.register()
   OpenTechnologyAction.register()
   CraftAction.register()
+  TemporaryRequestAction.register()
 end)
 
 -- Both ItemSource and TechnologySource need every one of these lifecycle events, but each of
@@ -74,5 +78,33 @@ script.on_event(defines.events.on_string_translated, for_each_translated_source(
 
 script.on_event("quidquid-toggle", Palette.on_toggle)
 script.on_event("quidquid-clear-source-lock", Palette.on_clear_source_lock)
-script.on_event(defines.events.on_gui_text_changed, Palette.on_gui_text_changed)
-script.on_event(defines.events.on_gui_closed, Palette.on_gui_closed)
+
+-- Palette and TemporaryRequestEditor each own a disjoint set of GUI elements and both
+-- already no-op for events aimed at elements they don't recognize (checked by name/tag
+-- at the top of each handler) — script.on_event only accepts one handler per event per
+-- mod, so both are chained from a single registration rather than one silently
+-- replacing the other.
+script.on_event(defines.events.on_gui_text_changed, function(event)
+  Palette.on_gui_text_changed(event)
+  TemporaryRequestEditor.on_gui_text_changed(event)
+end)
+script.on_event(defines.events.on_gui_closed, function(event)
+  Palette.on_gui_closed(event)
+  TemporaryRequestEditor.on_gui_closed(event)
+end)
+
+script.on_event(defines.events.on_gui_click, TemporaryRequestEditor.on_gui_click)
+script.on_event(defines.events.on_gui_checked_state_changed, TemporaryRequestEditor.on_gui_checked_state_changed)
+script.on_event("quidquid-temporary-request-editor-confirm", TemporaryRequestEditor.on_confirm_key)
+
+-- Every event that can change what LuaControl:get_item_count sees for a player's
+-- character — confirmed empirically that get_item_count aggregates across all of these
+-- (main inventory, cursor stack, guns, ammo), so a temporary request can become
+-- satisfied via any one of them.
+script.on_event({
+  defines.events.on_player_main_inventory_changed,
+  defines.events.on_player_ammo_inventory_changed,
+  defines.events.on_player_armor_inventory_changed,
+  defines.events.on_player_gun_inventory_changed,
+  defines.events.on_player_cursor_stack_changed,
+}, TemporaryRequestAction.on_inventory_changed)

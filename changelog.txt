@@ -4,3 +4,4 @@ Version: Unreleased
     - Add Ctrl+K command palette for searching and acting on items (open in Factoriopedia)
     - Search and act on technologies from the command palette (open technology screen)
     - Type a recognized prefix and a space (e.g. "item ") to search only that category, until cleared
+    - Request a temporary personal-logistics delivery for the selected item via an editor window (type a quantity or expression, with +/-Stack buttons to round to the nearest stack, and a quality picker when the Quality system is active); it clears itself automatically once fulfilled
