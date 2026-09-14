@@ -8,6 +8,14 @@ function TemporaryRequestEditorLogic.next_stack_multiple(current_value, stack_si
   return stack_size * (math.floor(current_value / stack_size) + 1)
 end
 
+-- pure, testable: rounds down to the previous multiple of stack_size, strictly less
+-- than current_value even when current_value is already an exact multiple -- the mirror
+-- of next_stack_multiple. Floored at 0 (a temporary request can't have a negative
+-- quantity; 0 is meaningful on its own, as the "remove this request" case).
+function TemporaryRequestEditorLogic.previous_stack_multiple(current_value, stack_size)
+  return math.max(0, stack_size * (math.ceil(current_value / stack_size) - 1))
+end
+
 -- pure, testable: decides what Confirm should do, given the entered quantity and how
 -- many the player currently holds of the selected item+quality. Doesn't know about GUI
 -- or LuaLogisticSection at all -- the caller maps each outcome to the actual

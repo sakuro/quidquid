@@ -9,17 +9,15 @@ local CONTENT_NAME = "quidquid-temporary-request-editor-content"
 local QUALITY_ROW_NAME = "quidquid-temporary-request-editor-quality-row"
 local QUALITY_RADIO_PREFIX = "quidquid-temporary-request-editor-quality-"
 local QUANTITY_ROW_NAME = "quidquid-temporary-request-editor-quantity-row"
-local SLIDER_NAME = "quidquid-temporary-request-editor-slider"
 local TEXTFIELD_NAME = "quidquid-temporary-request-editor-textfield"
-local STACK_BUTTON_NAME = "quidquid-temporary-request-editor-stack-button"
+local MINUS_STACK_BUTTON_NAME = "quidquid-temporary-request-editor-minus-stack-button"
+local PLUS_STACK_BUTTON_NAME = "quidquid-temporary-request-editor-plus-stack-button"
 local BUTTON_ROW_NAME = "quidquid-temporary-request-editor-button-row"
 local CONFIRM_BUTTON_NAME = "quidquid-temporary-request-editor-confirm-button"
 
-local SLIDER_MAX_STACKS = 10
 local RESERVED_QUALITY_NAME = "quality-unknown"
 
 local DEFAULT_FONT_COLOR = {r = 0, g = 0, b = 0}
-local OVERFLOW_FONT_COLOR = {r = 255, g = 142, b = 42}
 
 local function get_frame(player)
   return player.gui.screen[FRAME_NAME]
@@ -93,17 +91,8 @@ local function existing_request(player, item_name, quality)
   return { index = index, quantity = existing[index].min }
 end
 
-local function set_quantity_controls(content, quantity, stack_size)
-  local slider = content[QUANTITY_ROW_NAME][SLIDER_NAME]
-  local textfield = content[QUANTITY_ROW_NAME][TEXTFIELD_NAME]
-  textfield.text = tostring(quantity)
-  if quantity > slider.get_slider_maximum() then
-    slider.slider_value = slider.get_slider_maximum()
-    textfield.style.font_color = OVERFLOW_FONT_COLOR
-  else
-    slider.slider_value = quantity
-    textfield.style.font_color = DEFAULT_FONT_COLOR
-  end
+local function set_quantity_controls(content, quantity)
+  content[QUANTITY_ROW_NAME][TEXTFIELD_NAME].text = tostring(quantity)
 end
 
 function TemporaryRequestEditor.open(player, item_name)
@@ -149,27 +138,32 @@ function TemporaryRequestEditor.open(player, item_name)
   local quantity = found.quantity or stack_size
 
   local quantity_row = content.add{ type = "flow", name = QUANTITY_ROW_NAME, direction = "horizontal" }
+  -- vertical_align on a flow centers its children within the row's cross-axis, unlike
+  -- vertical_align on a single widget (which only centers *that widget's own* inner
+  -- content, e.g. its text -- confirmed via the LuaStyle docs after that alone didn't
+  -- move the textfield itself).
+  quantity_row.style.vertical_align = "center"
   quantity_row.add{
-    type = "slider",
-    name = SLIDER_NAME,
-    minimum_value = 0,
-    maximum_value = SLIDER_MAX_STACKS * stack_size,
-    value_step = stack_size,
-    discrete_values = true,
+    type = "sprite-button",
+    name = MINUS_STACK_BUTTON_NAME,
+    sprite = "quidquid-temporary-request-editor-stack-minus",
   }
-  quantity_row.add{
+  local textfield = quantity_row.add{
     type = "textfield",
     name = TEXTFIELD_NAME,
     numeric = true,
-    allow_decimal = false,
+    allow_decimal = true,
     allow_negative = false,
   }
+  textfield.style.font_color = DEFAULT_FONT_COLOR
+  textfield.style.horizontal_align = "center"
+  textfield.style.width = 100
   quantity_row.add{
-    type = "button",
-    name = STACK_BUTTON_NAME,
-    caption = { "quidquid.temporary-request-editor-stack-button" },
+    type = "sprite-button",
+    name = PLUS_STACK_BUTTON_NAME,
+    sprite = "quidquid-temporary-request-editor-stack-plus",
   }
-  set_quantity_controls(content, quantity, stack_size)
+  set_quantity_controls(content, quantity)
 
   local button_row = content.add{ type = "flow", name = BUTTON_ROW_NAME, direction = "horizontal" }
   local button_spacer = button_row.add{ type = "empty-widget" }
@@ -182,7 +176,7 @@ function TemporaryRequestEditor.open(player, item_name)
   }
 
   player.opened = frame
-  quantity_row[TEXTFIELD_NAME].focus()
+  textfield.focus()
 end
 
 function TemporaryRequestEditor.close(player)
@@ -213,7 +207,7 @@ local function select_quality(player, quality)
   local item_prototype = prototypes.item[item_name]
   local found = existing_request(player, item_name, quality)
   local quantity = found.quantity or item_prototype.stack_size
-  set_quantity_controls(content, quantity, item_prototype.stack_size)
+  set_quantity_controls(content, quantity)
 end
 
 function TemporaryRequestEditor.on_gui_checked_state_changed(event)
@@ -226,32 +220,6 @@ function TemporaryRequestEditor.on_gui_checked_state_changed(event)
     return
   end
   select_quality(player, element.tags.quidquid_quality)
-end
-
-function TemporaryRequestEditor.on_gui_value_changed(event)
-  local element = event.element
-  if element == nil or not element.valid or element.name ~= SLIDER_NAME then
-    return
-  end
-  local textfield = element.parent[TEXTFIELD_NAME]
-  textfield.text = tostring(element.slider_value)
-  textfield.style.font_color = DEFAULT_FONT_COLOR
-end
-
-function TemporaryRequestEditor.on_gui_text_changed(event)
-  local element = event.element
-  if element == nil or not element.valid or element.name ~= TEXTFIELD_NAME then
-    return
-  end
-  local quantity = tonumber(element.text) or 0
-  local slider = element.parent[SLIDER_NAME]
-  if quantity > slider.get_slider_maximum() then
-    slider.slider_value = slider.get_slider_maximum()
-    element.style.font_color = OVERFLOW_FONT_COLOR
-  else
-    slider.slider_value = quantity
-    element.style.font_color = DEFAULT_FONT_COLOR
-  end
 end
 
 function TemporaryRequestEditor.confirm(player)
@@ -293,6 +261,7 @@ function TemporaryRequestEditor.confirm(player)
   end
 
   local section = TemporaryRequestAction.find_existing_section(point)
+  local cleared = false
   if section ~= nil then
     local existing = {}
     for i = 1, section.filters_count do
@@ -301,7 +270,15 @@ function TemporaryRequestEditor.confirm(player)
     local slot_index = TemporaryRequestAction.find_slot_index(existing, item_name, quality)
     if slot_index <= #existing then
       section.clear_slot(slot_index)
+      cleared = true
     end
+  end
+
+  -- Quantity 0 with nothing to remove is a genuine no-op -- unlike "already satisfied",
+  -- there's no useful outcome to report, so stay silent rather than claim a removal that
+  -- didn't happen.
+  if action == "remove_zero" and not cleared then
+    return
   end
 
   local message_key = (action == "remove_zero")
@@ -323,7 +300,7 @@ function TemporaryRequestEditor.on_gui_click(event)
     return
   end
 
-  if element.name == STACK_BUTTON_NAME then
+  if element.name == MINUS_STACK_BUTTON_NAME or element.name == PLUS_STACK_BUTTON_NAME then
     local content = content_of(player)
     if content == nil then
       return
@@ -332,8 +309,13 @@ function TemporaryRequestEditor.on_gui_click(event)
     local stack_size = prototypes.item[item_name].stack_size
     local textfield = content[QUANTITY_ROW_NAME][TEXTFIELD_NAME]
     local current = tonumber(textfield.text) or 0
-    local next_quantity = TemporaryRequestEditorLogic.next_stack_multiple(current, stack_size)
-    set_quantity_controls(content, next_quantity, stack_size)
+    local next_quantity
+    if element.name == PLUS_STACK_BUTTON_NAME then
+      next_quantity = TemporaryRequestEditorLogic.next_stack_multiple(current, stack_size)
+    else
+      next_quantity = TemporaryRequestEditorLogic.previous_stack_multiple(current, stack_size)
+    end
+    set_quantity_controls(content, next_quantity)
   elseif element.name == CONFIRM_BUTTON_NAME then
     TemporaryRequestEditor.confirm(player)
   end
@@ -350,7 +332,7 @@ function TemporaryRequestEditor.on_gui_closed(event)
   TemporaryRequestEditor.close(player)
 end
 
--- Wired to the "E" custom-input so it actually does what green_button's own baked-in
+-- Wired to the "E" custom-input so it actually does what confirm_button's own baked-in
 -- tooltip ("Confirm (E)") promises. confirm() already no-ops safely if this player's
 -- editor isn't open (content_of returns nil), so no extra guard is needed here.
 function TemporaryRequestEditor.on_confirm_key(event)

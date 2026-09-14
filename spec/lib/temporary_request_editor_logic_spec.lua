@@ -19,6 +19,24 @@ describe("TemporaryRequestEditorLogic", function()
     end)
   end)
 
+  describe(".previous_stack_multiple", function()
+    it("rounds down to zero when below a single stack", function()
+      assert.are.equal(0, TemporaryRequestEditorLogic.previous_stack_multiple(30, 50))
+    end)
+
+    it("recedes to the previous multiple when already at an exact multiple", function()
+      assert.are.equal(0, TemporaryRequestEditorLogic.previous_stack_multiple(50, 50))
+    end)
+
+    it("rounds down from a value between two multiples", function()
+      assert.are.equal(50, TemporaryRequestEditorLogic.previous_stack_multiple(80, 50))
+    end)
+
+    it("stays at zero when already at zero", function()
+      assert.are.equal(0, TemporaryRequestEditorLogic.previous_stack_multiple(0, 50))
+    end)
+  end)
+
   describe(".decide_confirm_action", function()
     it("returns remove_zero when the entered quantity is 0", function()
       assert.are.equal("remove_zero", TemporaryRequestEditorLogic.decide_confirm_action(0, 0))

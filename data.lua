@@ -1,4 +1,6 @@
 -- data.lua
+require("prototypes.sprites")
+
 data:extend({
   {
     type = "custom-input",
