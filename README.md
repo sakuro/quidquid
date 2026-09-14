@@ -2,35 +2,88 @@
 
 [![Downloads](https://img.shields.io/badge/dynamic/json.svg?label=Downloads&url=https%3A%2F%2Fmods.factorio.com%2Fapi%2Fmods%2Fquidquid&query=%24.downloads_count)](https://mods.factorio.com/mod/quidquid)
 
-Generated from [sakuro/factorio-mod-scaffold](https://github.com/sakuro/factorio-mod-scaffold)
+Quidquid is a command palette for Factorio. Open it with `Ctrl/Cmd + K` to
+search available entries and perform actions on the selected result.
 
-## Surface search
+## Features
 
-Open the palette with **Ctrl/Command+K** and search for a planet or space platform by name.
-Type `s ` or `surface ` first to restrict the search to surfaces. Planet names can
-also be searched in your language once translations are ready.
+- Fuzzy search with optional source prefixes
+- Keyboard- and mouse-driven actions
+- Source-specific actions for search results
+- Temporary personal logistics requests
+- Position history for remote surface views
 
-- **Left click:** open remote view, restoring your last recorded position on that
-  surface. On a first visit, use the platform hub or your force's spawn position.
-- **Ctrl/Command + left click:** open the temporary
-  request editor for an item.
-- **Alt + left click:** open the planet's Factoriopedia entry, or the shared space
-  platform entry for a platform.
+## Usage
 
-Generated planetary surfaces are searchable regardless of research progress, like
-items and technologies. Locked planets can be opened in Factoriopedia; remote view
-requires your force to have unlocked the planet. Ungenerated surfaces are not
-included. Platforms
-are included when owned by your force or when their owner considers your force a
-friend; cease-fire alone does not qualify. Foreign platforms show their owner's
-force name. Enabling hidden results does not bypass these eligibility rules.
+Press `Ctrl/Cmd + K` to open the command palette.
 
-Position history starts when this version of the mod is installed and is retained
-in the save. Positions are recorded when the player's tile position changes and
-when opening remote view through the palette.
+Type a search query to find matching entries. A recognized prefix followed by a
+space restricts the search to that source. For example:
 
-### Known limitation
+- `item `
+- `technology `
+- `surface `
 
-Space locations such as Solar System Edge (`solar-system-edge`) are not included
-in Surface search. They are `space-location` entries rather than surfaces; only
-their generated planetary surfaces and space-platform surfaces can be listed.
+Select a result and use the available action keys shown in the palette.
+
+## Sources and actions
+
+### Items
+
+Search for items by name.
+
+| Key | Action |
+| --- | --- |
+| Left click | Craft 1 |
+| Middle click | Craft 5 |
+| `Shift` + left click | Craft all |
+| `Ctrl/Cmd` + left click | Create a temporary logistics request |
+| `Alt` + left click | Open in Factoriopedia |
+
+### Technologies
+
+Search for technologies by name.
+
+| Key | Action |
+| --- | --- |
+| Left click | Open the technology screen |
+
+### Surfaces
+
+Search for generated planets and space platforms available to your force.
+
+| Key | Action |
+| --- | --- |
+| Left click | Open in remote view |
+| `Alt` + left click | Open in Factoriopedia |
+
+## Temporary logistics requests
+
+Select an item, enter the desired quantity, and confirm the request.
+
+Requests are stored separately from existing personal logistics requests and
+are removed automatically when the requested amount is available in the
+player's inventory.
+
+The request editor also supports stack-based quantity adjustment and item
+quality selection when the Quality system is available.
+
+## Surface search limitations
+
+- Ungenerated surfaces are not included.
+- Remote view requires the planet to be unlocked by your force.
+- Locked planets can still be opened in Factoriopedia.
+- Space platforms are included when owned by your force or when their owner
+  considers your force a friend.
+- Space locations such as Solar System Edge are not included because they are
+  not surfaces.
+
+## Settings
+
+### Include hidden entries
+
+Show hidden or internal entries in search results.
+
+## License
+
+MIT License
