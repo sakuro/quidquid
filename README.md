@@ -6,12 +6,14 @@ Generated from [sakuro/factorio-mod-scaffold](https://github.com/sakuro/factorio
 
 ## Surface search
 
-Open the palette with **Ctrl+K** and search for a planet or space platform by name.
+Open the palette with **Ctrl/Command+K** and search for a planet or space platform by name.
 Type `s ` or `surface ` first to restrict the search to surfaces. Planet names can
 also be searched in your language once translations are ready.
 
 - **Left click:** open remote view, restoring your last recorded position on that
   surface. On a first visit, use the platform hub or your force's spawn position.
+- **Ctrl/Command + left click:** open the temporary
+  request editor for an item.
 - **Alt + left click:** open the planet's Factoriopedia entry, or the shared space
   platform entry for a platform.
 

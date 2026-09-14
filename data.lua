@@ -5,7 +5,7 @@ data:extend({
   {
     type = "custom-input",
     name = "quidquid-toggle",
-    key_sequence = "CONTROL + K",
+    key_sequence = "COMMAND + K",
   },
   {
     type = "custom-input",
@@ -35,7 +35,7 @@ data:extend({
   {
     type = "custom-input",
     name = "quidquid-temporary-request",
-    key_sequence = "CONTROL + mouse-button-1",
+    key_sequence = "COMMAND + mouse-button-1",
   },
   {
     type = "custom-input",
