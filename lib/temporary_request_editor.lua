@@ -122,6 +122,10 @@ local function refresh_quantity_validity(content)
   textfield.style.width = 100
 
   content[BUTTON_ROW_NAME][CONFIRM_BUTTON_NAME].enabled = valid
+  -- Disabled alongside Confirm rather than falling back to treating invalid text as 0:
+  -- silently overwriting whatever the player typed would discard it without asking.
+  content[QUANTITY_ROW_NAME][MINUS_STACK_BUTTON_NAME].enabled = valid
+  content[QUANTITY_ROW_NAME][PLUS_STACK_BUTTON_NAME].enabled = valid
 end
 
 local function set_quantity_controls(content, quantity)
