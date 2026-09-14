@@ -15,7 +15,10 @@ also be searched in your language once translations are ready.
 - **Alt + left click:** open the planet's Factoriopedia entry, or the shared space
   platform entry for a platform.
 
-Only generated planetary surfaces unlocked by your force are included. Platforms
+Generated planetary surfaces are searchable regardless of research progress, like
+items and technologies. Locked planets can be opened in Factoriopedia; remote view
+requires your force to have unlocked the planet. Ungenerated surfaces are not
+included. Platforms
 are included when owned by your force or when their owner considers your force a
 friend; cease-fire alone does not qualify. Foreign platforms show their owner's
 force name. Enabling hidden results does not bypass these eligibility rules.

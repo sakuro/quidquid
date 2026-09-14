@@ -33,6 +33,14 @@ function SurfaceAccess.resolve(candidate, player)
   if surface == nil then return nil end
   local descriptor = SurfaceAccess.describe(surface, player)
   if descriptor ~= nil and SurfaceLogic.is_visible(descriptor, player.mod_settings["quidquid-include-hidden"].value) then
+    return surface, descriptor
+  end
+  return nil
+end
+
+function SurfaceAccess.resolve_remote_view(candidate, player)
+  local surface, descriptor = SurfaceAccess.resolve(candidate, player)
+  if surface ~= nil and SurfaceLogic.can_open_remote_view(descriptor, player.mod_settings["quidquid-include-hidden"].value) then
     return surface
   end
   return nil

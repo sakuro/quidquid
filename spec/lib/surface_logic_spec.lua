@@ -16,9 +16,12 @@ describe("SurfaceLogic", function()
     return value
   end
 
-  it("never exposes locked planets even when hidden entries are included", function()
+  it("shows locked planets but prevents opening them in remote view", function()
     for _, include_hidden in ipairs({false, true}) do
-      assert.is_false(SurfaceLogic.is_visible(planet{unlocked = false}, include_hidden))
+      assert.is_true(SurfaceLogic.is_visible(planet{unlocked = false}, include_hidden))
+      assert.are.equal(1, #SurfaceLogic.build_candidates("nauv", {planet{unlocked = false}}, include_hidden))
+      assert.is_false(SurfaceLogic.can_open_remote_view(planet{unlocked = false}, include_hidden))
+      assert.is_true(SurfaceLogic.can_open_remote_view(planet(), include_hidden))
     end
   end)
 
@@ -28,6 +31,15 @@ describe("SurfaceLogic", function()
       assert.is_true(SurfaceLogic.is_visible(platform(), include_hidden))
       assert.is_true(SurfaceLogic.is_visible(platform{own = false, friendly = true}, include_hidden))
     end
+  end)
+
+  it("applies ownership and hidden rules to remote view too", function()
+    assert.is_false(SurfaceLogic.can_open_remote_view(platform{own = false}, true))
+    assert.is_false(SurfaceLogic.can_open_remote_view(platform{hidden = true}, false))
+    assert.is_true(SurfaceLogic.can_open_remote_view(platform{hidden = true}, true))
+    assert.is_true(SurfaceLogic.can_open_remote_view(platform{own = false, friendly = true}, false))
+    assert.is_false(SurfaceLogic.can_open_remote_view(planet{hidden = true}, false))
+    assert.is_false(SurfaceLogic.can_open_remote_view(planet{hidden = true, unlocked = false}, true))
   end)
 
   it("applies the hidden preference only to accessible surfaces", function()

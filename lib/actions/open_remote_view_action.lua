@@ -27,13 +27,13 @@ end
 
 local function is_applicable(candidate, player_index)
   local player = game.get_player(player_index)
-  return player ~= nil and SurfaceAccess.resolve(candidate, player) ~= nil
+  return player ~= nil and SurfaceAccess.resolve_remote_view(candidate, player) ~= nil
 end
 
 local function execute(candidate, _params, player_index)
   local player = game.get_player(player_index)
   if player == nil then return end
-  local surface = SurfaceAccess.resolve(candidate, player)
+  local surface = SurfaceAccess.resolve_remote_view(candidate, player)
   if surface == nil then return end
   remember(player)
   local platform = surface.platform
