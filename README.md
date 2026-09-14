@@ -26,3 +26,9 @@ force name. Enabling hidden results does not bypass these eligibility rules.
 Position history starts when this version of the mod is installed and is retained
 in the save. Positions are recorded when the player's tile position changes and
 when opening remote view through the palette.
+
+### Known limitation
+
+Space locations such as Solar System Edge (`solar-system-edge`) are not included
+in Surface search. They are `space-location` entries rather than surfaces; only
+their generated planetary surfaces and space-platform surfaces can be listed.
