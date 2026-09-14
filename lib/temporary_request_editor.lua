@@ -114,7 +114,8 @@ end
 -- programmatic or player-driven change to the textfield's text.
 local function refresh_quantity_validity(content)
   local textfield = content[QUANTITY_ROW_NAME][TEXTFIELD_NAME]
-  local valid = TemporaryRequestEditorLogic.valid_quantity(parse_quantity(textfield.text))
+  local value = parse_quantity(textfield.text)
+  local valid = TemporaryRequestEditorLogic.valid_quantity(value)
 
   textfield.style = valid and "textbox" or "invalid_value_textfield"
   textfield.style.font_color = DEFAULT_FONT_COLOR
@@ -124,7 +125,9 @@ local function refresh_quantity_validity(content)
   content[BUTTON_ROW_NAME][CONFIRM_BUTTON_NAME].enabled = valid
   -- Disabled alongside Confirm rather than falling back to treating invalid text as 0:
   -- silently overwriting whatever the player typed would discard it without asking.
-  content[QUANTITY_ROW_NAME][MINUS_STACK_BUTTON_NAME].enabled = valid
+  -- -Stack is additionally disabled at exactly 0 -- previous_stack_multiple(0, _) is
+  -- already floored at 0, so pressing it there would be a visible no-op.
+  content[QUANTITY_ROW_NAME][MINUS_STACK_BUTTON_NAME].enabled = valid and value > 0
   content[QUANTITY_ROW_NAME][PLUS_STACK_BUTTON_NAME].enabled = valid
 end
 
