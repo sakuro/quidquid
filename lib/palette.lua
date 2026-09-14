@@ -87,6 +87,16 @@ end
 -- is its own locale key (`action-<id>-hint`, one per registered action, added
 -- alongside that action's own `action-<id>` label), looked up here by id rather than
 -- constructed inline. Keys are sorted for a stable, predictable tooltip order.
+--
+-- Each action's block is its own nested LocalisedString rather than four entries
+-- flattened into the top-level array: a LocalisedString allows at most 20 parameters
+-- per nesting level, and a candidate with enough applicable actions blew past that
+-- flattened (each action contributing 4 slots plus a separator). Nesting resets the
+-- budget at each level, so the top level only spends one slot per action.
+local function candidate_hint(definition)
+  return {"", definition.label, " (", {"quidquid.action-" .. definition.id .. "-hint"}, ")"}
+end
+
 local function candidate_tooltip(candidate, player_index)
   local resolved = registry:resolve_actions(candidate, player_index, RemoteCaller)
   local keys = {}
@@ -99,12 +109,11 @@ local function candidate_tooltip(candidate, player_index)
   table.sort(keys)
 
   local tooltip = {""}
-  for _, key in ipairs(keys) do
-    local definition = resolved[key]
-    table.insert(tooltip, definition.label)
-    table.insert(tooltip, " (")
-    table.insert(tooltip, {"quidquid.action-" .. definition.id .. "-hint"})
-    table.insert(tooltip, ")\n")
+  for index, key in ipairs(keys) do
+    if index > 1 then
+      table.insert(tooltip, "\n")
+    end
+    table.insert(tooltip, candidate_hint(resolved[key]))
   end
   return tooltip
 end
