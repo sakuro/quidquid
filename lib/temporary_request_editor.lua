@@ -160,6 +160,10 @@ function TemporaryRequestEditor.open(player, item_name)
     style = "inside_shallow_frame_with_padding",
     direction = "vertical",
   }
+  -- Without this, the outer frame widens to fit a long item name in the title, but this
+  -- content frame stays at its own (narrower) natural width, leaving a blank gap on the
+  -- right for any item whose name is wider than the rows below it.
+  content.style.horizontally_stretchable = true
   content.tags = { quidquid_item_name = item_name, quidquid_quality = "normal" }
 
   if #qualities > 1 then
@@ -202,6 +206,7 @@ function TemporaryRequestEditor.open(player, item_name)
   }
 
   local button_row = content.add{ type = "flow", name = BUTTON_ROW_NAME, direction = "horizontal" }
+  button_row.style.horizontally_stretchable = true
   -- A stretchable spacer on each side centers the single button between them -- proven
   -- reliable in this file already (it's how right-alignment worked before), unlike
   -- relying on horizontal_align's exact behavior on a horizontal flow's main axis, which
