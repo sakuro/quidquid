@@ -78,11 +78,43 @@ function Palette.row_caption(candidate)
   return {"", "[img=", candidate.icon, "] ", candidate.label}
 end
 
-local function build_candidate_row(pane, wrapped)
+-- __CONTROL__<name>__ is a locale-string placeholder the engine substitutes with the
+-- player's actual current key binding for that custom-input (not just its data.lua
+-- default -- confirmed this also works for mod-defined custom-inputs, not only builtin
+-- game controls). Confirmed empirically that this substitution only happens for text
+-- read from an actual locale (.cfg) entry, not for a raw string segment built at
+-- runtime and dropped directly into a LocalisedString array -- so each action's hint
+-- is its own locale key (`action-<id>-hint`, one per registered action, added
+-- alongside that action's own `action-<id>` label), looked up here by id rather than
+-- constructed inline. Keys are sorted for a stable, predictable tooltip order.
+local function candidate_tooltip(candidate, player_index)
+  local resolved = registry:resolve_actions(candidate, player_index, RemoteCaller)
+  local keys = {}
+  for key, _ in pairs(resolved) do
+    table.insert(keys, key)
+  end
+  if #keys == 0 then
+    return nil
+  end
+  table.sort(keys)
+
+  local tooltip = {""}
+  for _, key in ipairs(keys) do
+    local definition = resolved[key]
+    table.insert(tooltip, definition.label)
+    table.insert(tooltip, " (")
+    table.insert(tooltip, {"quidquid.action-" .. definition.id .. "-hint"})
+    table.insert(tooltip, ")\n")
+  end
+  return tooltip
+end
+
+local function build_candidate_row(pane, wrapped, player_index)
   local button = pane.add{
     type = "button",
     style = "transparent_button",
     caption = Palette.row_caption(wrapped.candidate),
+    tooltip = candidate_tooltip(wrapped.candidate, player_index),
     tags = { quidquid_candidate = wrapped.candidate },
   }
   button.style.horizontally_stretchable = true
@@ -116,7 +148,7 @@ local function render_candidates(player, candidates)
   end
   table_element.clear()
   for _, wrapped in ipairs(candidates) do
-    build_candidate_row(table_element, wrapped)
+    build_candidate_row(table_element, wrapped, player.index)
   end
   pane.style.height = nil
 end
