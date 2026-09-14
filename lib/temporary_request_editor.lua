@@ -202,14 +202,20 @@ function TemporaryRequestEditor.open(player, item_name)
   }
 
   local button_row = content.add{ type = "flow", name = BUTTON_ROW_NAME, direction = "horizontal" }
-  local button_spacer = button_row.add{ type = "empty-widget" }
-  button_spacer.style.horizontally_stretchable = true
+  -- A stretchable spacer on each side centers the single button between them -- proven
+  -- reliable in this file already (it's how right-alignment worked before), unlike
+  -- relying on horizontal_align's exact behavior on a horizontal flow's main axis, which
+  -- the LuaStyle docs don't clearly specify.
+  local left_spacer = button_row.add{ type = "empty-widget" }
+  left_spacer.style.horizontally_stretchable = true
   button_row.add{
     type = "button",
-    style = "confirm_button",
+    style = "green_button",
     name = CONFIRM_BUTTON_NAME,
     caption = { "quidquid.temporary-request-editor-confirm" },
   }
+  local right_spacer = button_row.add{ type = "empty-widget" }
+  right_spacer.style.horizontally_stretchable = true
 
   set_quantity_controls(content, quantity)
 
