@@ -5,6 +5,8 @@ local SurfaceAccess = require("lib.surface_access")
 local function resolve_prototype(candidate, player)
   if candidate.type == "item" then
     return prototypes.item[candidate.id]
+  elseif candidate.type == "recipe" then
+    return prototypes.recipe[candidate.id]
   elseif candidate.type == "surface" then
     local surface = SurfaceAccess.resolve(candidate, player)
     if surface == nil then return nil end
@@ -41,7 +43,7 @@ function OpenFactoriopediaAction.register()
   remote.call("quidquid", "register_action", {
     version = 1,
     id = "open-factoriopedia",
-    types = {"item", "surface"},
+    types = {"item", "recipe", "surface"},
     label = {"quidquid.action-open-factoriopedia"},
     key = "quidquid-open-factoriopedia",
     interface = "quidquid.open-factoriopedia-action",

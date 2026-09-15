@@ -1,6 +1,9 @@
 local CraftAction = {}
 
 local function resolve_recipe(player, selected_candidate)
+  -- Both candidate types use the candidate id as the recipe name. Recipe
+  -- candidates are backed by prototypes.recipe for searching, but crafting
+  -- requires the force's runtime recipe.
   return player.force.recipes[selected_candidate.id]
 end
 
@@ -11,7 +14,9 @@ function CraftAction.is_applicable(selected_candidate, player_index)
   end
   local recipe = resolve_recipe(player, selected_candidate)
   if recipe == nil then
-    return false
+    -- Keep the craft actions available for items without a same-named recipe
+    -- so execute can explain why crafting is unavailable.
+    return selected_candidate.type == "item"
   end
   return not player.force.get_hand_crafting_disabled_for_recipe(recipe)
 end
@@ -34,6 +39,12 @@ local function craft(count_for)
     end
     local recipe = resolve_recipe(player, selected_candidate)
     if recipe == nil then
+      if selected_candidate.type == "item" then
+        player.create_local_flying_text({
+          text = {"quidquid.action-craft-no-recipe", selected_candidate.label},
+          create_at_cursor = true,
+        })
+      end
       return
     end
     player.begin_crafting{count = count_for(player, recipe), recipe = recipe}
@@ -48,7 +59,7 @@ local function register(id, key, interface, label, count_for)
   remote.call("quidquid", "register_action", {
     version = 1,
     id = id,
-    types = {"item"},
+    types = {"item", "recipe"},
     label = label,
     key = key,
     interface = interface,

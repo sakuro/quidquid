@@ -10,6 +10,7 @@ search available entries and perform actions on the selected result.
 - Fuzzy search with optional source prefixes
 - Keyboard- and mouse-driven actions
 - Source-specific actions for search results
+- Recipe search and recipe-based crafting
 - Temporary personal logistics requests
 - Position history for remote surface views
 
@@ -21,6 +22,7 @@ Type a search query to find matching entries. A recognized prefix followed by a
 space restricts the search to that source. For example:
 
 - `item `
+- `recipe `
 - `technology `
 - `surface `
 
@@ -47,6 +49,22 @@ Search for technologies by name.
 | Key | Action |
 | --- | --- |
 | Left click | Open the technology screen |
+
+### Recipes
+
+Search for recipes by name. Craft actions use the number of crafting operations,
+not the number of items produced by each operation.
+
+| Key | Action |
+| --- | --- |
+| Left click | Craft 1 |
+| Middle click | Craft 5 |
+| `Shift` + left click | Craft all |
+| `Alt` + left click | Open in Factoriopedia |
+
+Item craft actions only use a recipe with the same name as the selected item.
+If no such recipe exists, Quidquid displays a message instead of attempting to
+craft the item.
 
 ### Surfaces
 

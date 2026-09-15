@@ -48,10 +48,26 @@ describe("CraftAction", function()
       assert.is_false(applicable)
     end)
 
-    it("returns false when the recipe is not known to the player's force", function()
+    it("keeps an item candidate applicable when the recipe is not known to the player's force", function()
       _G.game = { get_player = function(_index) return fake_player({}, false) end }
 
-      local applicable = CraftAction.is_applicable({ id = "iron-plate" }, 1)
+      local applicable = CraftAction.is_applicable({ type = "item", id = "iron-plate" }, 1)
+
+      assert.is_true(applicable)
+    end)
+
+    it("keeps an item candidate applicable when no same-named recipe exists", function()
+      _G.game = { get_player = function(_index) return fake_player({}, false) end }
+
+      local applicable = CraftAction.is_applicable({ type = "item", id = "iron-plate" }, 1)
+
+      assert.is_true(applicable)
+    end)
+
+    it("returns false for a recipe candidate when the force has no matching recipe", function()
+      _G.game = { get_player = function(_index) return fake_player({}, false) end }
+
+      local applicable = CraftAction.is_applicable({ type = "recipe", id = "iron-plate" }, 1)
 
       assert.is_false(applicable)
     end)
