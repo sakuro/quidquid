@@ -48,11 +48,11 @@ describe("TemporaryRequestEditorLogic", function()
     end)
   end)
 
-  describe(".recipe_materials", function()
+  describe(".recipe_ingredients", function()
     it("converts item ingredients to requested amounts and skips fluids", function()
       assert.are.same({
         { name = "iron-plate", amount = 6, quality = "rare" },
-      }, TemporaryRequestEditorLogic.recipe_materials({
+      }, TemporaryRequestEditorLogic.recipe_ingredients({
         { type = "item", name = "iron-plate", amount = 2 },
         { type = "fluid", name = "water", amount = 10 },
       }, 3, "rare"))
@@ -60,7 +60,7 @@ describe("TemporaryRequestEditorLogic", function()
   end)
 
   describe(".recipe_quantity", function()
-    it("uses the smallest complete material count", function()
+    it("uses the smallest complete ingredient count", function()
       assert.are.equal(2, TemporaryRequestEditorLogic.recipe_quantity(
         { ["iron-plate"] = 6, ["copper-plate"] = 2 },
         {
@@ -70,7 +70,7 @@ describe("TemporaryRequestEditorLogic", function()
       ))
     end)
 
-    it("returns nil when a material request does not exist", function()
+    it("returns nil when an ingredient request does not exist", function()
       assert.is_nil(TemporaryRequestEditorLogic.recipe_quantity(
         { ["iron-plate"] = 6 },
         {
@@ -81,18 +81,18 @@ describe("TemporaryRequestEditorLogic", function()
     end)
   end)
 
-  describe(".all_materials_satisfied", function()
-    it("requires every material at the requested quality and amount", function()
+  describe(".all_ingredients_satisfied", function()
+    it("requires every ingredient at the requested quality and amount", function()
       local inventory = {
         ["iron-plate:rare"] = 6,
         ["copper-plate:rare"] = 2,
       }
-      local materials = {
+      local ingredients = {
         { name = "iron-plate", amount = 6, quality = "rare" },
         { name = "copper-plate", amount = 2, quality = "rare" },
       }
 
-      assert.is_true(TemporaryRequestEditorLogic.all_materials_satisfied(materials, function(name, quality)
+      assert.is_true(TemporaryRequestEditorLogic.all_ingredients_satisfied(ingredients, function(name, quality)
         return inventory[name .. ":" .. quality] or 0
       end))
     end)

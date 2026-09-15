@@ -145,8 +145,8 @@ local function set_quantity_controls(content, quantity)
   refresh_quantity_validity(content)
 end
 
-local function target_materials(player, target, craft_count, quality)
-  return TemporaryRequestEditorLogic.recipe_materials(ingredients_for(player, target), craft_count, quality)
+local function target_ingredients(player, target, craft_count, quality)
+  return TemporaryRequestEditorLogic.recipe_ingredients(ingredients_for(player, target), craft_count, quality)
 end
 
 function TemporaryRequestEditor.open(player, selected_candidate)
@@ -266,10 +266,10 @@ function TemporaryRequestEditor.on_gui_checked_state_changed(event)
   if player ~= nil then select_quality(player, element.tags.quidquid_quality) end
 end
 
-local function clear_material_requests(section, existing, materials)
+local function clear_ingredient_requests(section, existing, ingredients)
   local cleared = false
-  for _, material in ipairs(materials) do
-    local index = TemporaryRequestAction.find_slot_index(existing, material.name, material.quality)
+  for _, ingredient in ipairs(ingredients) do
+    local index = TemporaryRequestAction.find_slot_index(existing, ingredient.name, ingredient.quality)
     if index <= #existing then
       section.clear_slot(index)
       existing[index] = { value = nil }
@@ -287,9 +287,9 @@ function TemporaryRequestEditor.confirm(player)
   local quantity = parse_quantity(content[QUANTITY_ROW_NAME][TEXTFIELD_NAME].text)
   if not TemporaryRequestEditorLogic.valid_quantity(quantity) then return end
 
-  local materials = target_materials(player, target, quantity, quality)
-  local satisfied = TemporaryRequestEditorLogic.all_materials_satisfied(materials, function(name, material_quality)
-    return player.character.get_item_count({ name = name, quality = material_quality })
+  local ingredients = target_ingredients(player, target, quantity, quality)
+  local satisfied = TemporaryRequestEditorLogic.all_ingredients_satisfied(ingredients, function(name, ingredient_quality)
+    return player.character.get_item_count({ name = name, quality = ingredient_quality })
   end)
   local action
   if quantity == 0 then
@@ -314,13 +314,13 @@ function TemporaryRequestEditor.confirm(player)
     section = section or TemporaryRequestAction.get_or_create_section(point)
     existing = {}
     for i = 1, section.filters_count do existing[i] = section.get_slot(i) end
-    for _, material in ipairs(materials) do
-      local index = TemporaryRequestAction.find_slot_index(existing, material.name, material.quality)
+    for _, ingredient in ipairs(ingredients) do
+      local index = TemporaryRequestAction.find_slot_index(existing, ingredient.name, ingredient.quality)
       section.set_slot(index, {
-        value = { type = "item", name = material.name, quality = material.quality },
-        min = material.amount,
+        value = { type = "item", name = ingredient.name, quality = ingredient.quality },
+        min = ingredient.amount,
       })
-      existing[index] = { value = { name = material.name, quality = material.quality } }
+      existing[index] = { value = { name = ingredient.name, quality = ingredient.quality } }
     end
     local message = target.type == "item"
       and { "quidquid.action-temporary-request-created", target.name, quality, target_prototype(target).localised_name, quantity }
@@ -329,7 +329,7 @@ function TemporaryRequestEditor.confirm(player)
     return
   end
 
-  local cleared = section ~= nil and clear_material_requests(section, existing, materials) or false
+  local cleared = section ~= nil and clear_ingredient_requests(section, existing, ingredients) or false
   if action == "remove_zero" and not cleared then return end
   local message
   if target.type == "item" then

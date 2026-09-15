@@ -27,23 +27,23 @@ end
 
 -- Converts recipe ingredients into the item requests needed for a number of crafts.
 -- Fluids cannot be put into a personal logistics request and are intentionally omitted.
-function TemporaryRequestEditorLogic.recipe_materials(ingredients, craft_count, quality)
-  local materials = {}
+function TemporaryRequestEditorLogic.recipe_ingredients(ingredients, craft_count, quality)
+  local recipe_ingredients = {}
   for _, ingredient in ipairs(ingredients or {}) do
     if ingredient.type == "item" then
-      table.insert(materials, {
+      table.insert(recipe_ingredients, {
         name = ingredient.name,
         amount = ingredient.amount * craft_count,
         quality = quality,
       })
     end
   end
-  return materials
+  return recipe_ingredients
 end
 
--- Derives a recipe's operation count from existing per-material request quantities.
--- The smallest complete count is used so every material is available for that many
--- operations. A nil result means none of the recipe's material requests exist yet.
+-- Derives a recipe's operation count from existing per-ingredient request quantities.
+-- The smallest complete count is used so every ingredient is available for that many
+-- operations. A nil result means none of the recipe's ingredient requests exist yet.
 function TemporaryRequestEditorLogic.recipe_quantity(existing_quantities, ingredients)
   local craft_count = nil
   for _, ingredient in ipairs(ingredients or {}) do
@@ -60,9 +60,9 @@ function TemporaryRequestEditorLogic.recipe_quantity(existing_quantities, ingred
   return craft_count
 end
 
-function TemporaryRequestEditorLogic.all_materials_satisfied(materials, get_item_count)
-  for _, material in ipairs(materials) do
-    if get_item_count(material.name, material.quality) < material.amount then
+function TemporaryRequestEditorLogic.all_ingredients_satisfied(ingredients, get_item_count)
+  for _, ingredient in ipairs(ingredients) do
+    if get_item_count(ingredient.name, ingredient.quality) < ingredient.amount then
       return false
     end
   end
