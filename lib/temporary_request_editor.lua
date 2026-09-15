@@ -5,6 +5,7 @@ local TemporaryRequestEditor = {}
 
 local FRAME_NAME = "quidquid-temporary-request-editor-frame"
 local CONTENT_NAME = "quidquid-temporary-request-editor-content"
+local INPUT_TABLE_NAME = "quidquid-temporary-request-editor-input-table"
 local QUALITY_ROW_NAME = "quidquid-temporary-request-editor-quality-row"
 local QUALITY_RADIO_PREFIX = "quidquid-temporary-request-editor-quality-"
 local QUANTITY_ROW_NAME = "quidquid-temporary-request-editor-quantity-row"
@@ -77,6 +78,10 @@ local function recipe_for(player, target)
   return player.force.recipes[target.name]
 end
 
+local function quantity_row_of(content)
+  return content[INPUT_TABLE_NAME][QUANTITY_ROW_NAME]
+end
+
 local function ingredients_for(player, target)
   if target.type == "item" then
     return {{ type = "item", name = target.name, amount = 1 }}
@@ -134,7 +139,7 @@ local function parse_quantity(text)
 end
 
 local function refresh_quantity_validity(content)
-  local textfield = content[QUANTITY_ROW_NAME][TEXTFIELD_NAME]
+  local textfield = quantity_row_of(content)[TEXTFIELD_NAME]
   local value = parse_quantity(textfield.text)
   local valid = TemporaryRequestEditorLogic.valid_quantity(value)
   textfield.style = valid and "textbox" or "invalid_value_textfield"
@@ -142,12 +147,12 @@ local function refresh_quantity_validity(content)
   textfield.style.horizontal_align = "center"
   textfield.style.width = 100
   content[BUTTON_ROW_NAME][CONFIRM_BUTTON_NAME].enabled = valid
-  content[QUANTITY_ROW_NAME][MINUS_BUTTON_NAME].enabled = valid and value > 0
-  content[QUANTITY_ROW_NAME][PLUS_BUTTON_NAME].enabled = valid
+  quantity_row_of(content)[MINUS_BUTTON_NAME].enabled = valid and value > 0
+  quantity_row_of(content)[PLUS_BUTTON_NAME].enabled = valid
 end
 
 local function set_quantity_controls(content, quantity)
-  content[QUANTITY_ROW_NAME][TEXTFIELD_NAME].text = tostring(quantity)
+  quantity_row_of(content)[TEXTFIELD_NAME].text = tostring(quantity)
   refresh_quantity_validity(content)
 end
 
@@ -204,8 +209,13 @@ function TemporaryRequestEditor.open(player, selected_candidate)
     quidquid_quality = "normal",
   }
 
+  local input_table = content.add{
+    type = "table", name = INPUT_TABLE_NAME, column_count = 2,
+  }
+
   if #qualities > 1 then
-    local quality_row = content.add{ type = "flow", name = QUALITY_ROW_NAME, direction = "horizontal" }
+    input_table.add{ type = "label", caption = { "quidquid.temporary-request-editor-quality-label" } }
+    local quality_row = input_table.add{ type = "flow", name = QUALITY_ROW_NAME, direction = "horizontal" }
     for _, quality in ipairs(qualities) do
       quality_row.add{
         type = "radiobutton", name = QUALITY_RADIO_PREFIX .. quality,
@@ -220,7 +230,10 @@ function TemporaryRequestEditor.open(player, selected_candidate)
     initial_quantity = target.type == "item" and prototypes.item[target.name].stack_size or 1
   end
 
-  local quantity_row = content.add{ type = "flow", name = QUANTITY_ROW_NAME, direction = "horizontal" }
+  input_table.add{ type = "label", caption = { target.type == "item"
+    and "quidquid.temporary-request-editor-requested-quantity-label"
+    or "quidquid.temporary-request-editor-craft-count-label" } }
+  local quantity_row = input_table.add{ type = "flow", name = QUANTITY_ROW_NAME, direction = "horizontal" }
   quantity_row.style.vertical_align = "center"
   quantity_row.add{
     type = "sprite-button", name = MINUS_BUTTON_NAME,
@@ -258,7 +271,7 @@ function TemporaryRequestEditor.open(player, selected_candidate)
 
   set_quantity_controls(content, initial_quantity)
   player.opened = frame
-  content[QUANTITY_ROW_NAME][TEXTFIELD_NAME].focus()
+  quantity_row_of(content)[TEXTFIELD_NAME].focus()
 end
 
 function TemporaryRequestEditor.close(player)
@@ -279,7 +292,7 @@ local function select_quality(player, quality)
     quidquid_quality = quality,
   }
   frame.caption = title_caption(target, quality)
-  local quality_row = content[QUALITY_ROW_NAME]
+  local quality_row = content[INPUT_TABLE_NAME][QUALITY_ROW_NAME]
   if quality_row ~= nil then
     for _, radio in ipairs(quality_row.children) do
       radio.state = radio.tags.quidquid_quality == quality
@@ -317,7 +330,7 @@ function TemporaryRequestEditor.confirm(player)
   if content == nil then return end
   local target = target_from_content(content)
   local quality = content.tags.quidquid_quality
-  local quantity = parse_quantity(content[QUANTITY_ROW_NAME][TEXTFIELD_NAME].text)
+  local quantity = parse_quantity(quantity_row_of(content)[TEXTFIELD_NAME].text)
   if not TemporaryRequestEditorLogic.valid_quantity(quantity) then return end
 
   local ingredients = target_ingredients(player, target, quantity, quality)
@@ -395,7 +408,7 @@ function TemporaryRequestEditor.on_gui_click(event)
     local content = content_of(player)
     if content == nil then return end
     local target = target_from_content(content)
-    local textfield = content[QUANTITY_ROW_NAME][TEXTFIELD_NAME]
+    local textfield = quantity_row_of(content)[TEXTFIELD_NAME]
     local current = parse_quantity(textfield.text) or 0
     local next_quantity
     if target.type == "recipe" then
