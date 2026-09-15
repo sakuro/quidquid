@@ -40,11 +40,6 @@ local function target_prototype(target)
   return prototypes.recipe[target.name]
 end
 
-local function title_caption(target, quality)
-  local prefix = target.type == "item" and "item" or "recipe"
-  return { "", "[" .. prefix .. "=" .. target.name .. ",quality=" .. quality .. "] ", target_prototype(target).localised_name }
-end
-
 local function quality_system_active()
   for name, _ in pairs(prototypes.quality) do
     if name ~= "normal" and name ~= RESERVED_QUALITY_NAME then
@@ -52,6 +47,14 @@ local function quality_system_active()
     end
   end
   return false
+end
+
+local function title_caption(target, quality)
+  local prefix = target.type == "item" and "item" or "recipe"
+  local tag = quality_system_active()
+    and ("[" .. prefix .. "=" .. target.name .. ",quality=" .. quality .. "] ")
+    or ("[" .. prefix .. "=" .. target.name .. "] ")
+  return { "", tag, target_prototype(target).localised_name }
 end
 
 local function available_qualities(force)
@@ -150,6 +153,28 @@ end
 
 local function target_ingredients(player, target, craft_count, quality)
   return TemporaryRequestEditorLogic.recipe_ingredients(ingredients_for(player, target), craft_count, quality)
+end
+
+local function ingredient_caption(ingredients)
+  local caption = { "" }
+  for index, ingredient in ipairs(ingredients) do
+    if index > 1 then
+      table.insert(caption, ", ")
+    end
+    local quality = quality_system_active() and ",quality=" .. ingredient.quality or ""
+    table.insert(caption, "[item=" .. ingredient.name .. quality .. "]")
+  end
+  return caption
+end
+
+local function item_caption(target, quality)
+  local quality_suffix = quality_system_active() and ",quality=" .. quality or ""
+  return "[item=" .. target.name .. quality_suffix .. "]"
+end
+
+local function recipe_caption(target, quality)
+  local quality_suffix = quality_system_active() and ",quality=" .. quality or ""
+  return "[recipe=" .. target.name .. quality_suffix .. "]"
 end
 
 function TemporaryRequestEditor.open(player, selected_candidate)
@@ -325,9 +350,12 @@ function TemporaryRequestEditor.confirm(player)
       })
       existing[index] = { value = { name = ingredient.name, quality = ingredient.quality } }
     end
-    local message = target.type == "item"
-      and { "quidquid.action-temporary-request-created", target.name, quality, target_prototype(target).localised_name, quantity }
-      or { "quidquid.action-recipe-temporary-request-created", target.name, quantity, quality }
+    local message
+    if target.type == "item" then
+      message = { "quidquid.action-temporary-request-created", item_caption(target, quality), target_prototype(target).localised_name, quantity }
+    else
+      message = { "quidquid.action-recipe-temporary-request-created", recipe_caption(target, quality), target_prototype(target).localised_name, quantity, ingredient_caption(ingredients) }
+    end
     player.create_local_flying_text({ text = message, create_at_cursor = true })
     return
   end
@@ -337,12 +365,18 @@ function TemporaryRequestEditor.confirm(player)
   local message
   if target.type == "item" then
     message = action == "remove_zero"
-      and { "quidquid.action-temporary-request-removed", target.name, quality, target_prototype(target).localised_name }
-      or { "quidquid.action-temporary-request-already-satisfied", target.name, quality, target_prototype(target).localised_name }
+      and { "quidquid.action-temporary-request-removed", item_caption(target, quality), target_prototype(target).localised_name }
+      or { "quidquid.action-temporary-request-already-satisfied", item_caption(target, quality), target_prototype(target).localised_name }
   else
-    message = action == "remove_zero"
-      and { "quidquid.action-recipe-temporary-request-removed", target.name, target_prototype(target).localised_name }
-      or { "quidquid.action-recipe-temporary-request-already-satisfied", target.name, quantity, quality }
+    if quality_system_active() then
+      message = action == "remove_zero"
+        and { "quidquid.action-recipe-temporary-request-removed", recipe_caption(target, quality), target_prototype(target).localised_name, ingredient_caption(ingredients) }
+        or { "quidquid.action-recipe-temporary-request-already-satisfied", recipe_caption(target, quality), target_prototype(target).localised_name, quantity, ingredient_caption(ingredients) }
+    else
+      message = action == "remove_zero"
+        and { "quidquid.action-recipe-temporary-request-removed", recipe_caption(target, quality), target_prototype(target).localised_name, ingredient_caption(ingredients) }
+        or { "quidquid.action-recipe-temporary-request-already-satisfied", recipe_caption(target, quality), target_prototype(target).localised_name, quantity, ingredient_caption(ingredients) }
+    end
   end
   player.create_local_flying_text({ text = message, create_at_cursor = true })
 end
