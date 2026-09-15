@@ -60,6 +60,7 @@ not the number of items produced by each operation.
 | Left click | Craft 1 |
 | Middle click | Craft 5 |
 | `Shift` + left click | Craft all |
+| `Ctrl/Cmd` + left click | Create temporary logistics requests for recipe materials |
 | `Alt` + left click | Open in Factoriopedia |
 
 Item craft actions only use a recipe with the same name as the selected item.
@@ -77,7 +78,13 @@ Search for generated planets and space platforms available to your force.
 
 ## Temporary logistics requests
 
-Select an item, enter the desired quantity, and confirm the request.
+Select an item or recipe, enter the desired quantity, and confirm the request.
+
+For items, the quantity is the requested number of items and the +/- buttons
+adjust it by whole item stacks. For recipes, the quantity is the number of
+crafting operations and the +/- buttons adjust it by one operation. Recipe
+requests include all item materials for the selected number of operations, with
+the selected quality applied to every material.
 
 Requests are stored separately from existing personal logistics requests and
 are removed automatically when the requested amount is available in the

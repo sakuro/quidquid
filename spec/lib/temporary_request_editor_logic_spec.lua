@@ -37,6 +37,67 @@ describe("TemporaryRequestEditorLogic", function()
     end)
   end)
 
+  describe(".next_quantity and .previous_quantity", function()
+    it("increments and decrements recipe craft counts by one", function()
+      assert.are.equal(4, TemporaryRequestEditorLogic.next_quantity(3))
+      assert.are.equal(2, TemporaryRequestEditorLogic.previous_quantity(3))
+    end)
+
+    it("does not decrement below zero", function()
+      assert.are.equal(0, TemporaryRequestEditorLogic.previous_quantity(0))
+    end)
+  end)
+
+  describe(".recipe_materials", function()
+    it("converts item ingredients to requested amounts and skips fluids", function()
+      assert.are.same({
+        { name = "iron-plate", amount = 6, quality = "rare" },
+      }, TemporaryRequestEditorLogic.recipe_materials({
+        { type = "item", name = "iron-plate", amount = 2 },
+        { type = "fluid", name = "water", amount = 10 },
+      }, 3, "rare"))
+    end)
+  end)
+
+  describe(".recipe_quantity", function()
+    it("uses the smallest complete material count", function()
+      assert.are.equal(2, TemporaryRequestEditorLogic.recipe_quantity(
+        { ["iron-plate"] = 6, ["copper-plate"] = 2 },
+        {
+          { type = "item", name = "iron-plate", amount = 3 },
+          { type = "item", name = "copper-plate", amount = 1 },
+        }
+      ))
+    end)
+
+    it("returns nil when a material request does not exist", function()
+      assert.is_nil(TemporaryRequestEditorLogic.recipe_quantity(
+        { ["iron-plate"] = 6 },
+        {
+          { type = "item", name = "iron-plate", amount = 3 },
+          { type = "item", name = "copper-plate", amount = 1 },
+        }
+      ))
+    end)
+  end)
+
+  describe(".all_materials_satisfied", function()
+    it("requires every material at the requested quality and amount", function()
+      local inventory = {
+        ["iron-plate:rare"] = 6,
+        ["copper-plate:rare"] = 2,
+      }
+      local materials = {
+        { name = "iron-plate", amount = 6, quality = "rare" },
+        { name = "copper-plate", amount = 2, quality = "rare" },
+      }
+
+      assert.is_true(TemporaryRequestEditorLogic.all_materials_satisfied(materials, function(name, quality)
+        return inventory[name .. ":" .. quality] or 0
+      end))
+    end)
+  end)
+
   describe(".decide_confirm_action", function()
     it("returns remove_zero when the entered quantity is 0", function()
       assert.are.equal("remove_zero", TemporaryRequestEditorLogic.decide_confirm_action(0, 0))
