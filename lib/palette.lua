@@ -1,4 +1,3 @@
--- lib/palette.lua
 local PaletteLogic = require("lib.palette_logic")
 local RemoteCaller = require("lib.remote_caller")
 

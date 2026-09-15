@@ -1,4 +1,3 @@
--- lib/remote_caller.lua
 local RemoteCaller = {}
 
 function RemoteCaller:has(interface_name, function_name)

@@ -1,4 +1,3 @@
--- lib/palette_logic.lua
 local PaletteLogic = {}
 
 function PaletteLogic.merge_candidates(results, limit)

@@ -1,4 +1,3 @@
--- lib/actions/temporary_request_action.lua
 local TemporaryRequestAction = {}
 
 -- Injected from control.lua (see TemporaryRequestAction.init) rather than required

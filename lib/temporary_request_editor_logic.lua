@@ -1,4 +1,3 @@
--- lib/temporary_request_editor_logic.lua
 local TemporaryRequestEditorLogic = {}
 
 -- pure, testable: rounds up to the next multiple of stack_size, strictly greater than

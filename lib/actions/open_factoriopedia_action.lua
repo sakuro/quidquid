@@ -1,4 +1,3 @@
--- lib/open_factoriopedia_action.lua
 local OpenFactoriopediaAction = {}
 
 local SurfaceAccess = require("lib.surface_access")
