@@ -196,6 +196,7 @@ function TemporaryRequestEditor.open(player, selected_candidate)
     type = "frame", name = FRAME_NAME, direction = "vertical",
     caption = title_caption(target, "normal"),
   }
+  frame.style.maximal_width = 360
   frame.auto_center = true
 
   local content = frame.add{
@@ -212,10 +213,13 @@ function TemporaryRequestEditor.open(player, selected_candidate)
   local input_table = content.add{
     type = "table", name = INPUT_TABLE_NAME, column_count = 2,
   }
+  input_table.style.horizontally_stretchable = true
 
   if #qualities > 1 then
     input_table.add{ type = "label", caption = { "quidquid.temporary-request-editor-quality-label" } }
     local quality_row = input_table.add{ type = "flow", name = QUALITY_ROW_NAME, direction = "horizontal" }
+    quality_row.style.horizontally_stretchable = true
+    quality_row.style.horizontal_align = "center"
     for _, quality in ipairs(qualities) do
       quality_row.add{
         type = "radiobutton", name = QUALITY_RADIO_PREFIX .. quality,
@@ -234,6 +238,8 @@ function TemporaryRequestEditor.open(player, selected_candidate)
     and "quidquid.temporary-request-editor-requested-quantity-label"
     or "quidquid.temporary-request-editor-craft-count-label" } }
   local quantity_row = input_table.add{ type = "flow", name = QUANTITY_ROW_NAME, direction = "horizontal" }
+  quantity_row.style.horizontally_stretchable = true
+  quantity_row.style.horizontal_align = "center"
   quantity_row.style.vertical_align = "center"
   quantity_row.add{
     type = "sprite-button", name = MINUS_BUTTON_NAME,
