@@ -249,7 +249,10 @@ function TemporaryRequestEditor.open(player, selected_candidate)
   button_row.add{ type = "button", style = "green_button", name = CONFIRM_BUTTON_NAME,
     caption = { target.type == "item"
       and "quidquid.temporary-request-editor-confirm-item"
-      or "quidquid.temporary-request-editor-confirm-recipe" } }
+      or "quidquid.temporary-request-editor-confirm-recipe" },
+    tooltip = { target.type == "item"
+      and "quidquid.temporary-request-editor-confirm-item-tooltip"
+      or "quidquid.temporary-request-editor-confirm-recipe-tooltip" } }
   local right_spacer = button_row.add{ type = "empty-widget" }
   right_spacer.style.horizontally_stretchable = true
 
