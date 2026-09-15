@@ -23,7 +23,10 @@ end
 
 local function content_of(player)
   local frame = get_frame(player)
-  return frame == nil and nil or frame[CONTENT_NAME]
+  if frame == nil then
+    return nil
+  end
+  return frame[CONTENT_NAME]
 end
 
 local function target_from_content(content)
