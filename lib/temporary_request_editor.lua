@@ -1,4 +1,3 @@
--- lib/temporary_request_editor.lua
 local TemporaryRequestAction = require("lib.actions.temporary_request_action")
 local TemporaryRequestEditorLogic = require("lib.temporary_request_editor_logic")
 

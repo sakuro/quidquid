@@ -1,4 +1,3 @@
--- lib/actions/craft_action.lua
 local CraftAction = {}
 
 local function resolve_recipe(player, selected_candidate)

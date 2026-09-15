@@ -1,7 +1,3 @@
--- prototypes/sprites.lua
--- Icons for the temporary-request editor's stack +/- buttons: the base game's
--- stack-size signal icon with a plus/minus glyph baked into the bottom-right corner.
---
 -- Pre-composited into a single flat PNG (via a throwaway script, not checked in) rather
 -- than expressed as a two-layer `sprite` prototype (`layers = {base, glyph}`): the
 -- layered approach rendered the glyph layer centered instead of at its authored

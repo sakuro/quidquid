@@ -1,4 +1,3 @@
--- lib/actions/open_technology_action.lua
 local OpenTechnologyAction = {}
 
 local function execute(selected_candidate, _params, player_index)
