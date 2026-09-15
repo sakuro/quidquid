@@ -19,7 +19,7 @@ describe("TranslatedPrototypeSource", function()
       local source = TranslatedPrototypeSource.new("items", function()
         return { prototype("iron-plate"), prototype("copper-plate") }
       end, {"quidquid.source-items"})
-      TranslationCache:set("items", "en", "iron-plate", "Iron Plate")
+      TranslationCache:set("items", "en", "iron-plate", "Iron plate")
 
       local missing = source:missing("en")
 
@@ -31,7 +31,7 @@ describe("TranslatedPrototypeSource", function()
       local source = TranslatedPrototypeSource.new("items", function()
         return { prototype("iron-plate") }
       end, {"quidquid.source-items"})
-      TranslationCache:set("items", "en", "iron-plate", "Iron Plate")
+      TranslationCache:set("items", "en", "iron-plate", "Iron plate")
 
       assert.are.same({}, source:missing("en"))
     end)
@@ -135,7 +135,7 @@ describe("TranslatedPrototypeSource", function()
     it("ignores an event for an id that is not in flight", function()
       local source = TranslatedPrototypeSource.new("items", function() return {} end, {"quidquid.source-items"})
 
-      source:on_string_translated({ id = 999, translated = true, result = "Iron Plate" })
+      source:on_string_translated({ id = 999, translated = true, result = "Iron plate" })
 
       assert.is_nil(TranslationCache:get("items", "en", "iron-plate"))
     end)
@@ -146,9 +146,9 @@ describe("TranslatedPrototypeSource", function()
       end, {"quidquid.source-items"})
       source.in_flight[100] = { locale = "en", name = "iron-plate" }
 
-      source:on_string_translated({ id = 100, translated = true, result = "Iron Plate" })
+      source:on_string_translated({ id = 100, translated = true, result = "Iron plate" })
 
-      assert.are.equal("Iron Plate", TranslationCache:get("items", "en", "iron-plate"))
+      assert.are.equal("Iron plate", TranslationCache:get("items", "en", "iron-plate"))
       assert.is_nil(source.in_flight[100])
     end)
 
@@ -181,7 +181,7 @@ describe("TranslatedPrototypeSource", function()
         end,
       }
 
-      source:on_string_translated({ id = 100, translated = true, result = "Iron Plate" })
+      source:on_string_translated({ id = 100, translated = true, result = "Iron plate" })
 
       assert.is_true(TranslationCache:is_complete("items", "en"))
       assert.is_nil(source.pending.en)
@@ -228,7 +228,7 @@ describe("TranslatedPrototypeSource", function()
 
   describe(":on_configuration_changed", function()
     it("clears the translation cache and in-flight/pending state", function()
-      TranslationCache:set("items", "en", "iron-plate", "Iron Plate")
+      TranslationCache:set("items", "en", "iron-plate", "Iron plate")
       TranslationCache:mark_complete("items", "en")
       local source = TranslatedPrototypeSource.new("items", function() return {} end, {"quidquid.source-items"})
       source.in_flight[100] = { locale = "en", name = "iron-plate" }
