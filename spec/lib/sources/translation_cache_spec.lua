@@ -11,7 +11,7 @@ describe("TranslationCache", function()
     end)
 
     it("returns nil for an untranslated item in a known locale", function()
-      TranslationCache:set("items", "en", "iron-plate", "Iron Plate")
+      TranslationCache:set("items", "en", "iron-plate", "Iron plate")
 
       assert.is_nil(TranslationCache:get("items", "en", "copper-plate"))
     end)
@@ -19,16 +19,16 @@ describe("TranslationCache", function()
 
   describe(":set / :get", function()
     it("returns what was set", function()
-      TranslationCache:set("items", "en", "iron-plate", "Iron Plate")
+      TranslationCache:set("items", "en", "iron-plate", "Iron plate")
 
-      assert.are.equal("Iron Plate", TranslationCache:get("items", "en", "iron-plate"))
+      assert.are.equal("Iron plate", TranslationCache:get("items", "en", "iron-plate"))
     end)
 
     it("keeps different locales independent", function()
-      TranslationCache:set("items", "en", "iron-plate", "Iron Plate")
+      TranslationCache:set("items", "en", "iron-plate", "Iron plate")
       TranslationCache:set("items", "ja", "iron-plate", "鉄板")
 
-      assert.are.equal("Iron Plate", TranslationCache:get("items", "en", "iron-plate"))
+      assert.are.equal("Iron plate", TranslationCache:get("items", "en", "iron-plate"))
       assert.are.equal("鉄板", TranslationCache:get("items", "ja", "iron-plate"))
     end)
 
@@ -67,7 +67,7 @@ describe("TranslationCache", function()
 
   describe(":clear", function()
     it("resets both entries and completion flags together", function()
-      TranslationCache:set("items", "en", "iron-plate", "Iron Plate")
+      TranslationCache:set("items", "en", "iron-plate", "Iron plate")
       TranslationCache:mark_complete("items", "en")
 
       TranslationCache:clear()
@@ -77,7 +77,7 @@ describe("TranslationCache", function()
     end)
 
     it("resets every namespace at once, not just one", function()
-      TranslationCache:set("items", "en", "iron-plate", "Iron Plate")
+      TranslationCache:set("items", "en", "iron-plate", "Iron plate")
       TranslationCache:mark_complete("items", "en")
       TranslationCache:set("technologies", "en", "steam-power", "Steam power")
       TranslationCache:mark_complete("technologies", "en")
