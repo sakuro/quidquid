@@ -86,12 +86,27 @@ function TemporaryRequestAction.get_or_create_section(point)
   return point.add_section(GROUP)
 end
 
-local function is_applicable(_selected_candidate, player_index)
+local function is_applicable(selected_candidate, player_index)
   local player = game.get_player(player_index)
   if player == nil then
     return false
   end
-  return TemporaryRequestAction.logistic_point_for(player) ~= nil
+  if TemporaryRequestAction.logistic_point_for(player) == nil then
+    return false
+  end
+  if selected_candidate.type == "recipe" then
+    local recipe = player.force.recipes[selected_candidate.id]
+    if recipe == nil then
+      return false
+    end
+    for _, ingredient in ipairs(recipe.ingredients) do
+      if ingredient.type == "item" then
+        return true
+      end
+    end
+    return false
+  end
+  return true
 end
 
 local function execute(selected_candidate, _params, player_index)
@@ -99,7 +114,7 @@ local function execute(selected_candidate, _params, player_index)
   if player == nil then
     return
   end
-  editor.open(player, selected_candidate.id)
+  editor.open(player, selected_candidate)
 end
 
 local function check_and_clear(player)
@@ -141,7 +156,7 @@ function TemporaryRequestAction.register()
   remote.call("quidquid", "register_action", {
     version = 1,
     id = "temporary-request",
-    types = {"item"},
+    types = {"item", "recipe"},
     label = {"quidquid.action-temporary-request"},
     key = "quidquid-temporary-request",
     interface = "quidquid.temporary-request-action",

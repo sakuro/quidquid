@@ -5,17 +5,17 @@ local TemporaryRequestEditor = {}
 
 local FRAME_NAME = "quidquid-temporary-request-editor-frame"
 local CONTENT_NAME = "quidquid-temporary-request-editor-content"
+local INPUT_TABLE_NAME = "quidquid-temporary-request-editor-input-table"
 local QUALITY_ROW_NAME = "quidquid-temporary-request-editor-quality-row"
 local QUALITY_RADIO_PREFIX = "quidquid-temporary-request-editor-quality-"
 local QUANTITY_ROW_NAME = "quidquid-temporary-request-editor-quantity-row"
 local TEXTFIELD_NAME = "quidquid-temporary-request-editor-textfield"
-local MINUS_STACK_BUTTON_NAME = "quidquid-temporary-request-editor-minus-stack-button"
-local PLUS_STACK_BUTTON_NAME = "quidquid-temporary-request-editor-plus-stack-button"
+local MINUS_BUTTON_NAME = "quidquid-temporary-request-editor-minus-button"
+local PLUS_BUTTON_NAME = "quidquid-temporary-request-editor-plus-button"
 local BUTTON_ROW_NAME = "quidquid-temporary-request-editor-button-row"
 local CONFIRM_BUTTON_NAME = "quidquid-temporary-request-editor-confirm-button"
 
 local RESERVED_QUALITY_NAME = "quality-unknown"
-
 local DEFAULT_FONT_COLOR = {r = 0, g = 0, b = 0}
 
 local function get_frame(player)
@@ -30,15 +30,17 @@ local function content_of(player)
   return frame[CONTENT_NAME]
 end
 
--- [item=..,quality=..] renders the item's icon tinted/badged for that quality -- the
--- window title updates this whenever the selected quality changes (see select_quality).
-local function title_caption(item_name, quality)
-  return { "", "[item=" .. item_name .. ",quality=" .. quality .. "] ", prototypes.item[item_name].localised_name }
+local function target_from_content(content)
+  return { type = content.tags.quidquid_target_type, name = content.tags.quidquid_target_name }
 end
 
--- Confirmed empirically: `prototypes.quality` always has at least these two reserved
--- entries (`normal`, `quality-unknown`) even with Space Age disabled; any other entry
--- only exists when the Quality system is actually active.
+local function target_prototype(target)
+  if target.type == "item" then
+    return prototypes.item[target.name]
+  end
+  return prototypes.recipe[target.name]
+end
+
 local function quality_system_active()
   for name, _ in pairs(prototypes.quality) do
     if name ~= "normal" and name ~= RESERVED_QUALITY_NAME then
@@ -48,8 +50,14 @@ local function quality_system_active()
   return false
 end
 
--- Reads prototypes/force state -- stays untested per this project's runtime-code
--- convention, same as is_applicable/logistic_point_for.
+local function title_caption(target, quality)
+  local prefix = target.type == "item" and "item" or "recipe"
+  local tag = quality_system_active()
+    and ("[" .. prefix .. "=" .. target.name .. ",quality=" .. quality .. "] ")
+    or ("[" .. prefix .. "=" .. target.name .. "] ")
+  return { "", tag, target_prototype(target).localised_name }
+end
+
 local function available_qualities(force)
   if not quality_system_active() then
     return { "normal" }
@@ -66,307 +74,358 @@ local function available_qualities(force)
   return qualities
 end
 
--- Returns {index=.., quantity=..} for item_name+quality's existing request in the shared
--- section, or {index=nil, quantity=nil} if there isn't one yet. Never creates the section
--- (uses find_existing_section, not get_or_create_section) -- just looking shouldn't have
--- side effects.
-local function existing_request(player, item_name, quality)
+local function recipe_for(player, target)
+  return player.force.recipes[target.name]
+end
+
+local function quantity_row_of(content)
+  return content[INPUT_TABLE_NAME][QUANTITY_ROW_NAME]
+end
+
+local function ingredients_for(player, target)
+  if target.type == "item" then
+    return {{ type = "item", name = target.name, amount = 1 }}
+  end
+  local recipe = recipe_for(player, target)
+  return recipe == nil and {} or recipe.ingredients
+end
+
+local function existing_section_slots(player)
   local point = TemporaryRequestAction.logistic_point_for(player)
   if point == nil then
-    return { index = nil, quantity = nil }
+    return nil
   end
   local section = TemporaryRequestAction.find_existing_section(point)
   if section == nil then
-    return { index = nil, quantity = nil }
-  end
-  local existing = {}
-  for i = 1, section.filters_count do
-    existing[i] = section.get_slot(i)
-  end
-  local index = TemporaryRequestAction.find_slot_index(existing, item_name, quality)
-  if index > #existing then
-    return { index = nil, quantity = nil }
-  end
-  return { index = index, quantity = existing[index].min }
-end
-
--- k/M suffixes for typing large quantities (e.g. "5k" -> 5000, "2M" -> 2000000) --
--- confirmed empirically that evaluate_expression's variable substitution also covers
--- bare juxtaposition ("5k"), not just explicit multiplication ("5*k").
-local QUANTITY_VARIABLES = { k = 1000, M = 1000000 }
-
--- helpers.evaluate_expression raises a Lua error for anything it can't parse (not a
--- typed math expression at all, e.g. "abc") rather than returning a sentinel -- pcall
--- turns that into a plain nil, same "couldn't parse" outcome TemporaryRequestEditorLogic
--- .valid_quantity already treats a nil value as.
-local function parse_quantity(text)
-  local ok, result = pcall(helpers.evaluate_expression, text, QUANTITY_VARIABLES)
-  if not ok then
     return nil
   end
-  return result
+  local slots = {}
+  for i = 1, section.filters_count do
+    slots[i] = section.get_slot(i)
+  end
+  return slots
 end
 
--- Re-applies the textfield's error/normal style (and the per-instance overrides that a
--- style switch wipes) and the Confirm button's enabled state, based on whether the
--- textfield's current text currently parses to a valid quantity. Called after every
--- programmatic or player-driven change to the textfield's text.
+local function existing_request(player, target, quality)
+  local slots = existing_section_slots(player)
+  if slots == nil then
+    return nil
+  end
+
+  local ingredients = ingredients_for(player, target)
+  if target.type == "item" then
+    local index = TemporaryRequestAction.find_slot_index(slots, target.name, quality)
+    return index <= #slots and slots[index].min or nil
+  end
+
+  local quantities = {}
+  for _, ingredient in ipairs(ingredients) do
+    if ingredient.type == "item" then
+      local index = TemporaryRequestAction.find_slot_index(slots, ingredient.name, quality)
+      if index > #slots then
+        return nil
+      end
+      quantities[ingredient.name] = slots[index].min
+    end
+  end
+  return TemporaryRequestEditorLogic.recipe_quantity(quantities, ingredients)
+end
+
+local QUANTITY_VARIABLES = { k = 1000, M = 1000000 }
+
+local function parse_quantity(text)
+  local ok, result = pcall(helpers.evaluate_expression, text, QUANTITY_VARIABLES)
+  return ok and result or nil
+end
+
 local function refresh_quantity_validity(content)
-  local textfield = content[QUANTITY_ROW_NAME][TEXTFIELD_NAME]
+  local textfield = quantity_row_of(content)[TEXTFIELD_NAME]
   local value = parse_quantity(textfield.text)
   local valid = TemporaryRequestEditorLogic.valid_quantity(value)
-
   textfield.style = valid and "textbox" or "invalid_value_textfield"
   textfield.style.font_color = DEFAULT_FONT_COLOR
   textfield.style.horizontal_align = "center"
   textfield.style.width = 100
-
   content[BUTTON_ROW_NAME][CONFIRM_BUTTON_NAME].enabled = valid
-  -- Disabled alongside Confirm rather than falling back to treating invalid text as 0:
-  -- silently overwriting whatever the player typed would discard it without asking.
-  -- -Stack is additionally disabled at exactly 0 -- previous_stack_multiple(0, _) is
-  -- already floored at 0, so pressing it there would be a visible no-op.
-  content[QUANTITY_ROW_NAME][MINUS_STACK_BUTTON_NAME].enabled = valid and value > 0
-  content[QUANTITY_ROW_NAME][PLUS_STACK_BUTTON_NAME].enabled = valid
+  quantity_row_of(content)[MINUS_BUTTON_NAME].enabled = valid and value > 0
+  quantity_row_of(content)[PLUS_BUTTON_NAME].enabled = valid
 end
 
 local function set_quantity_controls(content, quantity)
-  content[QUANTITY_ROW_NAME][TEXTFIELD_NAME].text = tostring(quantity)
+  quantity_row_of(content)[TEXTFIELD_NAME].text = tostring(quantity)
   refresh_quantity_validity(content)
 end
 
-function TemporaryRequestEditor.open(player, item_name)
-  -- Retriggering the action on a different item while the editor is already open
-  -- retargets it to the new item rather than silently doing nothing -- consistent with
-  -- Cancel/Escape already treating any unconfirmed edit as safe to discard.
+local function target_ingredients(player, target, craft_count, quality)
+  return TemporaryRequestEditorLogic.recipe_ingredients(ingredients_for(player, target), craft_count, quality)
+end
+
+local function ingredient_caption(ingredients)
+  local caption = { "" }
+  for index, ingredient in ipairs(ingredients) do
+    if index > 1 then
+      table.insert(caption, ", ")
+    end
+    local quality = quality_system_active() and ",quality=" .. ingredient.quality or ""
+    table.insert(caption, "[item=" .. ingredient.name .. quality .. "]")
+  end
+  return caption
+end
+
+local function item_caption(target, quality)
+  local quality_suffix = quality_system_active() and ",quality=" .. quality or ""
+  return "[item=" .. target.name .. quality_suffix .. "]"
+end
+
+local function recipe_caption(target, quality)
+  local quality_suffix = quality_system_active() and ",quality=" .. quality or ""
+  return "[recipe=" .. target.name .. quality_suffix .. "]"
+end
+
+function TemporaryRequestEditor.open(player, selected_candidate)
+  local target
+  if type(selected_candidate) == "string" then
+    target = { type = "item", name = selected_candidate }
+  else
+    target = { type = selected_candidate.type, name = selected_candidate.id }
+  end
+
   TemporaryRequestEditor.close(player)
-
-  local item_prototype = prototypes.item[item_name]
-  local stack_size = item_prototype.stack_size
   local qualities = available_qualities(player.force)
-
   local frame = player.gui.screen.add{
-    type = "frame",
-    name = FRAME_NAME,
-    direction = "vertical",
-    caption = title_caption(item_name, "normal"),
+    type = "frame", name = FRAME_NAME, direction = "vertical",
+    caption = title_caption(target, "normal"),
   }
+  frame.style.maximal_width = 360
   frame.auto_center = true
 
   local content = frame.add{
-    type = "frame",
-    name = CONTENT_NAME,
-    style = "inside_shallow_frame_with_padding",
-    direction = "vertical",
+    type = "frame", name = CONTENT_NAME,
+    style = "inside_shallow_frame_with_padding", direction = "vertical",
   }
-  -- Without this, the outer frame widens to fit a long item name in the title, but this
-  -- content frame stays at its own (narrower) natural width, leaving a blank gap on the
-  -- right for any item whose name is wider than the rows below it.
   content.style.horizontally_stretchable = true
-  content.tags = { quidquid_item_name = item_name, quidquid_quality = "normal" }
+  content.tags = {
+    quidquid_target_type = target.type,
+    quidquid_target_name = target.name,
+    quidquid_quality = "normal",
+  }
+
+  local input_table = content.add{
+    type = "table", name = INPUT_TABLE_NAME, column_count = 2,
+  }
+  input_table.style.horizontally_stretchable = true
 
   if #qualities > 1 then
-    local quality_row = content.add{ type = "flow", name = QUALITY_ROW_NAME, direction = "horizontal" }
+    input_table.add{ type = "label", caption = { "quidquid.temporary-request-editor-quality-label" } }
+    local quality_row = input_table.add{ type = "flow", name = QUALITY_ROW_NAME, direction = "horizontal" }
+    quality_row.style.horizontally_stretchable = true
+    quality_row.style.horizontal_align = "center"
     for _, quality in ipairs(qualities) do
       quality_row.add{
-        type = "radiobutton",
-        name = QUALITY_RADIO_PREFIX .. quality,
-        caption = "[quality=" .. quality .. "]",
-        state = (quality == "normal"),
+        type = "radiobutton", name = QUALITY_RADIO_PREFIX .. quality,
+        caption = "[quality=" .. quality .. "]", state = quality == "normal",
         tags = { quidquid_quality = quality },
       }
     end
   end
 
-  local found = existing_request(player, item_name, "normal")
-  local quantity = found.quantity or stack_size
+  local initial_quantity = existing_request(player, target, "normal")
+  if initial_quantity == nil then
+    initial_quantity = target.type == "item" and prototypes.item[target.name].stack_size or 1
+  end
 
-  local quantity_row = content.add{ type = "flow", name = QUANTITY_ROW_NAME, direction = "horizontal" }
-  -- vertical_align on a flow centers its children within the row's cross-axis, unlike
-  -- vertical_align on a single widget (which only centers *that widget's own* inner
-  -- content, e.g. its text -- confirmed via the LuaStyle docs after that alone didn't
-  -- move the textfield itself).
+  input_table.add{ type = "label", caption = { target.type == "item"
+    and "quidquid.temporary-request-editor-requested-quantity-label"
+    or "quidquid.temporary-request-editor-craft-count-label" } }
+  local quantity_row = input_table.add{ type = "flow", name = QUANTITY_ROW_NAME, direction = "horizontal" }
+  quantity_row.style.horizontally_stretchable = true
+  quantity_row.style.horizontal_align = "center"
   quantity_row.style.vertical_align = "center"
   quantity_row.add{
-    type = "sprite-button",
-    name = MINUS_STACK_BUTTON_NAME,
-    sprite = "quidquid-temporary-request-editor-stack-minus",
-    tooltip = { "quidquid.temporary-request-editor-stack-minus-tooltip" },
+    type = "sprite-button", name = MINUS_BUTTON_NAME,
+    sprite = target.type == "item"
+      and "quidquid-temporary-request-editor-stack-minus"
+      or "virtual-signal/signal-minus",
+    tooltip = { target.type == "item"
+      and "quidquid.temporary-request-editor-stack-minus-tooltip"
+      or "quidquid.temporary-request-editor-quantity-minus-tooltip" },
   }
-  local textfield = quantity_row.add{
-    type = "textfield",
-    name = TEXTFIELD_NAME,
-  }
+  quantity_row.add{ type = "textfield", name = TEXTFIELD_NAME }
   quantity_row.add{
-    type = "sprite-button",
-    name = PLUS_STACK_BUTTON_NAME,
-    sprite = "quidquid-temporary-request-editor-stack-plus",
-    tooltip = { "quidquid.temporary-request-editor-stack-plus-tooltip" },
+    type = "sprite-button", name = PLUS_BUTTON_NAME,
+    sprite = target.type == "item"
+      and "quidquid-temporary-request-editor-stack-plus"
+      or "virtual-signal/signal-plus",
+    tooltip = { target.type == "item"
+      and "quidquid.temporary-request-editor-stack-plus-tooltip"
+      or "quidquid.temporary-request-editor-quantity-plus-tooltip" },
   }
 
   local button_row = content.add{ type = "flow", name = BUTTON_ROW_NAME, direction = "horizontal" }
   button_row.style.horizontally_stretchable = true
-  -- A stretchable spacer on each side centers the single button between them -- proven
-  -- reliable in this file already (it's how right-alignment worked before), unlike
-  -- relying on horizontal_align's exact behavior on a horizontal flow's main axis, which
-  -- the LuaStyle docs don't clearly specify.
   local left_spacer = button_row.add{ type = "empty-widget" }
   left_spacer.style.horizontally_stretchable = true
-  button_row.add{
-    type = "button",
-    style = "green_button",
-    name = CONFIRM_BUTTON_NAME,
-    caption = { "quidquid.temporary-request-editor-confirm" },
-  }
+  button_row.add{ type = "button", style = "green_button", name = CONFIRM_BUTTON_NAME,
+    caption = { target.type == "item"
+      and "quidquid.temporary-request-editor-confirm-item"
+      or "quidquid.temporary-request-editor-confirm-recipe" },
+    tooltip = { target.type == "item"
+      and "quidquid.temporary-request-editor-confirm-item-tooltip"
+      or "quidquid.temporary-request-editor-confirm-recipe-tooltip" } }
   local right_spacer = button_row.add{ type = "empty-widget" }
   right_spacer.style.horizontally_stretchable = true
 
-  set_quantity_controls(content, quantity)
-
+  set_quantity_controls(content, initial_quantity)
   player.opened = frame
-  textfield.focus()
+  quantity_row_of(content)[TEXTFIELD_NAME].focus()
 end
 
 function TemporaryRequestEditor.close(player)
   local frame = get_frame(player)
-  if frame == nil then
-    return
+  if frame ~= nil then
+    frame.destroy()
   end
-  frame.destroy()
 end
 
 local function select_quality(player, quality)
   local frame = get_frame(player)
-  if frame == nil then
-    return
-  end
+  if frame == nil then return end
   local content = frame[CONTENT_NAME]
-  local item_name = content.tags.quidquid_item_name
-  content.tags = { quidquid_item_name = item_name, quidquid_quality = quality }
-  frame.caption = title_caption(item_name, quality)
-
-  local quality_row = content[QUALITY_ROW_NAME]
+  local target = target_from_content(content)
+  content.tags = {
+    quidquid_target_type = target.type,
+    quidquid_target_name = target.name,
+    quidquid_quality = quality,
+  }
+  frame.caption = title_caption(target, quality)
+  local quality_row = content[INPUT_TABLE_NAME][QUALITY_ROW_NAME]
   if quality_row ~= nil then
     for _, radio in ipairs(quality_row.children) do
-      radio.state = (radio.tags.quidquid_quality == quality)
+      radio.state = radio.tags.quidquid_quality == quality
     end
   end
-
-  local item_prototype = prototypes.item[item_name]
-  local found = existing_request(player, item_name, quality)
-  local quantity = found.quantity or item_prototype.stack_size
+  local quantity = existing_request(player, target, quality)
+  if quantity == nil then
+    quantity = target.type == "item" and prototypes.item[target.name].stack_size or 1
+  end
   set_quantity_controls(content, quantity)
 end
 
 function TemporaryRequestEditor.on_gui_checked_state_changed(event)
   local element = event.element
-  if element == nil or not element.valid or element.tags.quidquid_quality == nil then
-    return
-  end
+  if element == nil or not element.valid or element.tags.quidquid_quality == nil then return end
   local player = game.get_player(event.player_index)
-  if player == nil then
-    return
+  if player ~= nil then select_quality(player, element.tags.quidquid_quality) end
+end
+
+local function clear_ingredient_requests(section, existing, ingredients)
+  local cleared = false
+  for _, ingredient in ipairs(ingredients) do
+    local index = TemporaryRequestAction.find_slot_index(existing, ingredient.name, ingredient.quality)
+    if index <= #existing then
+      section.clear_slot(index)
+      existing[index] = { value = nil }
+      cleared = true
+    end
   end
-  select_quality(player, element.tags.quidquid_quality)
+  return cleared
 end
 
 function TemporaryRequestEditor.confirm(player)
   local content = content_of(player)
-  if content == nil then
-    return
-  end
-  local item_name = content.tags.quidquid_item_name
+  if content == nil then return end
+  local target = target_from_content(content)
   local quality = content.tags.quidquid_quality
-  local item_prototype = prototypes.item[item_name]
-  local quantity = parse_quantity(content[QUANTITY_ROW_NAME][TEXTFIELD_NAME].text)
-  -- The Confirm button is disabled whenever this is false, but the "E" shortcut
-  -- (on_confirm_key) bypasses button state entirely, so this guard is still needed here.
-  if not TemporaryRequestEditorLogic.valid_quantity(quantity) then
-    return
+  local quantity = parse_quantity(quantity_row_of(content)[TEXTFIELD_NAME].text)
+  if not TemporaryRequestEditorLogic.valid_quantity(quantity) then return end
+
+  local ingredients = target_ingredients(player, target, quantity, quality)
+  local satisfied = TemporaryRequestEditorLogic.all_ingredients_satisfied(ingredients, function(name, ingredient_quality)
+    return player.character.get_item_count({ name = name, quality = ingredient_quality })
+  end)
+  local action
+  if quantity == 0 then
+    action = "remove_zero"
+  elseif satisfied then
+    action = "remove_satisfied"
+  else
+    action = "set"
   end
 
   TemporaryRequestEditor.close(player)
-
   local point = TemporaryRequestAction.logistic_point_for(player)
-  if point == nil then
-    return
-  end
-
-  local already_have = player.character.get_item_count({ name = item_name, quality = quality })
-  local action = TemporaryRequestEditorLogic.decide_confirm_action(quantity, already_have)
-
-  if action == "set" then
-    local section = TemporaryRequestAction.get_or_create_section(point)
-    local existing = {}
-    for i = 1, section.filters_count do
-      existing[i] = section.get_slot(i)
-    end
-    local slot_index = TemporaryRequestAction.find_slot_index(existing, item_name, quality)
-    section.set_slot(slot_index, {
-      value = { type = "item", name = item_name, quality = quality },
-      min = quantity,
-    })
-    player.create_local_flying_text({
-      text = { "quidquid.action-temporary-request-created", item_name, quality, item_prototype.localised_name, quantity },
-      create_at_cursor = true,
-    })
-    return
-  end
+  if point == nil then return end
 
   local section = TemporaryRequestAction.find_existing_section(point)
-  local cleared = false
+  local existing = {}
   if section ~= nil then
-    local existing = {}
-    for i = 1, section.filters_count do
-      existing[i] = section.get_slot(i)
-    end
-    local slot_index = TemporaryRequestAction.find_slot_index(existing, item_name, quality)
-    if slot_index <= #existing then
-      section.clear_slot(slot_index)
-      cleared = true
-    end
+    for i = 1, section.filters_count do existing[i] = section.get_slot(i) end
   end
 
-  -- Quantity 0 with nothing to remove is a genuine no-op -- unlike "already satisfied",
-  -- there's no useful outcome to report, so stay silent rather than claim a removal that
-  -- didn't happen.
-  if action == "remove_zero" and not cleared then
+  if action == "set" then
+    section = section or TemporaryRequestAction.get_or_create_section(point)
+    existing = {}
+    for i = 1, section.filters_count do existing[i] = section.get_slot(i) end
+    for _, ingredient in ipairs(ingredients) do
+      local index = TemporaryRequestAction.find_slot_index(existing, ingredient.name, ingredient.quality)
+      section.set_slot(index, {
+        value = { type = "item", name = ingredient.name, quality = ingredient.quality },
+        min = ingredient.amount,
+      })
+      existing[index] = { value = { name = ingredient.name, quality = ingredient.quality } }
+    end
+    local message
+    if target.type == "item" then
+      message = { "quidquid.action-temporary-request-created", item_caption(target, quality), target_prototype(target).localised_name, quantity }
+    else
+      message = { "quidquid.action-recipe-temporary-request-created", recipe_caption(target, quality), target_prototype(target).localised_name, quantity, ingredient_caption(ingredients) }
+    end
+    player.create_local_flying_text({ text = message, create_at_cursor = true })
     return
   end
 
-  local message_key = (action == "remove_zero")
-    and "quidquid.action-temporary-request-removed"
-    or "quidquid.action-temporary-request-already-satisfied"
-  player.create_local_flying_text({
-    text = { message_key, item_name, quality, item_prototype.localised_name },
-    create_at_cursor = true,
-  })
+  local cleared = section ~= nil and clear_ingredient_requests(section, existing, ingredients) or false
+  if action == "remove_zero" and not cleared then return end
+  local message
+  if target.type == "item" then
+    message = action == "remove_zero"
+      and { "quidquid.action-temporary-request-removed", item_caption(target, quality), target_prototype(target).localised_name }
+      or { "quidquid.action-temporary-request-already-satisfied", item_caption(target, quality), target_prototype(target).localised_name }
+  else
+    if quality_system_active() then
+      message = action == "remove_zero"
+        and { "quidquid.action-recipe-temporary-request-removed", recipe_caption(target, quality), target_prototype(target).localised_name, ingredient_caption(ingredients) }
+        or { "quidquid.action-recipe-temporary-request-already-satisfied", recipe_caption(target, quality), target_prototype(target).localised_name, quantity, ingredient_caption(ingredients) }
+    else
+      message = action == "remove_zero"
+        and { "quidquid.action-recipe-temporary-request-removed", recipe_caption(target, quality), target_prototype(target).localised_name, ingredient_caption(ingredients) }
+        or { "quidquid.action-recipe-temporary-request-already-satisfied", recipe_caption(target, quality), target_prototype(target).localised_name, quantity, ingredient_caption(ingredients) }
+    end
+  end
+  player.create_local_flying_text({ text = message, create_at_cursor = true })
 end
 
 function TemporaryRequestEditor.on_gui_click(event)
   local element = event.element
-  if element == nil or not element.valid then
-    return
-  end
+  if element == nil or not element.valid then return end
   local player = game.get_player(event.player_index)
-  if player == nil then
-    return
-  end
-
-  if element.name == MINUS_STACK_BUTTON_NAME or element.name == PLUS_STACK_BUTTON_NAME then
+  if player == nil then return end
+  if element.name == MINUS_BUTTON_NAME or element.name == PLUS_BUTTON_NAME then
     local content = content_of(player)
-    if content == nil then
-      return
-    end
-    local item_name = content.tags.quidquid_item_name
-    local stack_size = prototypes.item[item_name].stack_size
-    local textfield = content[QUANTITY_ROW_NAME][TEXTFIELD_NAME]
+    if content == nil then return end
+    local target = target_from_content(content)
+    local textfield = quantity_row_of(content)[TEXTFIELD_NAME]
     local current = parse_quantity(textfield.text) or 0
     local next_quantity
-    if element.name == PLUS_STACK_BUTTON_NAME then
-      next_quantity = TemporaryRequestEditorLogic.next_stack_multiple(current, stack_size)
+    if target.type == "recipe" then
+      next_quantity = element.name == PLUS_BUTTON_NAME
+        and TemporaryRequestEditorLogic.next_quantity(current)
+        or TemporaryRequestEditorLogic.previous_quantity(current)
     else
-      next_quantity = TemporaryRequestEditorLogic.previous_stack_multiple(current, stack_size)
+      local stack_size = prototypes.item[target.name].stack_size
+      next_quantity = element.name == PLUS_BUTTON_NAME
+        and TemporaryRequestEditorLogic.next_stack_multiple(current, stack_size)
+        or TemporaryRequestEditorLogic.previous_stack_multiple(current, stack_size)
     end
     set_quantity_controls(content, next_quantity)
   elseif element.name == CONFIRM_BUTTON_NAME then
@@ -376,40 +435,21 @@ end
 
 function TemporaryRequestEditor.on_gui_text_changed(event)
   local element = event.element
-  if element == nil or not element.valid or element.name ~= TEXTFIELD_NAME then
-    return
-  end
+  if element == nil or not element.valid or element.name ~= TEXTFIELD_NAME then return end
   local player = game.get_player(event.player_index)
-  if player == nil then
-    return
-  end
-  local content = content_of(player)
-  if content == nil then
-    return
-  end
-  refresh_quantity_validity(content)
+  local content = player ~= nil and content_of(player) or nil
+  if content ~= nil then refresh_quantity_validity(content) end
 end
 
 function TemporaryRequestEditor.on_gui_closed(event)
-  if event.element == nil or not event.element.valid or event.element.name ~= FRAME_NAME then
-    return
-  end
+  if event.element == nil or not event.element.valid or event.element.name ~= FRAME_NAME then return end
   local player = game.get_player(event.player_index)
-  if player == nil then
-    return
-  end
-  TemporaryRequestEditor.close(player)
+  if player ~= nil then TemporaryRequestEditor.close(player) end
 end
 
--- Wired to the "E" custom-input so it actually does what confirm_button's own baked-in
--- tooltip ("Confirm (E)") promises. confirm() already no-ops safely if this player's
--- editor isn't open (content_of returns nil), so no extra guard is needed here.
 function TemporaryRequestEditor.on_confirm_key(event)
   local player = game.get_player(event.player_index)
-  if player == nil then
-    return
-  end
-  TemporaryRequestEditor.confirm(player)
+  if player ~= nil then TemporaryRequestEditor.confirm(player) end
 end
 
 return TemporaryRequestEditor

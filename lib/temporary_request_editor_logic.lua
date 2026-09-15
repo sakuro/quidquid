@@ -15,6 +15,60 @@ function TemporaryRequestEditorLogic.previous_stack_multiple(current_value, stac
   return math.max(0, stack_size * (math.ceil(current_value / stack_size) - 1))
 end
 
+-- Recipe requests are measured in crafting operations, so their buttons change the
+-- operation count directly rather than rounding to an item's stack size.
+function TemporaryRequestEditorLogic.next_quantity(current_value)
+  return current_value + 1
+end
+
+function TemporaryRequestEditorLogic.previous_quantity(current_value)
+  return math.max(0, current_value - 1)
+end
+
+-- Converts recipe ingredients into the item requests needed for a number of crafts.
+-- Fluids cannot be put into a personal logistics request and are intentionally omitted.
+function TemporaryRequestEditorLogic.recipe_ingredients(ingredients, craft_count, quality)
+  local recipe_ingredients = {}
+  for _, ingredient in ipairs(ingredients or {}) do
+    if ingredient.type == "item" then
+      table.insert(recipe_ingredients, {
+        name = ingredient.name,
+        amount = ingredient.amount * craft_count,
+        quality = quality,
+      })
+    end
+  end
+  return recipe_ingredients
+end
+
+-- Derives a recipe's operation count from existing per-ingredient request quantities.
+-- The smallest complete count is used so every ingredient is available for that many
+-- operations. A nil result means none of the recipe's ingredient requests exist yet.
+function TemporaryRequestEditorLogic.recipe_quantity(existing_quantities, ingredients)
+  local craft_count = nil
+  for _, ingredient in ipairs(ingredients or {}) do
+    if ingredient.type == "item" then
+      local quantity = existing_quantities[ingredient.name]
+      if quantity ~= nil then
+        local count = math.floor(quantity / ingredient.amount)
+        craft_count = craft_count == nil and count or math.min(craft_count, count)
+      else
+        return nil
+      end
+    end
+  end
+  return craft_count
+end
+
+function TemporaryRequestEditorLogic.all_ingredients_satisfied(ingredients, get_item_count)
+  for _, ingredient in ipairs(ingredients) do
+    if get_item_count(ingredient.name, ingredient.quality) < ingredient.amount then
+      return false
+    end
+  end
+  return true
+end
+
 -- pure, testable: decides what Confirm should do, given the entered quantity and how
 -- many the player currently holds of the selected item+quality. Doesn't know about GUI
 -- or LuaLogisticSection at all -- the caller maps each outcome to the actual
