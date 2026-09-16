@@ -22,6 +22,7 @@ Type a search query to find matching entries. A recognized prefix followed by a
 space restricts the search to that source. For example:
 
 - `item `
+- `fluid `
 - `recipe `
 - `technology `
 - `surface `
@@ -41,6 +42,11 @@ Search for items by name.
 | `Shift` + left click | Craft all |
 | `Ctrl/Cmd` + left click | Create a temporary logistics request |
 | `Alt` + left click | Open in Factoriopedia |
+
+### Fluids
+
+Search for fluids by name. The only available action is opening the fluid in Factoriopedia.
+
 
 ### Technologies
 

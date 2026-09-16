@@ -1,6 +1,7 @@
 -- control.lua
 local Registry = require("lib.registry")
 local ItemSource = require("lib.sources.item_source")
+local FluidSource = require("lib.sources.fluid_source")
 local RecipeSource = require("lib.sources.recipe_source")
 local TechnologySource = require("lib.sources.technology_source")
 local SurfaceSource = require("lib.sources.surface_source")
@@ -58,6 +59,7 @@ remote.add_interface("quidquid", {
 script.on_event(defines.events.on_tick, function()
   script.on_event(defines.events.on_tick, nil)
   ItemSource.register()
+  FluidSource.register()
   RecipeSource.register()
   TechnologySource.register()
   SurfaceSource.register()
@@ -71,7 +73,7 @@ end)
 -- All translated sources need these lifecycle events, but each of
 -- script.on_init/on_configuration_changed/on_event accepts only one handler per event for the
 -- whole mod (no stacking) — so a single dispatcher fans each event out to every source.
-local translated_sources = { ItemSource, RecipeSource, TechnologySource, SurfaceSource }
+local translated_sources = { ItemSource, FluidSource, RecipeSource, TechnologySource, SurfaceSource }
 
 local function for_each_translated_source(method_name)
   return function(event)
