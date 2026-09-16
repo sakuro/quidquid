@@ -52,13 +52,15 @@ data:extend({
   {
     type = "custom-input",
     name = "quidquid-palette-up",
-    key_sequence = "UP",
+    key_sequence = "",
+    linked_game_control = "alternative-gui-move-up",
     consuming = "game-only",
   },
   {
     type = "custom-input",
     name = "quidquid-palette-down",
-    key_sequence = "DOWN",
+    key_sequence = "",
+    linked_game_control = "alternative-gui-move-down",
     consuming = "game-only",
   },
 })
