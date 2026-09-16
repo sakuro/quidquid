@@ -55,7 +55,7 @@ local function title_caption(target, quality)
   local tag = quality_system_active()
     and ("[" .. prefix .. "=" .. target.name .. ",quality=" .. quality .. "] ")
     or ("[" .. prefix .. "=" .. target.name .. "] ")
-  return { "", tag, target_prototype(target).localised_name }
+  return { "", "[virtual-signal=signal-Q] ", tag, target_prototype(target).localised_name }
 end
 
 local function available_qualities(force)
