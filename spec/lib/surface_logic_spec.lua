@@ -82,6 +82,23 @@ describe("SurfaceLogic", function()
     assert.are.equal(1, #SurfaceLogic.build_candidates("nauv", { planet({ search_name = false }) }, false))
   end)
 
+  it("includes an ungenerated planet but does not allow remote view", function()
+    local ungenerated = planet({
+      index = "vulcanus",
+      name = "vulcanus",
+      planet_name = "vulcanus",
+      search_name = "Vulcanus",
+      generated = false,
+      unlocked = true,
+    })
+
+    local candidates = SurfaceLogic.build_candidates("vulcanus", { ungenerated }, false)
+
+    assert.are.equal("vulcanus", candidates[1].id)
+    assert.are.equal("vulcanus", candidates[1].planet_name)
+    assert.is_false(SurfaceLogic.can_open_remote_view(ungenerated, false))
+  end)
+
   it("matches platform display names and annotates only foreign ownership", function()
     local own = SurfaceLogic.build_candidates("express", { platform() }, false)[1]
     assert.are.equal("Cargo Express", own.label)

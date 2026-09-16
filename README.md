@@ -8,7 +8,7 @@ search available entries and perform actions on the selected result.
 ## Features
 
 - Ctrl/Cmd + K command palette for searching and acting on items, fluids, recipes,
-  technologies, planets with generated surfaces, and accessible space platforms
+  technologies, planets, and accessible space platforms
 - Source-specific actions including Factoriopedia, technology screens, remote view,
   crafting, and research-queue management
 - Technology research actions queue missing prerequisites when there is enough room
@@ -84,7 +84,7 @@ not the number of items produced by each operation.
 
 ### Surfaces
 
-Search for planets with generated surfaces and space platforms available to your force.
+Search for planets and space platforms available to your force.
 
 | Key | Action |
 | --- | --- |
@@ -110,8 +110,9 @@ quality selection when the Quality system is available.
 
 ## Surface search limitations
 
-- Planets without generated surfaces are not included.
-- Remote view requires the planet to be unlocked by your force.
+- Remote view requires the planet surface to be generated and the planet to be
+  unlocked by your force.
+- Planets without generated surfaces can still be opened in Factoriopedia.
 - Locked planets can still be opened in Factoriopedia.
 - Space platforms are included when owned by your force or when their owner
   considers your force a friend.
