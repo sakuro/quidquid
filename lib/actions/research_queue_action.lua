@@ -3,9 +3,14 @@ local ResearchQueueAction = {}
 local MAX_QUEUE_SIZE = 7
 local INFINITE_LEVEL = 4294967295
 
+local function is_level_based(technology)
+  local max_level = technology.prototype.max_level
+  return max_level == INFINITE_LEVEL or max_level == "infinite" or type(max_level) == "number" and max_level > 1
+end
+
 local function technology_caption(technology)
   local caption = { "", "[technology=" .. technology.name .. "] ", technology.localised_name }
-  if technology.prototype.max_level == INFINITE_LEVEL then
+  if is_level_based(technology) then
     table.insert(caption, " ")
     table.insert(caption, technology.level)
   end
@@ -82,14 +87,20 @@ function ResearchQueueAction.progress_for(force, technology, queue_index)
   return math.floor(technology.saved_progress * 100 + 0.5)
 end
 
-local function queue_index(queue, name)
-  for i, technology in ipairs(queue) do
-    if technology.name == name then
+local function queue_index(queue, technology)
+  if is_level_based(technology) then
+    -- Each occurrence represents the next level of an infinite technology.
+    return nil
+  end
+  for i, queued_technology in ipairs(queue) do
+    if queued_technology.name == technology.name then
       return i
     end
   end
   return nil
 end
+
+ResearchQueueAction.queue_index = queue_index
 
 local function execute(candidate, _params, player_index)
   local player = game.get_player(player_index)
@@ -104,7 +115,7 @@ local function execute(candidate, _params, player_index)
   end
 
   local queue = force.research_queue
-  local existing_index = queue_index(queue, technology.name)
+  local existing_index = queue_index(queue, technology)
   if existing_index ~= nil then
     local key = existing_index == 1 and "quidquid.action-research-queue-current"
       or "quidquid.action-research-queue-already-queued"
