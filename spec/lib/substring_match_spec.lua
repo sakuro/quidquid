@@ -1,4 +1,3 @@
--- spec/lib/substring_match_spec.lua
 local substring_match = require("lib.substring_match")
 
 describe("substring_match", function()

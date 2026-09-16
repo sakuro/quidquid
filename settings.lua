@@ -1,4 +1,3 @@
--- settings.lua
 data:extend({
   {
     type = "bool-setting",

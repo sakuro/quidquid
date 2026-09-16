@@ -1,4 +1,3 @@
--- control.lua
 local Registry = require("lib.registry")
 local ItemSource = require("lib.sources.item_source")
 local FluidSource = require("lib.sources.fluid_source")
@@ -19,9 +18,6 @@ local registry = Registry.new(log)
 Palette.init(registry)
 TemporaryRequestAction.init(TemporaryRequestEditor)
 
--- These custom-input names are quidquid's own hotkeys, wired to fixed handlers below.
--- script.on_event has last-registration-wins, no-stacking semantics, so an action that
--- registered under one of these keys would silently steal the event and break the hotkey.
 local RESERVED_ACTION_KEYS = {
   ["quidquid-toggle"] = true,
   ["quidquid-clear-source-lock"] = true,
