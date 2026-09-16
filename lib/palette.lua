@@ -574,6 +574,12 @@ function Palette.on_cancel_button(event)
   Palette.close(player)
 end
 
+function Palette.on_gui_click(event)
+  Palette.on_clear_source_lock(event)
+  Palette.on_toggle_pin(event)
+  Palette.on_cancel_button(event)
+end
+
 -- When some other GUI (e.g. the temporary-request editor) reassigned player.opened away
 -- from the palette and later closes, player.opened is left nil rather than reverting --
 -- so if the palette is still around (pinned), Escape would otherwise hit nothing opened
