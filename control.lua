@@ -20,9 +20,6 @@ TemporaryRequestAction.init(TemporaryRequestEditor)
 
 local RESERVED_ACTION_KEYS = {
   ["quidquid-toggle"] = true,
-  ["quidquid-clear-source-lock"] = true,
-  ["quidquid-toggle-palette-pin"] = true,
-  ["quidquid-cancel-button"] = true,
   ["quidquid-palette-up"] = true,
   ["quidquid-palette-down"] = true,
 }
@@ -91,12 +88,6 @@ script.on_event(defines.events.on_player_left_game, for_each_translated_source("
 script.on_event(defines.events.on_string_translated, for_each_translated_source("on_string_translated"))
 
 script.on_event("quidquid-toggle", Palette.on_toggle)
-script.on_event("quidquid-clear-source-lock", Palette.on_clear_source_lock)
-script.on_event("quidquid-toggle-palette-pin", Palette.on_toggle_pin)
-script.on_event("quidquid-cancel-button", function(event)
-  Palette.on_cancel_button(event)
-  TemporaryRequestEditor.on_cancel_button(event)
-end)
 script.on_event("quidquid-palette-up", Palette.on_palette_up)
 script.on_event("quidquid-palette-down", Palette.on_palette_down)
 
@@ -120,7 +111,11 @@ script.on_event(defines.events.on_gui_closed, function(event)
   end
 end)
 
-script.on_event(defines.events.on_gui_click, TemporaryRequestEditor.on_gui_click)
+script.on_event(defines.events.on_gui_click, function(event)
+  Palette.on_gui_click(event)
+  TemporaryRequestEditor.on_gui_click(event)
+  TemporaryRequestEditor.on_cancel_button(event)
+end)
 script.on_event(defines.events.on_gui_checked_state_changed, TemporaryRequestEditor.on_gui_checked_state_changed)
 script.on_event("quidquid-temporary-request-editor-confirm", TemporaryRequestEditor.on_confirm_key)
 
