@@ -7,11 +7,16 @@ search available entries and perform actions on the selected result.
 
 ## Features
 
-- Fuzzy search with optional source prefixes
-- Keyboard- and mouse-driven actions
-- Source-specific actions for search results
-- Recipe search and recipe-based crafting
-- Temporary personal logistics requests
+- Ctrl/Cmd + K command palette for searching and acting on items, fluids, recipes,
+  technologies, planets with generated surfaces, and accessible space platforms
+- Source-specific actions including Factoriopedia, technology screens, remote view,
+  crafting, and research-queue management
+- Technology research actions queue missing prerequisites when there is enough room
+- Recognized source prefixes, such as `item `, `fluid `, `recipe `, `technology `,
+  and `surface `, to restrict searches by category
+- Temporary personal logistics requests for items and recipe ingredients, with
+  quantity expressions, stack adjustment buttons, and quality selection
+- Automatic removal of temporary requests once they are fulfilled
 - Position history for remote surface views
 
 ## Usage
@@ -43,6 +48,10 @@ Search for items by name.
 | `Ctrl/Cmd` + left click | Create a temporary logistics request |
 | `Alt` + left click | Open in Factoriopedia |
 
+Item craft actions only use a recipe with the same name as the selected item.
+If no such recipe exists, Quidquid displays a message instead of attempting to
+craft the item.
+
 ### Fluids
 
 Search for fluids by name. The only available action is opening the fluid in Factoriopedia.
@@ -73,13 +82,9 @@ not the number of items produced by each operation.
 | `Ctrl/Cmd` + left click | Create temporary logistics requests for recipe ingredients |
 | `Alt` + left click | Open in Factoriopedia |
 
-Item craft actions only use a recipe with the same name as the selected item.
-If no such recipe exists, Quidquid displays a message instead of attempting to
-craft the item.
-
 ### Surfaces
 
-Search for generated planets and space platforms available to your force.
+Search for planets with generated surfaces and space platforms available to your force.
 
 | Key | Action |
 | --- | --- |
@@ -105,7 +110,7 @@ quality selection when the Quality system is available.
 
 ## Surface search limitations
 
-- Ungenerated surfaces are not included.
+- Planets without generated surfaces are not included.
 - Remote view requires the planet to be unlocked by your force.
 - Locked planets can still be opened in Factoriopedia.
 - Space platforms are included when owned by your force or when their owner
