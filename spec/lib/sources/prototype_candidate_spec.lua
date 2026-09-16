@@ -23,6 +23,17 @@ describe("prototype_candidate", function()
     assert.are.same({}, candidates)
   end)
 
+  it("returns nothing for an empty query", function()
+    local prototype_list = {
+      { name = "iron-plate", localised_name = { "item-name.iron-plate" }, hidden = false },
+    }
+
+    local candidates =
+      build_candidates(candidate_type, icon_prefix, "", prototype_list, "en", fake_translation_cache(), false)
+
+    assert.are.same({}, candidates)
+  end)
+
   it("matches a prototype by internal name", function()
     local prototype_list = {
       { name = "iron-plate", localised_name = { "item-name.iron-plate" }, hidden = false },

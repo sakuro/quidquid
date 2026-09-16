@@ -106,8 +106,17 @@ describe("SurfaceLogic", function()
     assert.are.same({ "quidquid.surface-with-force", "Cargo Express", "Blue Team" }, foreign.label)
   end)
 
-  it("keeps same-name platforms distinct and orders by surface index", function()
+  it("returns no candidates for an empty query", function()
     local candidates = SurfaceLogic.build_candidates("", { platform({ index = 9 }), planet(), platform() }, false)
+    assert.are.same({}, candidates)
+  end)
+
+  it("keeps same-name platforms distinct and orders by surface index", function()
+    local candidates = SurfaceLogic.build_candidates("a", {
+      platform({ index = 9 }),
+      planet({ name = "a", search_name = "a" }),
+      platform(),
+    }, false)
     assert.are.equal(3, #candidates)
     assert.are.same({ 1, 2, 9 }, { candidates[1].id, candidates[2].id, candidates[3].id })
     assert.are.equal("surface", candidates[1].type)
