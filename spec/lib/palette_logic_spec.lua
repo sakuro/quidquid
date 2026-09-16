@@ -38,4 +38,23 @@ describe("PaletteLogic", function()
       assert.are.same({ "a1", "b1", "a2" }, merged)
     end)
   end)
+
+  describe(".move_index", function()
+    it("starts at the first item when moving down", function()
+      assert.are.equal(1, PaletteLogic.move_index(nil, 3, 1))
+    end)
+
+    it("starts at the last item when moving up", function()
+      assert.are.equal(3, PaletteLogic.move_index(nil, 3, -1))
+    end)
+
+    it("wraps at both ends", function()
+      assert.are.equal(3, PaletteLogic.move_index(1, 3, -1))
+      assert.are.equal(1, PaletteLogic.move_index(3, 3, 1))
+    end)
+
+    it("returns nil for an empty list", function()
+      assert.is_nil(PaletteLogic.move_index(nil, 0, 1))
+    end)
+  end)
 end)

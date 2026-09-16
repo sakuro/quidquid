@@ -23,6 +23,8 @@ local RESERVED_ACTION_KEYS = {
   ["quidquid-clear-source-lock"] = true,
   ["quidquid-toggle-palette-pin"] = true,
   ["quidquid-cancel-button"] = true,
+  ["quidquid-palette-up"] = true,
+  ["quidquid-palette-down"] = true,
 }
 
 remote.add_interface("quidquid", {
@@ -95,6 +97,8 @@ script.on_event("quidquid-cancel-button", function(event)
   Palette.on_cancel_button(event)
   TemporaryRequestEditor.on_cancel_button(event)
 end)
+script.on_event("quidquid-palette-up", Palette.on_palette_up)
+script.on_event("quidquid-palette-down", Palette.on_palette_down)
 
 -- Palette and TemporaryRequestEditor each own a disjoint set of GUI elements and both
 -- already no-op for events aimed at elements they don't recognize (checked by name/tag
@@ -105,6 +109,7 @@ script.on_event(defines.events.on_gui_text_changed, function(event)
   Palette.on_gui_text_changed(event)
   TemporaryRequestEditor.on_gui_text_changed(event)
 end)
+script.on_event(defines.events.on_gui_hover, Palette.on_gui_hover)
 script.on_event(defines.events.on_gui_closed, function(event)
   Palette.on_gui_closed(event)
   TemporaryRequestEditor.on_gui_closed(event)
