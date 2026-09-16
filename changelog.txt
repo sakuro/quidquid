@@ -1,12 +1,4 @@
 ---------------------------------------------------------------------------------------------------
 Version: Unreleased
   Features:
-    - Add a technology action for adding research, including prerequisites, to the research queue
-    - Add fluid search with a Factoriopedia action
-    - Add Ctrl+K command palette for searching and acting on items (open in Factoriopedia)
-    - Search and act on technologies from the command palette (open technology screen)
-    - Type a recognized prefix and a space (e.g. "item ") to search only that category, until cleared
-    - Request a temporary personal-logistics delivery for the selected item via an editor window (type a quantity or expression, with +/-Stack buttons to round to the nearest stack, and a quality picker when the Quality system is active); it clears itself automatically once fulfilled
-    - Search generated planets and own or friendly space platforms; open them in remote view or Factoriopedia
-    - Add recipe search with craft and Factoriopedia actions
-    - Request the item ingredients for a recipe through temporary personal logistics requests
+    - Initial release
