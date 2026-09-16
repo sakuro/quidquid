@@ -261,7 +261,6 @@ local function dispatch(player, selected_candidate, key)
   if not ok then
     log(("quidquid: action '%s' execute failed: %s"):format(tostring(action.id), tostring(err)))
   end
-  Palette.close(player)
 end
 
 function Palette.is_palette_input(element)
