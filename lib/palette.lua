@@ -82,7 +82,9 @@ local function update_active_button_styles(player)
     local tags = child.tags
     local index = tags and tags.quidquid_candidate_index
     if index ~= nil then
-      child.style.font_color = index == state.active_index and ACCENT_FONT_COLOR or DEFAULT_FONT_COLOR
+      local active = index == state.active_index
+      child.style.font_color = active and ACCENT_FONT_COLOR or DEFAULT_FONT_COLOR
+      child.style.hovered_font_color = active and ACCENT_FONT_COLOR or DEFAULT_FONT_COLOR
     end
   end
 end
@@ -170,7 +172,7 @@ local function build_candidate_row(pane, wrapped, index, player_index)
   button.style.horizontally_stretchable = true
   button.style.horizontal_align = "left"
   button.style.font_color = DEFAULT_FONT_COLOR
-  button.style.hovered_font_color = ACCENT_FONT_COLOR
+  button.style.hovered_font_color = DEFAULT_FONT_COLOR
 
   local source_label = pane.add({
     type = "label",
