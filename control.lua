@@ -19,7 +19,7 @@ Palette.init(registry)
 TemporaryRequestAction.init(TemporaryRequestEditor)
 
 local RESERVED_ACTION_KEYS = {
-  ["quidquid-toggle"] = true,
+  ["quidquid-open-palette"] = true,
   ["quidquid-palette-up"] = true,
   ["quidquid-palette-down"] = true,
 }
@@ -87,7 +87,7 @@ script.on_event(defines.events.on_player_locale_changed, for_each_translated_sou
 script.on_event(defines.events.on_player_left_game, for_each_translated_source("on_player_left_game"))
 script.on_event(defines.events.on_string_translated, for_each_translated_source("on_string_translated"))
 
-script.on_event("quidquid-toggle", Palette.on_toggle)
+script.on_event("quidquid-open-palette", Palette.on_open)
 script.on_event("quidquid-palette-up", Palette.on_palette_up)
 script.on_event("quidquid-palette-down", Palette.on_palette_down)
 

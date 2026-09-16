@@ -337,14 +337,6 @@ function Palette.close(player)
   frame.destroy()
 end
 
-function Palette.toggle(player)
-  if get_frame(player) ~= nil then
-    Palette.close(player)
-  else
-    Palette.open(player)
-  end
-end
-
 local function dispatch(player, selected_candidate, key)
   if selected_candidate == nil then
     return
@@ -609,10 +601,10 @@ function Palette.on_gui_closed(event)
   Palette.close(player)
 end
 
-function Palette.on_toggle(event)
+function Palette.on_open(event)
   local player = game.get_player(event.player_index)
   if player ~= nil then
-    Palette.toggle(player)
+    Palette.open(player)
   end
 end
 

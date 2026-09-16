@@ -1,7 +1,7 @@
 data:extend({
   {
     type = "custom-input",
-    name = "quidquid-toggle",
+    name = "quidquid-open-palette",
     key_sequence = "COMMAND + K",
   },
   {
