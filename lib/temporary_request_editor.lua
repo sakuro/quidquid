@@ -10,7 +10,7 @@ local CANCEL_BUTTON_NAME = "quidquid-temporary-request-editor-cancel"
 local CONTENT_NAME = "quidquid-temporary-request-editor-content"
 local INPUT_TABLE_NAME = "quidquid-temporary-request-editor-input-table"
 local QUALITY_ROW_NAME = "quidquid-temporary-request-editor-quality-row"
-local QUALITY_RADIO_PREFIX = "quidquid-temporary-request-editor-quality-"
+local QUALITY_BUTTON_PREFIX = "quidquid-temporary-request-editor-quality-"
 local QUANTITY_ROW_NAME = "quidquid-temporary-request-editor-quantity-row"
 local TEXTFIELD_NAME = "quidquid-temporary-request-editor-textfield"
 local MINUS_BUTTON_NAME = "quidquid-temporary-request-editor-minus-button"
@@ -254,10 +254,12 @@ function TemporaryRequestEditor.open(player, selected_candidate)
     quality_row.style.horizontal_align = "center"
     for _, quality in ipairs(qualities) do
       quality_row.add({
-        type = "radiobutton",
-        name = QUALITY_RADIO_PREFIX .. quality,
+        type = "button",
+        name = QUALITY_BUTTON_PREFIX .. quality,
+        style = "compact_slot_sized_button",
         caption = "[quality=" .. quality .. "]",
-        state = quality == "normal",
+        tooltip = prototypes.quality[quality].localised_name,
+        toggled = quality == "normal",
         tags = { quidquid_quality = quality },
       })
     end
@@ -347,7 +349,7 @@ local function select_quality(player, quality)
   local quality_row = content[INPUT_TABLE_NAME][QUALITY_ROW_NAME]
   if quality_row ~= nil then
     for _, radio in ipairs(quality_row.children) do
-      radio.state = radio.tags.quidquid_quality == quality
+      radio.toggled = radio.tags.quidquid_quality == quality
     end
   end
   local quantity = existing_request(player, target, quality)
@@ -355,17 +357,6 @@ local function select_quality(player, quality)
     quantity = target.type == "item" and prototypes.item[target.name].stack_size or 1
   end
   set_quantity_controls(content, quantity)
-end
-
-function TemporaryRequestEditor.on_gui_checked_state_changed(event)
-  local element = event.element
-  if element == nil or not element.valid or element.tags.quidquid_quality == nil then
-    return
-  end
-  local player = game.get_player(event.player_index)
-  if player ~= nil then
-    select_quality(player, element.tags.quidquid_quality)
-  end
 end
 
 local function clear_ingredient_requests(section, existing, ingredients)
@@ -520,7 +511,9 @@ function TemporaryRequestEditor.on_gui_click(event)
   if player == nil then
     return
   end
-  if element.name == MINUS_BUTTON_NAME or element.name == PLUS_BUTTON_NAME then
+  if element.tags.quidquid_quality ~= nil then
+    select_quality(player, element.tags.quidquid_quality)
+  elseif element.name == MINUS_BUTTON_NAME or element.name == PLUS_BUTTON_NAME then
     local content = content_of(player)
     if content == nil then
       return

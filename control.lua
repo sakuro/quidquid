@@ -116,7 +116,6 @@ script.on_event(defines.events.on_gui_click, function(event)
   TemporaryRequestEditor.on_gui_click(event)
   TemporaryRequestEditor.on_cancel_button(event)
 end)
-script.on_event(defines.events.on_gui_checked_state_changed, TemporaryRequestEditor.on_gui_checked_state_changed)
 script.on_event("quidquid-temporary-request-editor-confirm", TemporaryRequestEditor.on_confirm_key)
 
 -- Every event that can change what LuaControl:get_item_count sees for a player's
