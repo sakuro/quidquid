@@ -9,7 +9,9 @@ function SurfaceLogic.is_visible(surface, include_hidden)
 end
 
 function SurfaceLogic.can_open_remote_view(surface, include_hidden)
-  return SurfaceLogic.is_visible(surface, include_hidden) and (surface.kind ~= "planet" or surface.unlocked == true)
+  return SurfaceLogic.is_visible(surface, include_hidden)
+    and surface.generated ~= false
+    and (surface.kind ~= "planet" or surface.unlocked == true)
 end
 
 function SurfaceLogic.build_candidates(query, surfaces, include_hidden)
@@ -29,12 +31,16 @@ function SurfaceLogic.build_candidates(query, surfaces, include_hidden)
       table.insert(candidates, {
         type = "surface",
         id = surface.index,
+        planet_name = surface.planet_name,
         label = label,
         icon = surface.icon,
       })
     end
   end
   table.sort(candidates, function(a, b)
+    if type(a.id) ~= type(b.id) then
+      return tostring(a.id) < tostring(b.id)
+    end
     return a.id < b.id
   end)
   return candidates

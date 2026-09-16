@@ -45,16 +45,35 @@ local function search(query, player_index, _context)
     return {}
   end
   local surfaces = {}
+  local planet_indexes = {}
+
+  for _, planet in pairs(game.planets) do
+    local descriptor = SurfaceAccess.describe_planet(planet, player)
+    local translated = translation:get(player.locale, planet.name)
+    if type(translated) == "string" then
+      descriptor.search_name = translated
+    end
+    table.insert(surfaces, descriptor)
+    planet_indexes[planet.name] = #surfaces
+  end
+
   for _, surface in pairs(game.surfaces) do
     local descriptor = SurfaceAccess.describe(surface, player)
     if descriptor ~= nil then
       if descriptor.planet_name ~= nil then
-        local translated = translation:get(player.locale, descriptor.planet_name)
-        if type(translated) == "string" then
-          descriptor.search_name = translated
+        local index = planet_indexes[descriptor.planet_name]
+        if index ~= nil then
+          local translated = translation:get(player.locale, descriptor.planet_name)
+          if type(translated) == "string" then
+            descriptor.search_name = translated
+          end
+          surfaces[index] = descriptor
+        else
+          table.insert(surfaces, descriptor)
         end
+      else
+        table.insert(surfaces, descriptor)
       end
-      table.insert(surfaces, descriptor)
     end
   end
   return SurfaceLogic.build_candidates(query, surfaces, player.mod_settings["quidquid-include-hidden"].value)

@@ -21,18 +21,36 @@ function SurfaceAccess.describe(surface, player)
   end
   local planet = surface.planet
   if planet ~= nil then
-    return {
-      index = surface.index,
-      name = surface.name,
-      kind = "planet",
-      label = planet.prototype.localised_name,
-      planet_name = planet.name,
-      icon = "space-location/" .. planet.name,
-      unlocked = player.force.is_space_location_unlocked(planet.name),
-      hidden = planet.prototype.hidden or player.force.get_surface_hidden(surface),
-    }
+    local descriptor = SurfaceAccess.describe_planet(planet, player)
+    descriptor.index = surface.index
+    descriptor.name = surface.name
+    descriptor.generated = true
+    descriptor.hidden = planet.prototype.hidden or player.force.get_surface_hidden(surface)
+    return descriptor
   end
   return nil
+end
+
+function SurfaceAccess.describe_planet(planet, player)
+  return {
+    index = planet.name,
+    name = planet.name,
+    kind = "planet",
+    label = planet.prototype.localised_name,
+    planet_name = planet.name,
+    icon = "space-location/" .. planet.name,
+    unlocked = player.force.is_space_location_unlocked(planet.name),
+    hidden = planet.prototype.hidden,
+    generated = false,
+  }
+end
+
+function SurfaceAccess.planet_prototype(candidate)
+  if candidate.type ~= "surface" or candidate.planet_name == nil then
+    return nil
+  end
+  local planet = game.planets[candidate.planet_name]
+  return planet ~= nil and planet.prototype or nil
 end
 
 function SurfaceAccess.resolve(candidate, player)

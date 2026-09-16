@@ -11,13 +11,14 @@ local function resolve_prototype(candidate, player)
     return prototypes.recipe[candidate.id]
   elseif candidate.type == "surface" then
     local surface = SurfaceAccess.resolve(candidate, player)
-    if surface == nil then
-      return nil
-    end
-    if surface.platform ~= nil then
-      return prototypes.surface["space-platform"]
-    elseif surface.planet ~= nil then
-      return surface.planet.prototype
+    if surface ~= nil then
+      if surface.platform ~= nil then
+        return prototypes.surface["space-platform"]
+      elseif surface.planet ~= nil then
+        return surface.planet.prototype
+      end
+    else
+      return SurfaceAccess.planet_prototype(candidate)
     end
   end
   return nil
