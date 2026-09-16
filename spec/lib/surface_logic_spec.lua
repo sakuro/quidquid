@@ -106,6 +106,11 @@ describe("SurfaceLogic", function()
     assert.are.same({ "quidquid.surface-with-force", "Cargo Express", "Blue Team" }, foreign.label)
   end)
 
+  it("does not match a platform by its surface name", function()
+    local candidates = SurfaceLogic.build_candidates("platform-1", { platform() }, false)
+    assert.are.same({}, candidates)
+  end)
+
   it("returns no candidates for an empty query", function()
     local candidates = SurfaceLogic.build_candidates("", { platform({ index = 9 }), planet(), platform() }, false)
     assert.are.same({}, candidates)
