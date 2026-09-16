@@ -292,6 +292,7 @@ function Palette.open(player)
   local input = input_row.add({
     type = "textfield",
     name = INPUT_NAME,
+    lose_focus_on_confirm = true,
   })
   input.style.width = 0
   input.style.horizontally_stretchable = true
@@ -464,6 +465,34 @@ end
 
 function Palette.on_palette_down(event)
   move_active_index(event, 1)
+end
+
+function Palette.on_gui_confirmed(event)
+  if not Palette.is_palette_input(event.element) then
+    return
+  end
+  local player = game.get_player(event.player_index)
+  if player == nil then
+    return
+  end
+  local state = navigation_states[player.index]
+  if state == nil or #state.candidates == 0 then
+    return
+  end
+
+  local index = state.active_index or 1
+  set_active_index(player, index)
+  local table_element = results_table(player)
+  if table_element == nil then
+    return
+  end
+  for _, child in pairs(table_element.children) do
+    local tags = child.tags
+    if tags and tags.quidquid_candidate_index == index then
+      child.focus()
+      return
+    end
+  end
 end
 
 function Palette.on_gui_hover(event)
