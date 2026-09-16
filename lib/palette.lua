@@ -295,11 +295,27 @@ local function dispatch(player, selected_candidate, key)
   if action == nil then
     return
   end
+
+  -- Some actions (e.g. the temporary-request editor) reassign player.opened to a GUI
+  -- of their own, which raises on_gui_closed for whatever was previously opened -- the
+  -- palette frame. That fires synchronously, inside this remote.call, and would destroy
+  -- the palette through Palette.on_gui_closed before the pin check below ever runs.
+  -- Tag the frame so that handler can tell this incidental close from a real one.
+  local frame = get_frame(player)
+  local pinned = is_pinned(player)
+  if pinned and frame ~= nil then
+    frame.tags = { quidquid_suppress_close = true }
+  end
+
   local ok, err = pcall(remote.call, action.interface, "execute", selected_candidate, {}, player.index)
   if not ok then
     log(("quidquid: action '%s' execute failed: %s"):format(tostring(action.id), tostring(err)))
   end
-  if not is_pinned(player) then
+
+  if frame ~= nil and frame.valid then
+    frame.tags = {}
+  end
+  if not pinned then
     Palette.close(player)
   end
 end
@@ -411,7 +427,11 @@ function Palette.on_toggle_pin(event)
 end
 
 function Palette.on_gui_closed(event)
-  if event.element == nil or not event.element.valid or event.element.name ~= FRAME_NAME then
+  local element = event.element
+  if element == nil or not element.valid or element.name ~= FRAME_NAME then
+    return
+  end
+  if element.tags.quidquid_suppress_close then
     return
   end
   local player = game.get_player(event.player_index)
