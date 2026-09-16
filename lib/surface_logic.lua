@@ -17,13 +17,11 @@ end
 function SurfaceLogic.build_candidates(query, surfaces, include_hidden)
   local candidates = {}
   for _, surface in ipairs(surfaces) do
-    if
-      SurfaceLogic.is_visible(surface, include_hidden)
-      and (
-        substring_match(query, surface.name)
-        or (surface.search_name and substring_match(query, surface.search_name))
-      )
-    then
+    local matched = surface.search_name and substring_match(query, surface.search_name)
+    if surface.kind ~= "platform" then
+      matched = matched or substring_match(query, surface.name)
+    end
+    if SurfaceLogic.is_visible(surface, include_hidden) and matched then
       local label = surface.label
       if surface.kind == "platform" and not surface.own then
         label = { "quidquid.surface-with-force", label, surface.force_name }
