@@ -198,7 +198,7 @@ function Palette.open(player)
   titlebar.add{
     type = "label",
     style = "frame_title",
-    caption = {"mod-name.quidquid"},
+    caption = {"", "[virtual-signal=signal-Q] ", {"mod-name.quidquid"}},
   }
 
   local titlebar_filler = titlebar.add{
