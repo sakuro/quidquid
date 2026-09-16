@@ -5,6 +5,11 @@ local Palette = {}
 
 local registry = nil
 
+-- Not persisted to storage: the frame is destroyed and rebuilt on every open/close, so
+-- this remembers the player's pin choice only across that within the current session --
+-- resetting on save load is fine here, unlike e.g. surface navigation history.
+local pinned_players = {}
+
 function Palette.init(registry_instance)
   registry = registry_instance
 end
@@ -210,6 +215,7 @@ function Palette.open(player)
     sprite = "utility/track_button_white",
     tooltip = {"quidquid.palette-pin-tooltip"},
     tags = { quidquid_pin = true },
+    toggled = pinned_players[player.index] == true,
   }
 
   local content_frame = frame.add{
@@ -424,6 +430,11 @@ function Palette.on_toggle_pin(event)
     return
   end
   element.toggled = not element.toggled
+  pinned_players[event.player_index] = element.toggled
+end
+
+function Palette.on_player_removed(event)
+  pinned_players[event.player_index] = nil
 end
 
 function Palette.on_gui_closed(event)

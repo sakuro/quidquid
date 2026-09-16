@@ -121,4 +121,10 @@ script.on_event({
 -- player or surface is removed so reused indices cannot inherit old positions.
 script.on_event(defines.events.on_player_changed_position, OpenRemoteViewAction.on_player_changed_position)
 script.on_event(defines.events.on_pre_surface_deleted, OpenRemoteViewAction.on_pre_surface_deleted)
-script.on_event(defines.events.on_player_removed, OpenRemoteViewAction.on_player_removed)
+
+-- Palette also keys a small per-player table (pin state) by player_index, which needs
+-- the same reused-index cleanup as OpenRemoteViewAction's history above.
+script.on_event(defines.events.on_player_removed, function(event)
+  OpenRemoteViewAction.on_player_removed(event)
+  Palette.on_player_removed(event)
+end)
