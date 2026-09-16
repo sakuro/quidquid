@@ -54,7 +54,11 @@ Search for technologies by name.
 
 | Key | Action |
 | --- | --- |
-| Left click | Open the technology screen |
+| Left click | Add to the research queue |
+| Alt + left click | Open in Factoriopedia |
+
+Technologies can also be added to the research queue with left click. Missing
+prerequisites are queued first when there is enough room.
 
 ### Recipes
 
