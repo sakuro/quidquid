@@ -258,6 +258,7 @@ function TemporaryRequestEditor.open(player, selected_candidate)
         name = QUALITY_BUTTON_PREFIX .. quality,
         style = "compact_slot_sized_button",
         caption = "[quality=" .. quality .. "]",
+        tooltip = prototypes.quality[quality].localised_name,
         toggled = quality == "normal",
         tags = { quidquid_quality = quality },
       })
