@@ -23,6 +23,7 @@ TemporaryRequestAction.init(TemporaryRequestEditor)
 local RESERVED_ACTION_KEYS = {
   ["quidquid-toggle"] = true,
   ["quidquid-clear-source-lock"] = true,
+  ["quidquid-toggle-palette-pin"] = true,
 }
 
 remote.add_interface("quidquid", {
@@ -84,6 +85,7 @@ script.on_event(defines.events.on_string_translated, for_each_translated_source(
 
 script.on_event("quidquid-toggle", Palette.on_toggle)
 script.on_event("quidquid-clear-source-lock", Palette.on_clear_source_lock)
+script.on_event("quidquid-toggle-palette-pin", Palette.on_toggle_pin)
 
 -- Palette and TemporaryRequestEditor each own a disjoint set of GUI elements and both
 -- already no-op for events aimed at elements they don't recognize (checked by name/tag
@@ -119,4 +121,10 @@ script.on_event({
 -- player or surface is removed so reused indices cannot inherit old positions.
 script.on_event(defines.events.on_player_changed_position, OpenRemoteViewAction.on_player_changed_position)
 script.on_event(defines.events.on_pre_surface_deleted, OpenRemoteViewAction.on_pre_surface_deleted)
-script.on_event(defines.events.on_player_removed, OpenRemoteViewAction.on_player_removed)
+
+-- Palette also keys a small per-player table (pin state) by player_index, which needs
+-- the same reused-index cleanup as OpenRemoteViewAction's history above.
+script.on_event(defines.events.on_player_removed, function(event)
+  OpenRemoteViewAction.on_player_removed(event)
+  Palette.on_player_removed(event)
+end)
