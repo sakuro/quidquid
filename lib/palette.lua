@@ -17,6 +17,7 @@ end
 local FRAME_NAME = "quidquid-palette-frame"
 local TITLEBAR_NAME = "quidquid-palette-titlebar"
 local PIN_BUTTON_NAME = "quidquid-palette-pin"
+local CANCEL_BUTTON_NAME = "quidquid-palette-cancel"
 local CONTENT_NAME = "quidquid-palette-content"
 local INPUT_ROW_NAME = "quidquid-palette-input-row"
 local INPUT_NAME = "quidquid-palette-input"
@@ -216,6 +217,15 @@ function Palette.open(player)
     tooltip = {"quidquid.palette-pin-tooltip"},
     tags = { quidquid_pin = true },
     toggled = pinned_players[player.index] == true,
+  }
+
+  titlebar.add{
+    type = "sprite-button",
+    name = CANCEL_BUTTON_NAME,
+    style = "frame_action_button",
+    sprite = "utility/close",
+    tooltip = {"quidquid.cancel-tooltip"},
+    tags = { quidquid_palette_cancel = true },
   }
 
   local content_frame = frame.add{
@@ -435,6 +445,32 @@ end
 
 function Palette.on_player_removed(event)
   pinned_players[event.player_index] = nil
+end
+
+function Palette.on_cancel_button(event)
+  local element = event.element
+  if element == nil or not element.valid or element.tags.quidquid_palette_cancel == nil then
+    return
+  end
+  local player = game.get_player(event.player_index)
+  if player == nil then
+    return
+  end
+  Palette.close(player)
+end
+
+-- When some other GUI (e.g. the temporary-request editor) reassigned player.opened away
+-- from the palette and later closes, player.opened is left nil rather than reverting --
+-- so if the palette is still around (pinned), Escape would otherwise hit nothing opened
+-- and fall through to the game's own pause menu instead of closing the palette.
+function Palette.reclaim_opened(player)
+  if player.opened ~= nil then
+    return
+  end
+  local frame = get_frame(player)
+  if frame ~= nil and frame.valid then
+    player.opened = frame
+  end
 end
 
 function Palette.on_gui_closed(event)

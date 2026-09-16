@@ -4,6 +4,9 @@ local TemporaryRequestEditorLogic = require("lib.temporary_request_editor_logic"
 local TemporaryRequestEditor = {}
 
 local FRAME_NAME = "quidquid-temporary-request-editor-frame"
+local TITLEBAR_NAME = "quidquid-temporary-request-editor-titlebar"
+local TITLE_LABEL_NAME = "quidquid-temporary-request-editor-title-label"
+local CANCEL_BUTTON_NAME = "quidquid-temporary-request-editor-cancel"
 local CONTENT_NAME = "quidquid-temporary-request-editor-content"
 local INPUT_TABLE_NAME = "quidquid-temporary-request-editor-input-table"
 local QUALITY_ROW_NAME = "quidquid-temporary-request-editor-quality-row"
@@ -194,10 +197,25 @@ function TemporaryRequestEditor.open(player, selected_candidate)
   local qualities = available_qualities(player.force)
   local frame = player.gui.screen.add{
     type = "frame", name = FRAME_NAME, direction = "vertical",
-    caption = title_caption(target, "normal"),
   }
   frame.style.maximal_width = 360
   frame.auto_center = true
+
+  local titlebar = frame.add{ type = "flow", name = TITLEBAR_NAME, direction = "horizontal" }
+  titlebar.drag_target = frame
+  titlebar.add{
+    type = "label", name = TITLE_LABEL_NAME, style = "frame_title",
+    caption = title_caption(target, "normal"),
+  }
+  local titlebar_filler = titlebar.add{ type = "empty-widget", style = "draggable_space_header" }
+  titlebar_filler.style.horizontally_stretchable = true
+  titlebar_filler.style.height = 24
+  titlebar.add{
+    type = "sprite-button", name = CANCEL_BUTTON_NAME,
+    style = "frame_action_button", sprite = "utility/close",
+    tooltip = {"quidquid.cancel-tooltip"},
+    tags = { quidquid_temporary_request_editor_cancel = true },
+  }
 
   local content = frame.add{
     type = "frame", name = CONTENT_NAME,
@@ -297,7 +315,7 @@ local function select_quality(player, quality)
     quidquid_target_name = target.name,
     quidquid_quality = quality,
   }
-  frame.caption = title_caption(target, quality)
+  frame[TITLEBAR_NAME][TITLE_LABEL_NAME].caption = title_caption(target, quality)
   local quality_row = content[INPUT_TABLE_NAME][QUALITY_ROW_NAME]
   if quality_row ~= nil then
     for _, radio in ipairs(quality_row.children) do
@@ -450,6 +468,15 @@ end
 function TemporaryRequestEditor.on_confirm_key(event)
   local player = game.get_player(event.player_index)
   if player ~= nil then TemporaryRequestEditor.confirm(player) end
+end
+
+function TemporaryRequestEditor.on_cancel_button(event)
+  local element = event.element
+  if element == nil or not element.valid or element.tags.quidquid_temporary_request_editor_cancel == nil then
+    return
+  end
+  local player = game.get_player(event.player_index)
+  if player ~= nil then TemporaryRequestEditor.close(player) end
 end
 
 return TemporaryRequestEditor

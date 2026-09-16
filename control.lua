@@ -24,6 +24,7 @@ local RESERVED_ACTION_KEYS = {
   ["quidquid-toggle"] = true,
   ["quidquid-clear-source-lock"] = true,
   ["quidquid-toggle-palette-pin"] = true,
+  ["quidquid-cancel-button"] = true,
 }
 
 remote.add_interface("quidquid", {
@@ -86,6 +87,10 @@ script.on_event(defines.events.on_string_translated, for_each_translated_source(
 script.on_event("quidquid-toggle", Palette.on_toggle)
 script.on_event("quidquid-clear-source-lock", Palette.on_clear_source_lock)
 script.on_event("quidquid-toggle-palette-pin", Palette.on_toggle_pin)
+script.on_event("quidquid-cancel-button", function(event)
+  Palette.on_cancel_button(event)
+  TemporaryRequestEditor.on_cancel_button(event)
+end)
 
 -- Palette and TemporaryRequestEditor each own a disjoint set of GUI elements and both
 -- already no-op for events aimed at elements they don't recognize (checked by name/tag
@@ -99,6 +104,10 @@ end)
 script.on_event(defines.events.on_gui_closed, function(event)
   Palette.on_gui_closed(event)
   TemporaryRequestEditor.on_gui_closed(event)
+  local player = game.get_player(event.player_index)
+  if player ~= nil then
+    Palette.reclaim_opened(player)
+  end
 end)
 
 script.on_event(defines.events.on_gui_click, TemporaryRequestEditor.on_gui_click)
