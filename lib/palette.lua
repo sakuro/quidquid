@@ -31,9 +31,9 @@ local ROW_HEIGHT = 28
 local VISIBLE_ROWS = 5
 local CONTENT_WIDTH = 400
 
-local DEFAULT_FONT_COLOR = {r = 255, g = 255, b = 255}
-local ACCENT_FONT_COLOR = {r = 255, g = 142, b = 42}
-local MUTED_FONT_COLOR = {r = 160, g = 160, b = 160}
+local DEFAULT_FONT_COLOR = { r = 255, g = 255, b = 255 }
+local ACCENT_FONT_COLOR = { r = 255, g = 142, b = 42 }
+local MUTED_FONT_COLOR = { r = 160, g = 160, b = 160 }
 
 local function get_frame(player)
   return player.gui.screen[FRAME_NAME]
@@ -73,7 +73,7 @@ end
 
 function Palette.search_all_sources(query, player_index, locked_source)
   local results = {}
-  local sources = locked_source and {locked_source} or registry:default_active_sources()
+  local sources = locked_source and { locked_source } or registry:default_active_sources()
   for _, source in ipairs(sources) do
     local ok, candidates = pcall(remote.call, source.interface, "search", query, player_index, nil)
     if ok then
@@ -90,7 +90,7 @@ function Palette.search_all_sources(query, player_index, locked_source)
 end
 
 function Palette.row_caption(candidate)
-  return {"", "[img=", candidate.icon, "] ", candidate.label}
+  return { "", "[img=", candidate.icon, "] ", candidate.label }
 end
 
 -- __CONTROL__<name>__ is a locale-string placeholder the engine substitutes with the
@@ -109,7 +109,7 @@ end
 -- flattened (each action contributing 4 slots plus a separator). Nesting resets the
 -- budget at each level, so the top level only spends one slot per action.
 local function candidate_hint(definition)
-  return {"", definition.label, " (", {"quidquid.action-" .. definition.id .. "-hint"}, ")"}
+  return { "", definition.label, " (", { "quidquid.action-" .. definition.id .. "-hint" }, ")" }
 end
 
 local function candidate_tooltip(candidate, player_index)
@@ -123,7 +123,7 @@ local function candidate_tooltip(candidate, player_index)
   end
   table.sort(keys)
 
-  local tooltip = {""}
+  local tooltip = { "" }
   for index, key in ipairs(keys) do
     if index > 1 then
       table.insert(tooltip, "\n")
@@ -134,22 +134,22 @@ local function candidate_tooltip(candidate, player_index)
 end
 
 local function build_candidate_row(pane, wrapped, player_index)
-  local button = pane.add{
+  local button = pane.add({
     type = "button",
     style = "transparent_button",
     caption = Palette.row_caption(wrapped.candidate),
     tooltip = candidate_tooltip(wrapped.candidate, player_index),
     tags = { quidquid_candidate = wrapped.candidate },
-  }
+  })
   button.style.horizontally_stretchable = true
   button.style.horizontal_align = "left"
   button.style.font_color = DEFAULT_FONT_COLOR
   button.style.hovered_font_color = ACCENT_FONT_COLOR
 
-  local source_label = pane.add{
+  local source_label = pane.add({
     type = "label",
     caption = wrapped.source_label,
-  }
+  })
   source_label.style.horizontal_align = "right"
   source_label.style.font_color = MUTED_FONT_COLOR
 end
@@ -182,106 +182,106 @@ function Palette.open(player)
     return
   end
 
-  local frame = player.gui.screen.add{
+  local frame = player.gui.screen.add({
     type = "frame",
     name = FRAME_NAME,
     direction = "vertical",
-  }
+  })
   frame.auto_center = true
 
-  local titlebar = frame.add{
+  local titlebar = frame.add({
     type = "flow",
     name = TITLEBAR_NAME,
     direction = "horizontal",
-  }
+  })
   titlebar.drag_target = frame
 
-  titlebar.add{
+  titlebar.add({
     type = "label",
     style = "frame_title",
-    caption = {"", "[virtual-signal=signal-Q] ", {"mod-name.quidquid"}},
+    caption = { "", "[virtual-signal=signal-Q] ", { "mod-name.quidquid" } },
     ignored_by_interaction = true,
-  }
+  })
 
-  local titlebar_filler = titlebar.add{
+  local titlebar_filler = titlebar.add({
     type = "empty-widget",
     style = "draggable_space_header",
     ignored_by_interaction = true,
-  }
+  })
   titlebar_filler.style.horizontally_stretchable = true
   titlebar_filler.style.height = 24
 
-  titlebar.add{
+  titlebar.add({
     type = "sprite-button",
     name = PIN_BUTTON_NAME,
     style = "frame_action_button",
     sprite = "utility/track_button_white",
-    tooltip = {"quidquid.palette-pin-tooltip"},
+    tooltip = { "quidquid.palette-pin-tooltip" },
     tags = { quidquid_pin = true },
     toggled = pinned_players[player.index] == true,
-  }
+  })
 
-  titlebar.add{
+  titlebar.add({
     type = "sprite-button",
     name = CANCEL_BUTTON_NAME,
     style = "frame_action_button",
     sprite = "utility/close",
-    tooltip = {"quidquid.cancel-tooltip"},
+    tooltip = { "quidquid.cancel-tooltip" },
     tags = { quidquid_palette_cancel = true },
-  }
+  })
 
-  local content_frame = frame.add{
+  local content_frame = frame.add({
     type = "frame",
     name = CONTENT_NAME,
     style = "inside_shallow_frame_with_padding",
     direction = "vertical",
-  }
+  })
   content_frame.style.width = CONTENT_WIDTH
 
-  local input_row = content_frame.add{
+  local input_row = content_frame.add({
     type = "flow",
     name = INPUT_ROW_NAME,
     direction = "horizontal",
-  }
+  })
   input_row.style.horizontally_stretchable = true
 
-  local lock_label = input_row.add{
+  local lock_label = input_row.add({
     type = "label",
     name = LOCK_LABEL_NAME,
     visible = false,
-  }
+  })
   lock_label.style.vertical_align = "center"
 
-  input_row.add{
+  input_row.add({
     type = "sprite-button",
     name = LOCK_CLOSE_NAME,
     style = "frame_action_button",
     sprite = "utility/close",
     visible = false,
     tags = { quidquid_close_lock = true },
-  }
+  })
 
-  local input = input_row.add{
+  local input = input_row.add({
     type = "textfield",
     name = INPUT_NAME,
-  }
+  })
   input.style.width = 0
   input.style.horizontally_stretchable = true
 
-  local results_scroll_pane = content_frame.add{
+  local results_scroll_pane = content_frame.add({
     type = "scroll-pane",
     name = RESULTS_NAME,
     direction = "vertical",
-  }
+  })
   results_scroll_pane.style.horizontally_stretchable = true
   results_scroll_pane.style.height = 0
   results_scroll_pane.style.maximal_height = ROW_HEIGHT * VISIBLE_ROWS
 
-  local results_table = results_scroll_pane.add{
+  local results_table = results_scroll_pane.add({
     type = "table",
     name = RESULTS_TABLE_NAME,
     column_count = 2,
-  }
+  })
   results_table.style.horizontally_stretchable = true
 
   player.opened = frame

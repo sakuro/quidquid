@@ -3,7 +3,7 @@ local build_candidates = require("lib.sources.prototype_candidate")
 
 local TechnologySource = {}
 
-local SOURCE_LABEL = {"quidquid.source-technologies"}
+local SOURCE_LABEL = { "quidquid.source-technologies" }
 
 local function collect_technologies()
   local technologies = {}
@@ -57,7 +57,7 @@ function TechnologySource.register()
     id = "technologies",
     type = "technology",
     label = SOURCE_LABEL,
-    prefixes = {"t", "tech"},
+    prefixes = { "t", "tech" },
     default_active = true,
     interface = "quidquid.technology-source",
   })

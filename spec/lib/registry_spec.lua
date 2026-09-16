@@ -10,8 +10,12 @@ end
 
 local function always_true_caller()
   return {
-    has = function() return false end,
-    call = function() error("should not be called") end,
+    has = function()
+      return false
+    end,
+    call = function()
+      error("should not be called")
+    end,
   }
 end
 
@@ -46,7 +50,7 @@ describe("Registry", function()
         version = 1,
         id = "items",
         type = "item",
-        prefixes = {"i", "item"},
+        prefixes = { "i", "item" },
         interface = "my-mod.source-items",
       })
 
@@ -61,7 +65,7 @@ describe("Registry", function()
         version = 2,
         id = "items",
         type = "item",
-        prefixes = {"i"},
+        prefixes = { "i" },
         interface = "my-mod.source-items",
       })
 
@@ -76,7 +80,7 @@ describe("Registry", function()
       local ok = registry:register_source({
         version = 1,
         id = "items",
-        prefixes = {"i"},
+        prefixes = { "i" },
         interface = "my-mod.source-items",
       })
 
@@ -92,14 +96,14 @@ describe("Registry", function()
         version = 1,
         id = "items",
         type = "item",
-        prefixes = {"i"},
+        prefixes = { "i" },
         interface = "my-mod.source-items",
       })
       registry:register_source({
         version = 1,
         id = "recipes",
         type = "recipe",
-        prefixes = {"i"},
+        prefixes = { "i" },
         interface = "my-mod.source-recipes",
       })
 
@@ -115,7 +119,7 @@ describe("Registry", function()
         id = "items",
         type = "item",
         default_active = true,
-        prefixes = {"i"},
+        prefixes = { "i" },
         interface = "my-mod.source-items",
       })
       local second_ok = registry:register_source({
@@ -123,7 +127,7 @@ describe("Registry", function()
         id = "duplicate-items",
         type = "item",
         default_active = true,
-        prefixes = {"d"},
+        prefixes = { "d" },
         interface = "my-mod.source-duplicate-items",
       })
 
@@ -143,14 +147,14 @@ describe("Registry", function()
         version = 1,
         id = "items",
         type = "item",
-        prefixes = {"i"},
+        prefixes = { "i" },
         interface = "my-mod.source-items",
       })
       local fluid_ok = registry:register_source({
         version = 1,
         id = "fluids",
         type = "fluid",
-        prefixes = {"f"},
+        prefixes = { "f" },
         interface = "my-mod.source-fluids",
       })
 
@@ -163,7 +167,10 @@ describe("Registry", function()
     it("returns the source definition registered for a prefix", function()
       local registry = Registry.new()
       registry:register_source({
-        version = 1, id = "items", type = "item", prefixes = {"i", "item"},
+        version = 1,
+        id = "items",
+        type = "item",
+        prefixes = { "i", "item" },
         interface = "my-mod.source-items",
       })
 
@@ -186,7 +193,7 @@ describe("Registry", function()
       local ok = registry:register_action({
         version = 1,
         id = "logistics-request",
-        types = {"item"},
+        types = { "item" },
         key = "confirm",
         interface = "my-mod.action-logistics-request",
       })
@@ -201,7 +208,7 @@ describe("Registry", function()
       local ok = registry:register_action({
         version = 2,
         id = "logistics-request",
-        types = {"item"},
+        types = { "item" },
         key = "confirm",
         interface = "my-mod.action-logistics-request",
       })
@@ -217,7 +224,7 @@ describe("Registry", function()
       local ok = registry:register_action({
         version = 1,
         id = "logistics-request",
-        types = {"item"},
+        types = { "item" },
         interface = "my-mod.action-logistics-request",
       })
 
@@ -245,7 +252,11 @@ describe("Registry", function()
     it("returns sources registered with default_active = true", function()
       local registry = Registry.new()
       registry:register_source({
-        version = 1, id = "items", type = "item", prefixes = {"i"}, default_active = true,
+        version = 1,
+        id = "items",
+        type = "item",
+        prefixes = { "i" },
+        default_active = true,
         interface = "my-mod.source-items",
       })
 
@@ -258,7 +269,10 @@ describe("Registry", function()
     it("excludes sources without default_active", function()
       local registry = Registry.new()
       registry:register_source({
-        version = 1, id = "items", type = "item", prefixes = {"i"},
+        version = 1,
+        id = "items",
+        type = "item",
+        prefixes = { "i" },
         interface = "my-mod.source-items",
       })
 
@@ -280,7 +294,7 @@ describe("Registry", function()
     it("returns nothing for a type with no registered actions", function()
       local registry = Registry.new()
 
-      local resolved = registry:resolve_actions({type = "item", id = "iron-plate"}, 1, always_true_caller())
+      local resolved = registry:resolve_actions({ type = "item", id = "iron-plate" }, 1, always_true_caller())
 
       assert.are.same({}, resolved)
     end)
@@ -290,12 +304,12 @@ describe("Registry", function()
       registry:register_action({
         version = 1,
         id = "logistics-request",
-        types = {"item"},
+        types = { "item" },
         key = "confirm",
         interface = "my-mod.action-logistics-request",
       })
 
-      local resolved = registry:resolve_actions({type = "item", id = "iron-plate"}, 1, always_true_caller())
+      local resolved = registry:resolve_actions({ type = "item", id = "iron-plate" }, 1, always_true_caller())
 
       assert.are.equal("logistics-request", resolved["confirm"].id)
     end)
@@ -304,15 +318,21 @@ describe("Registry", function()
       local logger, messages = spy_logger()
       local registry = Registry.new(logger)
       registry:register_action({
-        version = 1, id = "logistics-request", types = {"item"}, key = "confirm",
+        version = 1,
+        id = "logistics-request",
+        types = { "item" },
+        key = "confirm",
         interface = "my-mod.action-logistics-request",
       })
       registry:register_action({
-        version = 1, id = "duplicate", types = {"item"}, key = "confirm",
+        version = 1,
+        id = "duplicate",
+        types = { "item" },
+        key = "confirm",
         interface = "my-mod.action-duplicate",
       })
 
-      local resolved = registry:resolve_actions({type = "item", id = "iron-plate"}, 1, always_true_caller())
+      local resolved = registry:resolve_actions({ type = "item", id = "iron-plate" }, 1, always_true_caller())
 
       assert.are.equal("logistics-request", resolved["confirm"].id)
       assert.are.equal(1, #messages)
@@ -321,16 +341,22 @@ describe("Registry", function()
     it("does not let a key collision on one type affect another type", function()
       local registry = Registry.new()
       registry:register_action({
-        version = 1, id = "logistics-request", types = {"item"}, key = "confirm",
+        version = 1,
+        id = "logistics-request",
+        types = { "item" },
+        key = "confirm",
         interface = "my-mod.action-logistics-request",
       })
       registry:register_action({
-        version = 1, id = "add-to-crafting-queue", types = {"fluid"}, key = "confirm",
+        version = 1,
+        id = "add-to-crafting-queue",
+        types = { "fluid" },
+        key = "confirm",
         interface = "my-mod.action-crafting-queue",
       })
 
-      local item_resolved = registry:resolve_actions({type = "item", id = "iron-plate"}, 1, always_true_caller())
-      local fluid_resolved = registry:resolve_actions({type = "fluid", id = "water"}, 1, always_true_caller())
+      local item_resolved = registry:resolve_actions({ type = "item", id = "iron-plate" }, 1, always_true_caller())
+      local fluid_resolved = registry:resolve_actions({ type = "fluid", id = "water" }, 1, always_true_caller())
 
       assert.are.equal("logistics-request", item_resolved["confirm"].id)
       assert.are.equal("add-to-crafting-queue", fluid_resolved["confirm"].id)
@@ -339,11 +365,15 @@ describe("Registry", function()
     it("omits an action whose is_applicable returns false", function()
       local registry = Registry.new()
       registry:register_action({
-        version = 1, id = "logistics-request", types = {"item"}, key = "confirm",
+        version = 1,
+        id = "logistics-request",
+        types = { "item" },
+        key = "confirm",
         interface = "my-mod.action-logistics-request",
       })
 
-      local resolved = registry:resolve_actions({type = "item", id = "iron-plate"}, 1, caller_with_is_applicable(false))
+      local resolved =
+        registry:resolve_actions({ type = "item", id = "iron-plate" }, 1, caller_with_is_applicable(false))
 
       assert.is_nil(resolved["confirm"])
     end)
@@ -351,11 +381,14 @@ describe("Registry", function()
     it("includes an action that has no is_applicable implementation", function()
       local registry = Registry.new()
       registry:register_action({
-        version = 1, id = "logistics-request", types = {"item"}, key = "confirm",
+        version = 1,
+        id = "logistics-request",
+        types = { "item" },
+        key = "confirm",
         interface = "my-mod.action-logistics-request",
       })
 
-      local resolved = registry:resolve_actions({type = "item", id = "iron-plate"}, 1, always_true_caller())
+      local resolved = registry:resolve_actions({ type = "item", id = "iron-plate" }, 1, always_true_caller())
 
       assert.are.equal("logistics-request", resolved["confirm"].id)
     end)
@@ -364,12 +397,15 @@ describe("Registry", function()
       local logger, messages = spy_logger()
       local registry = Registry.new(logger)
       registry:register_action({
-        version = 1, id = "logistics-request", types = {"item"}, key = "confirm",
+        version = 1,
+        id = "logistics-request",
+        types = { "item" },
+        key = "confirm",
         interface = "my-mod.action-logistics-request",
       })
 
-      local resolved = registry:resolve_actions(
-        {type = "item", id = "iron-plate"}, 1, caller_with_throwing_is_applicable("boom"))
+      local resolved =
+        registry:resolve_actions({ type = "item", id = "iron-plate" }, 1, caller_with_throwing_is_applicable("boom"))
 
       assert.is_nil(resolved["confirm"])
       assert.are.equal(1, #messages)

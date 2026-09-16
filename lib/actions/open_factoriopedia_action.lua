@@ -9,7 +9,9 @@ local function resolve_prototype(candidate, player)
     return prototypes.recipe[candidate.id]
   elseif candidate.type == "surface" then
     local surface = SurfaceAccess.resolve(candidate, player)
-    if surface == nil then return nil end
+    if surface == nil then
+      return nil
+    end
     if surface.platform ~= nil then
       return prototypes.surface["space-platform"]
     elseif surface.planet ~= nil then
@@ -31,8 +33,12 @@ local function execute(selected_candidate, _params, player_index)
   end
   local prototype = resolve_prototype(selected_candidate, player)
   if prototype == nil then
-    log(("quidquid: open-factoriopedia could not resolve prototype '%s' of type '%s'"):format(
-      tostring(selected_candidate.id), tostring(selected_candidate.type)))
+    log(
+      ("quidquid: open-factoriopedia could not resolve prototype '%s' of type '%s'"):format(
+        tostring(selected_candidate.id),
+        tostring(selected_candidate.type)
+      )
+    )
     return
   end
   player.open_factoriopedia_gui(prototype)
@@ -43,8 +49,8 @@ function OpenFactoriopediaAction.register()
   remote.call("quidquid", "register_action", {
     version = 1,
     id = "open-factoriopedia",
-    types = {"item", "recipe", "surface"},
-    label = {"quidquid.action-open-factoriopedia"},
+    types = { "item", "recipe", "surface" },
+    label = { "quidquid.action-open-factoriopedia" },
     key = "quidquid-open-factoriopedia",
     interface = "quidquid.open-factoriopedia-action",
   })

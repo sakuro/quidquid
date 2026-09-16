@@ -3,7 +3,7 @@ local build_candidates = require("lib.sources.prototype_candidate")
 
 local ItemSource = {}
 
-local SOURCE_LABEL = {"quidquid.source-items"}
+local SOURCE_LABEL = { "quidquid.source-items" }
 
 local function collect_items()
   local items = {}
@@ -57,7 +57,7 @@ function ItemSource.register()
     id = "items",
     type = "item",
     label = SOURCE_LABEL,
-    prefixes = {"i", "item"},
+    prefixes = { "i", "item" },
     default_active = true,
     interface = "quidquid.item-source",
   })

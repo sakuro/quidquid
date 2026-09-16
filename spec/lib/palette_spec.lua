@@ -8,11 +8,11 @@ describe("Palette", function()
 
   describe(".row_caption", function()
     it("builds a rich-text caption with the candidate's icon and label", function()
-      local candidate = { icon = "item/iron-plate", label = {"item-name.iron-plate"} }
+      local candidate = { icon = "item/iron-plate", label = { "item-name.iron-plate" } }
 
       local caption = Palette.row_caption(candidate)
 
-      assert.are.same({"", "[img=", "item/iron-plate", "] ", {"item-name.iron-plate"}}, caption)
+      assert.are.same({ "", "[img=", "item/iron-plate", "] ", { "item-name.iron-plate" } }, caption)
     end)
   end)
 
@@ -59,11 +59,11 @@ describe("Palette", function()
 
     it("wraps each source's candidates with that source's label", function()
       Palette.init(fake_registry({
-        { id = "items", interface = "quidquid.item-source", label = {"quidquid.source-items"} },
+        { id = "items", interface = "quidquid.item-source", label = { "quidquid.source-items" } },
       }))
       _G.remote = {
         call = function(_interface, _fn, _query, _player_index, _context)
-          return { { type = "item", id = "iron-plate", label = {"item-name.iron-plate"}, icon = "item/iron-plate" } }
+          return { { type = "item", id = "iron-plate", label = { "item-name.iron-plate" }, icon = "item/iron-plate" } }
         end,
       }
 
@@ -71,7 +71,7 @@ describe("Palette", function()
 
       assert.are.equal(1, #results)
       assert.are.equal("iron-plate", results[1].candidate.id)
-      assert.are.same({"quidquid.source-items"}, results[1].source_label)
+      assert.are.same({ "quidquid.source-items" }, results[1].source_label)
     end)
 
     it("logs and skips a source whose search call fails, still returning the others", function()
@@ -80,15 +80,22 @@ describe("Palette", function()
         table.insert(logged, message)
       end
       Palette.init(fake_registry({
-        { id = "items", interface = "quidquid.item-source", label = {"quidquid.source-items"} },
-        { id = "technologies", interface = "quidquid.technology-source", label = {"quidquid.source-technologies"} },
+        { id = "items", interface = "quidquid.item-source", label = { "quidquid.source-items" } },
+        { id = "technologies", interface = "quidquid.technology-source", label = { "quidquid.source-technologies" } },
       }))
       _G.remote = {
         call = function(interface, _fn, _query, _player_index, _context)
           if interface == "quidquid.item-source" then
             error("boom")
           end
-          return { { type = "technology", id = "automation", label = {"technology-name.automation"}, icon = "technology/automation" } }
+          return {
+            {
+              type = "technology",
+              id = "automation",
+              label = { "technology-name.automation" },
+              icon = "technology/automation",
+            },
+          }
         end,
       }
 
@@ -109,10 +116,18 @@ describe("Palette", function()
       })
       _G.remote = {
         call = function(_interface, _fn, _query, _player_index, _context)
-          return { { type = "technology", id = "automation", label = {"technology-name.automation"}, icon = "technology/automation" } }
+          return {
+            {
+              type = "technology",
+              id = "automation",
+              label = { "technology-name.automation" },
+              icon = "technology/automation",
+            },
+          }
         end,
       }
-      local locked_source = { id = "technologies", interface = "quidquid.technology-source", label = {"quidquid.source-technologies"} }
+      local locked_source =
+        { id = "technologies", interface = "quidquid.technology-source", label = { "quidquid.source-technologies" } }
 
       local results = Palette.search_all_sources("auto", 1, locked_source)
 

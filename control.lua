@@ -33,8 +33,12 @@ remote.add_interface("quidquid", {
   end,
   register_action = function(definition)
     if RESERVED_ACTION_KEYS[definition.key] then
-      log(("quidquid: action '%s' rejected: key '%s' is reserved for quidquid's own hotkeys"):format(
-        tostring(definition.id), tostring(definition.key)))
+      log(
+        ("quidquid: action '%s' rejected: key '%s' is reserved for quidquid's own hotkeys"):format(
+          tostring(definition.id),
+          tostring(definition.key)
+        )
+      )
       return false
     end
 
@@ -67,7 +71,7 @@ end)
 -- All translated sources need these lifecycle events, but each of
 -- script.on_init/on_configuration_changed/on_event accepts only one handler per event for the
 -- whole mod (no stacking) — so a single dispatcher fans each event out to every source.
-local translated_sources = {ItemSource, RecipeSource, TechnologySource, SurfaceSource}
+local translated_sources = { ItemSource, RecipeSource, TechnologySource, SurfaceSource }
 
 local function for_each_translated_source(method_name)
   return function(event)
