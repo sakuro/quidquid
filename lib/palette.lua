@@ -10,6 +10,8 @@ function Palette.init(registry_instance)
 end
 
 local FRAME_NAME = "quidquid-palette-frame"
+local TITLEBAR_NAME = "quidquid-palette-titlebar"
+local PIN_BUTTON_NAME = "quidquid-palette-pin"
 local CONTENT_NAME = "quidquid-palette-content"
 local INPUT_ROW_NAME = "quidquid-palette-input-row"
 local INPUT_NAME = "quidquid-palette-input"
@@ -29,6 +31,14 @@ local MUTED_FONT_COLOR = {r = 160, g = 160, b = 160}
 
 local function get_frame(player)
   return player.gui.screen[FRAME_NAME]
+end
+
+local function is_pinned(player)
+  local frame = get_frame(player)
+  if frame == nil then
+    return false
+  end
+  return frame[TITLEBAR_NAME][PIN_BUTTON_NAME].toggled
 end
 
 local function content_frame_of(player)
@@ -170,9 +180,37 @@ function Palette.open(player)
     type = "frame",
     name = FRAME_NAME,
     direction = "vertical",
-    caption = {"mod-name.quidquid"},
   }
   frame.auto_center = true
+
+  local titlebar = frame.add{
+    type = "flow",
+    name = TITLEBAR_NAME,
+    direction = "horizontal",
+  }
+  titlebar.drag_target = frame
+
+  titlebar.add{
+    type = "label",
+    style = "frame_title",
+    caption = {"mod-name.quidquid"},
+  }
+
+  local titlebar_filler = titlebar.add{
+    type = "empty-widget",
+    style = "draggable_space_header",
+  }
+  titlebar_filler.style.horizontally_stretchable = true
+  titlebar_filler.style.height = 24
+
+  titlebar.add{
+    type = "sprite-button",
+    name = PIN_BUTTON_NAME,
+    style = "frame_action_button",
+    sprite = "utility/track_button_white",
+    tooltip = {"quidquid.palette-pin-tooltip"},
+    tags = { quidquid_pin = true },
+  }
 
   local content_frame = frame.add{
     type = "frame",
@@ -260,6 +298,9 @@ local function dispatch(player, selected_candidate, key)
   local ok, err = pcall(remote.call, action.interface, "execute", selected_candidate, {}, player.index)
   if not ok then
     log(("quidquid: action '%s' execute failed: %s"):format(tostring(action.id), tostring(err)))
+  end
+  if not is_pinned(player) then
+    Palette.close(player)
   end
 end
 
@@ -359,6 +400,14 @@ function Palette.on_clear_source_lock(event)
   else
     render_candidates(player, Palette.search_all_sources(current_text, player.index))
   end
+end
+
+function Palette.on_toggle_pin(event)
+  local element = event.element
+  if element == nil or not element.valid or element.tags.quidquid_pin == nil then
+    return
+  end
+  element.toggled = not element.toggled
 end
 
 function Palette.on_gui_closed(event)

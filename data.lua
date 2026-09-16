@@ -34,6 +34,11 @@ data:extend({
   },
   {
     type = "custom-input",
+    name = "quidquid-toggle-palette-pin",
+    key_sequence = "mouse-button-1",
+  },
+  {
+    type = "custom-input",
     name = "quidquid-temporary-request",
     key_sequence = "COMMAND + mouse-button-1",
   },
