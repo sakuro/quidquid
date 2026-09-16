@@ -39,7 +39,7 @@ data:extend({
   },
   {
     type = "custom-input",
-    name = "quidquid-cancel-palette-button",
+    name = "quidquid-cancel-button",
     key_sequence = "mouse-button-1",
   },
   {

@@ -224,7 +224,7 @@ function Palette.open(player)
     name = CANCEL_BUTTON_NAME,
     style = "frame_action_button",
     sprite = "utility/close",
-    tooltip = {"quidquid.palette-cancel-tooltip"},
+    tooltip = {"quidquid.cancel-tooltip"},
     tags = { quidquid_palette_cancel = true },
   }
 
