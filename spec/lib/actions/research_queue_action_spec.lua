@@ -45,6 +45,18 @@ describe("ResearchQueueAction", function()
       }, ResearchQueueAction.technology_caption(infinite))
     end)
 
+    it("uses an explicitly provided level", function()
+      local infinite = technology("mining-productivity", nil, { level = 12, max_level = "infinite" })
+
+      assert.are.same({
+        "",
+        "[technology=mining-productivity] ",
+        { "technology-name.mining-productivity" },
+        " ",
+        14,
+      }, ResearchQueueAction.technology_caption(infinite, 14))
+    end)
+
     it("recognizes the infinite technology marker used by the runtime", function()
       local infinite = technology("mining-productivity", nil, { level = 12, max_level = "infinite" })
 
@@ -126,6 +138,20 @@ describe("ResearchQueueAction", function()
       local finite = technology("worker-robots-speed", nil, { max_level = 6 })
 
       assert.is_nil(ResearchQueueAction.queue_index({ finite }, finite))
+    end)
+  end)
+
+  describe(".queued_level", function()
+    it("increments the displayed level for each queued level", function()
+      local infinite = technology("mining-productivity", nil, { level = 12, max_level = "infinite" })
+
+      assert.are.equal(14, ResearchQueueAction.queued_level({ infinite, infinite }, infinite))
+    end)
+
+    it("does not change the level for non-level-based technologies", function()
+      local finite = technology("automation", nil, { level = 1, max_level = 1 })
+
+      assert.are.equal(1, ResearchQueueAction.queued_level({ finite }, finite))
     end)
   end)
 end)

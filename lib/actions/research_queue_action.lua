@@ -8,11 +8,11 @@ local function is_level_based(technology)
   return max_level == INFINITE_LEVEL or max_level == "infinite" or type(max_level) == "number" and max_level > 1
 end
 
-local function technology_caption(technology)
+local function technology_caption(technology, level)
   local caption = { "", "[technology=" .. technology.name .. "] ", technology.localised_name }
   if is_level_based(technology) then
     table.insert(caption, " ")
-    table.insert(caption, technology.level)
+    table.insert(caption, level or technology.level)
   end
   return caption
 end
@@ -34,6 +34,26 @@ ResearchQueueAction.technology_list = technology_list
 
 local function message(target, key, ...)
   local result = { "", technology_caption(target), " ", { key, ... } }
+  return result
+end
+
+local function queued_level(queue, technology)
+  local level = technology.level
+  if not is_level_based(technology) then
+    return level
+  end
+  for _, queued_technology in ipairs(queue) do
+    if queued_technology.name == technology.name then
+      level = level + 1
+    end
+  end
+  return level
+end
+
+ResearchQueueAction.queued_level = queued_level
+
+local function queue_message(queue, target, key, ...)
+  local result = { "", technology_caption(target, queued_level(queue, target)), " ", { key, ... } }
   return result
 end
 
@@ -120,7 +140,7 @@ local function execute(candidate, _params, player_index)
     local key = existing_index == 1 and "quidquid.action-research-queue-current"
       or "quidquid.action-research-queue-already-queued"
     player.create_local_flying_text({
-      text = message(technology, key, ResearchQueueAction.progress_for(force, technology, existing_index)),
+      text = queue_message(queue, technology, key, ResearchQueueAction.progress_for(force, technology, existing_index)),
       create_at_cursor = true,
     })
     return
@@ -128,7 +148,7 @@ local function execute(candidate, _params, player_index)
 
   if technology.researched then
     player.create_local_flying_text({
-      text = message(technology, "quidquid.action-research-queue-already-researched"),
+      text = queue_message(queue, technology, "quidquid.action-research-queue-already-researched"),
       create_at_cursor = true,
     })
     return
@@ -136,7 +156,7 @@ local function execute(candidate, _params, player_index)
 
   if #queue >= MAX_QUEUE_SIZE then
     player.create_local_flying_text({
-      text = message(technology, "quidquid.action-research-queue-full"),
+      text = queue_message(queue, technology, "quidquid.action-research-queue-full"),
       create_at_cursor = true,
     })
     return
@@ -144,7 +164,7 @@ local function execute(candidate, _params, player_index)
 
   if technology.prototype.research_trigger ~= nil then
     player.create_local_flying_text({
-      text = message(technology, "quidquid.action-research-queue-trigger"),
+      text = queue_message(queue, technology, "quidquid.action-research-queue-trigger"),
       create_at_cursor = true,
     })
     return
@@ -154,7 +174,12 @@ local function execute(candidate, _params, player_index)
   local prerequisites, triggers = ResearchQueueAction.collect_prerequisites(technology, queued)
   if #triggers > 0 then
     player.create_local_flying_text({
-      text = message(technology, "quidquid.action-research-queue-trigger-prerequisite", technology_list(triggers)),
+      text = queue_message(
+        queue,
+        technology,
+        "quidquid.action-research-queue-trigger-prerequisite",
+        technology_list(triggers)
+      ),
       create_at_cursor = true,
     })
     return
@@ -162,7 +187,12 @@ local function execute(candidate, _params, player_index)
 
   if #queue + #prerequisites + 1 > MAX_QUEUE_SIZE then
     player.create_local_flying_text({
-      text = message(technology, "quidquid.action-research-queue-prerequisite-slots", technology_list(prerequisites)),
+      text = queue_message(
+        queue,
+        technology,
+        "quidquid.action-research-queue-prerequisite-slots",
+        technology_list(prerequisites)
+      ),
       create_at_cursor = true,
     })
     return
@@ -182,7 +212,7 @@ local function execute(candidate, _params, player_index)
     or "quidquid.action-research-queue-added-with-prerequisites"
   local args = #prerequisites == 0 and {} or { technology_list(prerequisites) }
   player.create_local_flying_text({
-    text = message(technology, key, table.unpack(args)),
+    text = queue_message(queue, technology, key, table.unpack(args)),
     create_at_cursor = true,
   })
 end
