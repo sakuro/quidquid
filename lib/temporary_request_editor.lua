@@ -19,7 +19,7 @@ local BUTTON_ROW_NAME = "quidquid-temporary-request-editor-button-row"
 local CONFIRM_BUTTON_NAME = "quidquid-temporary-request-editor-confirm-button"
 
 local RESERVED_QUALITY_NAME = "quality-unknown"
-local DEFAULT_FONT_COLOR = {r = 0, g = 0, b = 0}
+local DEFAULT_FONT_COLOR = { r = 0, g = 0, b = 0 }
 
 local function get_frame(player)
   return player.gui.screen[FRAME_NAME]
@@ -55,8 +55,7 @@ end
 
 local function title_caption(target, quality)
   local prefix = target.type == "item" and "item" or "recipe"
-  local tag = quality_system_active()
-    and ("[" .. prefix .. "=" .. target.name .. ",quality=" .. quality .. "] ")
+  local tag = quality_system_active() and ("[" .. prefix .. "=" .. target.name .. ",quality=" .. quality .. "] ")
     or ("[" .. prefix .. "=" .. target.name .. "] ")
   return { "", "[virtual-signal=signal-Q] ", tag, target_prototype(target).localised_name }
 end
@@ -87,7 +86,7 @@ end
 
 local function ingredients_for(player, target)
   if target.type == "item" then
-    return {{ type = "item", name = target.name, amount = 1 }}
+    return { { type = "item", name = target.name, amount = 1 } }
   end
   local recipe = recipe_for(player, target)
   return recipe == nil and {} or recipe.ingredients
@@ -195,35 +194,45 @@ function TemporaryRequestEditor.open(player, selected_candidate)
 
   TemporaryRequestEditor.close(player)
   local qualities = available_qualities(player.force)
-  local frame = player.gui.screen.add{
-    type = "frame", name = FRAME_NAME, direction = "vertical",
-  }
+  local frame = player.gui.screen.add({
+    type = "frame",
+    name = FRAME_NAME,
+    direction = "vertical",
+  })
   frame.style.maximal_width = 360
   frame.auto_center = true
 
-  local titlebar = frame.add{ type = "flow", name = TITLEBAR_NAME, direction = "horizontal" }
+  local titlebar = frame.add({ type = "flow", name = TITLEBAR_NAME, direction = "horizontal" })
   titlebar.drag_target = frame
-  titlebar.add{
-    type = "label", name = TITLE_LABEL_NAME, style = "frame_title",
+  titlebar.add({
+    type = "label",
+    name = TITLE_LABEL_NAME,
+    style = "frame_title",
     caption = title_caption(target, "normal"),
     ignored_by_interaction = true,
-  }
-  local titlebar_filler = titlebar.add{
-    type = "empty-widget", style = "draggable_space_header", ignored_by_interaction = true,
-  }
+  })
+  local titlebar_filler = titlebar.add({
+    type = "empty-widget",
+    style = "draggable_space_header",
+    ignored_by_interaction = true,
+  })
   titlebar_filler.style.horizontally_stretchable = true
   titlebar_filler.style.height = 24
-  titlebar.add{
-    type = "sprite-button", name = CANCEL_BUTTON_NAME,
-    style = "frame_action_button", sprite = "utility/close",
-    tooltip = {"quidquid.cancel-tooltip"},
+  titlebar.add({
+    type = "sprite-button",
+    name = CANCEL_BUTTON_NAME,
+    style = "frame_action_button",
+    sprite = "utility/close",
+    tooltip = { "quidquid.cancel-tooltip" },
     tags = { quidquid_temporary_request_editor_cancel = true },
-  }
+  })
 
-  local content = frame.add{
-    type = "frame", name = CONTENT_NAME,
-    style = "inside_shallow_frame_with_padding", direction = "vertical",
-  }
+  local content = frame.add({
+    type = "frame",
+    name = CONTENT_NAME,
+    style = "inside_shallow_frame_with_padding",
+    direction = "vertical",
+  })
   content.style.horizontally_stretchable = true
   content.tags = {
     quidquid_target_type = target.type,
@@ -231,22 +240,26 @@ function TemporaryRequestEditor.open(player, selected_candidate)
     quidquid_quality = "normal",
   }
 
-  local input_table = content.add{
-    type = "table", name = INPUT_TABLE_NAME, column_count = 2,
-  }
+  local input_table = content.add({
+    type = "table",
+    name = INPUT_TABLE_NAME,
+    column_count = 2,
+  })
   input_table.style.horizontally_stretchable = true
 
   if #qualities > 1 then
-    input_table.add{ type = "label", caption = { "quidquid.temporary-request-editor-quality-label" } }
-    local quality_row = input_table.add{ type = "flow", name = QUALITY_ROW_NAME, direction = "horizontal" }
+    input_table.add({ type = "label", caption = { "quidquid.temporary-request-editor-quality-label" } })
+    local quality_row = input_table.add({ type = "flow", name = QUALITY_ROW_NAME, direction = "horizontal" })
     quality_row.style.horizontally_stretchable = true
     quality_row.style.horizontal_align = "center"
     for _, quality in ipairs(qualities) do
-      quality_row.add{
-        type = "radiobutton", name = QUALITY_RADIO_PREFIX .. quality,
-        caption = "[quality=" .. quality .. "]", state = quality == "normal",
+      quality_row.add({
+        type = "radiobutton",
+        name = QUALITY_RADIO_PREFIX .. quality,
+        caption = "[quality=" .. quality .. "]",
+        state = quality == "normal",
         tags = { quidquid_quality = quality },
-      }
+      })
     end
   end
 
@@ -255,45 +268,55 @@ function TemporaryRequestEditor.open(player, selected_candidate)
     initial_quantity = target.type == "item" and prototypes.item[target.name].stack_size or 1
   end
 
-  input_table.add{ type = "label", caption = { target.type == "item"
-    and "quidquid.temporary-request-editor-requested-quantity-label"
-    or "quidquid.temporary-request-editor-craft-count-label" } }
-  local quantity_row = input_table.add{ type = "flow", name = QUANTITY_ROW_NAME, direction = "horizontal" }
+  input_table.add({
+    type = "label",
+    caption = {
+      target.type == "item" and "quidquid.temporary-request-editor-requested-quantity-label"
+        or "quidquid.temporary-request-editor-craft-count-label",
+    },
+  })
+  local quantity_row = input_table.add({ type = "flow", name = QUANTITY_ROW_NAME, direction = "horizontal" })
   quantity_row.style.horizontally_stretchable = true
   quantity_row.style.horizontal_align = "center"
   quantity_row.style.vertical_align = "center"
-  quantity_row.add{
-    type = "sprite-button", name = MINUS_BUTTON_NAME,
-    sprite = target.type == "item"
-      and "quidquid-temporary-request-editor-stack-minus"
-      or "virtual-signal/signal-minus",
-    tooltip = { target.type == "item"
-      and "quidquid.temporary-request-editor-stack-minus-tooltip"
-      or "quidquid.temporary-request-editor-quantity-minus-tooltip" },
-  }
-  quantity_row.add{ type = "textfield", name = TEXTFIELD_NAME }
-  quantity_row.add{
-    type = "sprite-button", name = PLUS_BUTTON_NAME,
-    sprite = target.type == "item"
-      and "quidquid-temporary-request-editor-stack-plus"
-      or "virtual-signal/signal-plus",
-    tooltip = { target.type == "item"
-      and "quidquid.temporary-request-editor-stack-plus-tooltip"
-      or "quidquid.temporary-request-editor-quantity-plus-tooltip" },
-  }
+  quantity_row.add({
+    type = "sprite-button",
+    name = MINUS_BUTTON_NAME,
+    sprite = target.type == "item" and "quidquid-temporary-request-editor-stack-minus" or "virtual-signal/signal-minus",
+    tooltip = {
+      target.type == "item" and "quidquid.temporary-request-editor-stack-minus-tooltip"
+        or "quidquid.temporary-request-editor-quantity-minus-tooltip",
+    },
+  })
+  quantity_row.add({ type = "textfield", name = TEXTFIELD_NAME })
+  quantity_row.add({
+    type = "sprite-button",
+    name = PLUS_BUTTON_NAME,
+    sprite = target.type == "item" and "quidquid-temporary-request-editor-stack-plus" or "virtual-signal/signal-plus",
+    tooltip = {
+      target.type == "item" and "quidquid.temporary-request-editor-stack-plus-tooltip"
+        or "quidquid.temporary-request-editor-quantity-plus-tooltip",
+    },
+  })
 
-  local button_row = content.add{ type = "flow", name = BUTTON_ROW_NAME, direction = "horizontal" }
+  local button_row = content.add({ type = "flow", name = BUTTON_ROW_NAME, direction = "horizontal" })
   button_row.style.horizontally_stretchable = true
-  local left_spacer = button_row.add{ type = "empty-widget" }
+  local left_spacer = button_row.add({ type = "empty-widget" })
   left_spacer.style.horizontally_stretchable = true
-  button_row.add{ type = "button", style = "green_button", name = CONFIRM_BUTTON_NAME,
-    caption = { target.type == "item"
-      and "quidquid.temporary-request-editor-confirm-item"
-      or "quidquid.temporary-request-editor-confirm-recipe" },
-    tooltip = { target.type == "item"
-      and "quidquid.temporary-request-editor-confirm-item-tooltip"
-      or "quidquid.temporary-request-editor-confirm-recipe-tooltip" } }
-  local right_spacer = button_row.add{ type = "empty-widget" }
+  button_row.add({
+    type = "button",
+    style = "green_button",
+    name = CONFIRM_BUTTON_NAME,
+    caption = {
+      target.type == "item" and "quidquid.temporary-request-editor-confirm-item"
+        or "quidquid.temporary-request-editor-confirm-recipe",
+    },
+    tooltip = {
+      target.type == "item" and "quidquid.temporary-request-editor-confirm-item-tooltip"
+        or "quidquid.temporary-request-editor-confirm-recipe-tooltip",
+    },
+  })
+  local right_spacer = button_row.add({ type = "empty-widget" })
   right_spacer.style.horizontally_stretchable = true
 
   set_quantity_controls(content, initial_quantity)
@@ -310,7 +333,9 @@ end
 
 local function select_quality(player, quality)
   local frame = get_frame(player)
-  if frame == nil then return end
+  if frame == nil then
+    return
+  end
   local content = frame[CONTENT_NAME]
   local target = target_from_content(content)
   content.tags = {
@@ -334,9 +359,13 @@ end
 
 function TemporaryRequestEditor.on_gui_checked_state_changed(event)
   local element = event.element
-  if element == nil or not element.valid or element.tags.quidquid_quality == nil then return end
+  if element == nil or not element.valid or element.tags.quidquid_quality == nil then
+    return
+  end
   local player = game.get_player(event.player_index)
-  if player ~= nil then select_quality(player, element.tags.quidquid_quality) end
+  if player ~= nil then
+    select_quality(player, element.tags.quidquid_quality)
+  end
 end
 
 local function clear_ingredient_requests(section, existing, ingredients)
@@ -354,16 +383,23 @@ end
 
 function TemporaryRequestEditor.confirm(player)
   local content = content_of(player)
-  if content == nil then return end
+  if content == nil then
+    return
+  end
   local target = target_from_content(content)
   local quality = content.tags.quidquid_quality
   local quantity = parse_quantity(quantity_row_of(content)[TEXTFIELD_NAME].text)
-  if not TemporaryRequestEditorLogic.valid_quantity(quantity) then return end
+  if not TemporaryRequestEditorLogic.valid_quantity(quantity) then
+    return
+  end
 
   local ingredients = target_ingredients(player, target, quantity, quality)
-  local satisfied = TemporaryRequestEditorLogic.all_ingredients_satisfied(ingredients, function(name, ingredient_quality)
-    return player.character.get_item_count({ name = name, quality = ingredient_quality })
-  end)
+  local satisfied = TemporaryRequestEditorLogic.all_ingredients_satisfied(
+    ingredients,
+    function(name, ingredient_quality)
+      return player.character.get_item_count({ name = name, quality = ingredient_quality })
+    end
+  )
   local action
   if quantity == 0 then
     action = "remove_zero"
@@ -375,18 +411,24 @@ function TemporaryRequestEditor.confirm(player)
 
   TemporaryRequestEditor.close(player)
   local point = TemporaryRequestAction.logistic_point_for(player)
-  if point == nil then return end
+  if point == nil then
+    return
+  end
 
   local section = TemporaryRequestAction.find_existing_section(point)
   local existing = {}
   if section ~= nil then
-    for i = 1, section.filters_count do existing[i] = section.get_slot(i) end
+    for i = 1, section.filters_count do
+      existing[i] = section.get_slot(i)
+    end
   end
 
   if action == "set" then
     section = section or TemporaryRequestAction.get_or_create_section(point)
     existing = {}
-    for i = 1, section.filters_count do existing[i] = section.get_slot(i) end
+    for i = 1, section.filters_count do
+      existing[i] = section.get_slot(i)
+    end
     for _, ingredient in ipairs(ingredients) do
       local index = TemporaryRequestAction.find_slot_index(existing, ingredient.name, ingredient.quality)
       section.set_slot(index, {
@@ -397,30 +439,73 @@ function TemporaryRequestEditor.confirm(player)
     end
     local message
     if target.type == "item" then
-      message = { "quidquid.action-temporary-request-created", item_caption(target, quality), target_prototype(target).localised_name, quantity }
+      message = {
+        "quidquid.action-temporary-request-created",
+        item_caption(target, quality),
+        target_prototype(target).localised_name,
+        quantity,
+      }
     else
-      message = { "quidquid.action-recipe-temporary-request-created", recipe_caption(target, quality), target_prototype(target).localised_name, quantity, ingredient_caption(ingredients) }
+      message = {
+        "quidquid.action-recipe-temporary-request-created",
+        recipe_caption(target, quality),
+        target_prototype(target).localised_name,
+        quantity,
+        ingredient_caption(ingredients),
+      }
     end
     player.create_local_flying_text({ text = message, create_at_cursor = true })
     return
   end
 
   local cleared = section ~= nil and clear_ingredient_requests(section, existing, ingredients) or false
-  if action == "remove_zero" and not cleared then return end
+  if action == "remove_zero" and not cleared then
+    return
+  end
   local message
   if target.type == "item" then
     message = action == "remove_zero"
-      and { "quidquid.action-temporary-request-removed", item_caption(target, quality), target_prototype(target).localised_name }
-      or { "quidquid.action-temporary-request-already-satisfied", item_caption(target, quality), target_prototype(target).localised_name }
+        and {
+          "quidquid.action-temporary-request-removed",
+          item_caption(target, quality),
+          target_prototype(target).localised_name,
+        }
+      or {
+        "quidquid.action-temporary-request-already-satisfied",
+        item_caption(target, quality),
+        target_prototype(target).localised_name,
+      }
   else
     if quality_system_active() then
       message = action == "remove_zero"
-        and { "quidquid.action-recipe-temporary-request-removed", recipe_caption(target, quality), target_prototype(target).localised_name, ingredient_caption(ingredients) }
-        or { "quidquid.action-recipe-temporary-request-already-satisfied", recipe_caption(target, quality), target_prototype(target).localised_name, quantity, ingredient_caption(ingredients) }
+          and {
+            "quidquid.action-recipe-temporary-request-removed",
+            recipe_caption(target, quality),
+            target_prototype(target).localised_name,
+            ingredient_caption(ingredients),
+          }
+        or {
+          "quidquid.action-recipe-temporary-request-already-satisfied",
+          recipe_caption(target, quality),
+          target_prototype(target).localised_name,
+          quantity,
+          ingredient_caption(ingredients),
+        }
     else
       message = action == "remove_zero"
-        and { "quidquid.action-recipe-temporary-request-removed", recipe_caption(target, quality), target_prototype(target).localised_name, ingredient_caption(ingredients) }
-        or { "quidquid.action-recipe-temporary-request-already-satisfied", recipe_caption(target, quality), target_prototype(target).localised_name, quantity, ingredient_caption(ingredients) }
+          and {
+            "quidquid.action-recipe-temporary-request-removed",
+            recipe_caption(target, quality),
+            target_prototype(target).localised_name,
+            ingredient_caption(ingredients),
+          }
+        or {
+          "quidquid.action-recipe-temporary-request-already-satisfied",
+          recipe_caption(target, quality),
+          target_prototype(target).localised_name,
+          quantity,
+          ingredient_caption(ingredients),
+        }
     end
   end
   player.create_local_flying_text({ text = message, create_at_cursor = true })
@@ -428,24 +513,29 @@ end
 
 function TemporaryRequestEditor.on_gui_click(event)
   local element = event.element
-  if element == nil or not element.valid then return end
+  if element == nil or not element.valid then
+    return
+  end
   local player = game.get_player(event.player_index)
-  if player == nil then return end
+  if player == nil then
+    return
+  end
   if element.name == MINUS_BUTTON_NAME or element.name == PLUS_BUTTON_NAME then
     local content = content_of(player)
-    if content == nil then return end
+    if content == nil then
+      return
+    end
     local target = target_from_content(content)
     local textfield = quantity_row_of(content)[TEXTFIELD_NAME]
     local current = parse_quantity(textfield.text) or 0
     local next_quantity
     if target.type == "recipe" then
-      next_quantity = element.name == PLUS_BUTTON_NAME
-        and TemporaryRequestEditorLogic.next_quantity(current)
+      next_quantity = element.name == PLUS_BUTTON_NAME and TemporaryRequestEditorLogic.next_quantity(current)
         or TemporaryRequestEditorLogic.previous_quantity(current)
     else
       local stack_size = prototypes.item[target.name].stack_size
       next_quantity = element.name == PLUS_BUTTON_NAME
-        and TemporaryRequestEditorLogic.next_stack_multiple(current, stack_size)
+          and TemporaryRequestEditorLogic.next_stack_multiple(current, stack_size)
         or TemporaryRequestEditorLogic.previous_stack_multiple(current, stack_size)
     end
     set_quantity_controls(content, next_quantity)
@@ -456,21 +546,31 @@ end
 
 function TemporaryRequestEditor.on_gui_text_changed(event)
   local element = event.element
-  if element == nil or not element.valid or element.name ~= TEXTFIELD_NAME then return end
+  if element == nil or not element.valid or element.name ~= TEXTFIELD_NAME then
+    return
+  end
   local player = game.get_player(event.player_index)
   local content = player ~= nil and content_of(player) or nil
-  if content ~= nil then refresh_quantity_validity(content) end
+  if content ~= nil then
+    refresh_quantity_validity(content)
+  end
 end
 
 function TemporaryRequestEditor.on_gui_closed(event)
-  if event.element == nil or not event.element.valid or event.element.name ~= FRAME_NAME then return end
+  if event.element == nil or not event.element.valid or event.element.name ~= FRAME_NAME then
+    return
+  end
   local player = game.get_player(event.player_index)
-  if player ~= nil then TemporaryRequestEditor.close(player) end
+  if player ~= nil then
+    TemporaryRequestEditor.close(player)
+  end
 end
 
 function TemporaryRequestEditor.on_confirm_key(event)
   local player = game.get_player(event.player_index)
-  if player ~= nil then TemporaryRequestEditor.confirm(player) end
+  if player ~= nil then
+    TemporaryRequestEditor.confirm(player)
+  end
 end
 
 function TemporaryRequestEditor.on_cancel_button(event)
@@ -479,7 +579,9 @@ function TemporaryRequestEditor.on_cancel_button(event)
     return
   end
   local player = game.get_player(event.player_index)
-  if player ~= nil then TemporaryRequestEditor.close(player) end
+  if player ~= nil then
+    TemporaryRequestEditor.close(player)
+  end
 end
 
 return TemporaryRequestEditor

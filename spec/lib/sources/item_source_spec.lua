@@ -17,14 +17,14 @@ describe("ItemSource", function()
   describe(".build_candidates", function()
     it("delegates to prototype_candidate with the item type and icon prefix", function()
       local items = {
-        { name = "iron-plate", localised_name = {"item-name.iron-plate"}, hidden = false },
+        { name = "iron-plate", localised_name = { "item-name.iron-plate" }, hidden = false },
       }
 
       local candidates = ItemSource.build_candidates("iron", items, "en", fake_translation_cache(), false)
 
       assert.are.equal(1, #candidates)
       assert.are.same(
-        { type = "item", id = "iron-plate", label = {"item-name.iron-plate"}, icon = "item/iron-plate" },
+        { type = "item", id = "iron-plate", label = { "item-name.iron-plate" }, icon = "item/iron-plate" },
         candidates[1]
       )
     end)

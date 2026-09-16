@@ -50,34 +50,34 @@ describe("TemporaryRequestEditorLogic", function()
 
   describe(".recipe_ingredients", function()
     it("converts item ingredients to requested amounts and skips fluids", function()
-      assert.are.same({
-        { name = "iron-plate", amount = 6, quality = "rare" },
-      }, TemporaryRequestEditorLogic.recipe_ingredients({
-        { type = "item", name = "iron-plate", amount = 2 },
-        { type = "fluid", name = "water", amount = 10 },
-      }, 3, "rare"))
+      assert.are.same(
+        {
+          { name = "iron-plate", amount = 6, quality = "rare" },
+        },
+        TemporaryRequestEditorLogic.recipe_ingredients({
+          { type = "item", name = "iron-plate", amount = 2 },
+          { type = "fluid", name = "water", amount = 10 },
+        }, 3, "rare")
+      )
     end)
   end)
 
   describe(".recipe_quantity", function()
     it("uses the smallest complete ingredient count", function()
-      assert.are.equal(2, TemporaryRequestEditorLogic.recipe_quantity(
-        { ["iron-plate"] = 6, ["copper-plate"] = 2 },
-        {
+      assert.are.equal(
+        2,
+        TemporaryRequestEditorLogic.recipe_quantity({ ["iron-plate"] = 6, ["copper-plate"] = 2 }, {
           { type = "item", name = "iron-plate", amount = 3 },
           { type = "item", name = "copper-plate", amount = 1 },
-        }
-      ))
+        })
+      )
     end)
 
     it("returns nil when an ingredient request does not exist", function()
-      assert.is_nil(TemporaryRequestEditorLogic.recipe_quantity(
-        { ["iron-plate"] = 6 },
-        {
-          { type = "item", name = "iron-plate", amount = 3 },
-          { type = "item", name = "copper-plate", amount = 1 },
-        }
-      ))
+      assert.is_nil(TemporaryRequestEditorLogic.recipe_quantity({ ["iron-plate"] = 6 }, {
+        { type = "item", name = "iron-plate", amount = 3 },
+        { type = "item", name = "copper-plate", amount = 1 },
+      }))
     end)
   end)
 

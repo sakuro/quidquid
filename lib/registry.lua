@@ -19,8 +19,13 @@ end
 
 function Registry:register_source(definition)
   if definition.version ~= SOURCE_CONTRACT_VERSION then
-    self.logger(("quidquid: source '%s' rejected: unsupported version %s (expected %d)"):format(
-      tostring(definition.id), tostring(definition.version), SOURCE_CONTRACT_VERSION))
+    self.logger(
+      ("quidquid: source '%s' rejected: unsupported version %s (expected %d)"):format(
+        tostring(definition.id),
+        tostring(definition.version),
+        SOURCE_CONTRACT_VERSION
+      )
+    )
     return false
   end
 
@@ -30,8 +35,13 @@ function Registry:register_source(definition)
   end
 
   if self.type_owners[definition.type] ~= nil then
-    self.logger(("quidquid: source '%s' rejected: type '%s' already registered by '%s'"):format(
-      tostring(definition.id), definition.type, tostring(self.type_owners[definition.type].id)))
+    self.logger(
+      ("quidquid: source '%s' rejected: type '%s' already registered by '%s'"):format(
+        tostring(definition.id),
+        definition.type,
+        tostring(self.type_owners[definition.type].id)
+      )
+    )
     return false
   end
 
@@ -39,8 +49,13 @@ function Registry:register_source(definition)
     if self.prefix_owners[prefix] == nil then
       self.prefix_owners[prefix] = definition
     else
-      self.logger(("quidquid: source '%s' prefix '%s' ignored: already registered by '%s'"):format(
-        tostring(definition.id), prefix, tostring(self.prefix_owners[prefix].id)))
+      self.logger(
+        ("quidquid: source '%s' prefix '%s' ignored: already registered by '%s'"):format(
+          tostring(definition.id),
+          prefix,
+          tostring(self.prefix_owners[prefix].id)
+        )
+      )
     end
   end
 
@@ -65,8 +80,13 @@ end
 
 function Registry:register_action(definition)
   if definition.version ~= ACTION_CONTRACT_VERSION then
-    self.logger(("quidquid: action '%s' rejected: unsupported version %s (expected %d)"):format(
-      tostring(definition.id), tostring(definition.version), ACTION_CONTRACT_VERSION))
+    self.logger(
+      ("quidquid: action '%s' rejected: unsupported version %s (expected %d)"):format(
+        tostring(definition.id),
+        tostring(definition.version),
+        ACTION_CONTRACT_VERSION
+      )
+    )
     return false
   end
 
@@ -81,8 +101,14 @@ function Registry:register_action(definition)
     if slots[definition.key] == nil then
       slots[definition.key] = definition
     else
-      self.logger(("quidquid: action '%s' key '%s' for type '%s' ignored: already registered by '%s'"):format(
-        tostring(definition.id), definition.key, candidate_type, tostring(slots[definition.key].id)))
+      self.logger(
+        ("quidquid: action '%s' key '%s' for type '%s' ignored: already registered by '%s'"):format(
+          tostring(definition.id),
+          definition.key,
+          candidate_type,
+          tostring(slots[definition.key].id)
+        )
+      )
     end
   end
 
@@ -100,12 +126,15 @@ function Registry:resolve_actions(selected_candidate, player_index, caller)
   for key, definition in pairs(slots) do
     local applicable = true
     if caller:has(definition.interface, "is_applicable") then
-      local ok, result = pcall(caller.call, caller, definition.interface, "is_applicable", selected_candidate, player_index)
+      local ok, result =
+        pcall(caller.call, caller, definition.interface, "is_applicable", selected_candidate, player_index)
       if ok then
         applicable = result
       else
         applicable = false
-        self.logger(("quidquid: action '%s' is_applicable check failed: %s"):format(tostring(definition.id), tostring(result)))
+        self.logger(
+          ("quidquid: action '%s' is_applicable check failed: %s"):format(tostring(definition.id), tostring(result))
+        )
       end
     end
     if applicable then

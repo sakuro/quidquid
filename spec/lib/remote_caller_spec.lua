@@ -31,14 +31,14 @@ describe("RemoteCaller", function()
 
       _G.remote = {
         call = function(...)
-          captured = {...}
+          captured = { ... }
           return "result"
         end,
       }
 
       local result = RemoteCaller:call("my-mod.action", "execute", "candidate", 42)
 
-      assert.are.same({"my-mod.action", "execute", "candidate", 42}, captured)
+      assert.are.same({ "my-mod.action", "execute", "candidate", 42 }, captured)
       assert.are.equal("result", result)
     end)
   end)

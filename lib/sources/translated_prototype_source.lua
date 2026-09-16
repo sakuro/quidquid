@@ -41,7 +41,7 @@ function TranslatedPrototypeSource:notify_and_clear_pending(locale)
     for player_index in pairs(waiting) do
       local player = game.get_player(player_index)
       if player ~= nil then
-        player.print({"quidquid.source-translations-ready", self.source_label})
+        player.print({ "quidquid.source-translations-ready", self.source_label })
       end
     end
   end

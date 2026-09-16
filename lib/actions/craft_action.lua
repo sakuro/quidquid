@@ -41,13 +41,13 @@ local function craft(count_for)
     if recipe == nil then
       if selected_candidate.type == "item" then
         player.create_local_flying_text({
-          text = {"quidquid.action-craft-no-recipe", selected_candidate.label},
+          text = { "quidquid.action-craft-no-recipe", selected_candidate.label },
           create_at_cursor = true,
         })
       end
       return
     end
-    player.begin_crafting{count = count_for(player, recipe), recipe = recipe}
+    player.begin_crafting({ count = count_for(player, recipe), recipe = recipe })
   end
 end
 
@@ -59,7 +59,7 @@ local function register(id, key, interface, label, count_for)
   remote.call("quidquid", "register_action", {
     version = 1,
     id = id,
-    types = {"item", "recipe"},
+    types = { "item", "recipe" },
     label = label,
     key = key,
     interface = interface,
@@ -67,9 +67,27 @@ local function register(id, key, interface, label, count_for)
 end
 
 function CraftAction.register()
-  register("craft-1", "quidquid-confirm", "quidquid.craft-1-action", {"quidquid.action-craft-1"}, CraftAction.count_of(1))
-  register("craft-5", "quidquid-craft-5", "quidquid.craft-5-action", {"quidquid.action-craft-5"}, CraftAction.count_of(5))
-  register("craft-all", "quidquid-craft-all", "quidquid.craft-all-action", {"quidquid.action-craft-all"}, CraftAction.max_craftable)
+  register(
+    "craft-1",
+    "quidquid-confirm",
+    "quidquid.craft-1-action",
+    { "quidquid.action-craft-1" },
+    CraftAction.count_of(1)
+  )
+  register(
+    "craft-5",
+    "quidquid-craft-5",
+    "quidquid.craft-5-action",
+    { "quidquid.action-craft-5" },
+    CraftAction.count_of(5)
+  )
+  register(
+    "craft-all",
+    "quidquid-craft-all",
+    "quidquid.craft-all-action",
+    { "quidquid.action-craft-all" },
+    CraftAction.max_craftable
+  )
 end
 
 return CraftAction

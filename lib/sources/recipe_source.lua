@@ -3,7 +3,7 @@ local build_candidates = require("lib.sources.prototype_candidate")
 
 local RecipeSource = {}
 
-local SOURCE_LABEL = {"quidquid.source-recipes"}
+local SOURCE_LABEL = { "quidquid.source-recipes" }
 
 local function collect_recipes()
   local recipes = {}
@@ -57,7 +57,7 @@ function RecipeSource.register()
     id = "recipes",
     type = "recipe",
     label = SOURCE_LABEL,
-    prefixes = {"r", "recipe"},
+    prefixes = { "r", "recipe" },
     default_active = true,
     interface = "quidquid.recipe-source",
   })

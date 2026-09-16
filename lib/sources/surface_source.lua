@@ -3,7 +3,7 @@ local SurfaceAccess = require("lib.surface_access")
 local SurfaceLogic = require("lib.surface_logic")
 
 local SurfaceSource = {}
-local SOURCE_LABEL = {"quidquid.source-surfaces"}
+local SOURCE_LABEL = { "quidquid.source-surfaces" }
 
 -- Translate prototype names, not the dynamic list of generated surfaces. Newly
 -- generated planets can then be searched immediately using the existing cache.
@@ -41,14 +41,18 @@ end
 
 local function search(query, player_index, _context)
   local player = game.get_player(player_index)
-  if player == nil then return {} end
+  if player == nil then
+    return {}
+  end
   local surfaces = {}
   for _, surface in pairs(game.surfaces) do
     local descriptor = SurfaceAccess.describe(surface, player)
     if descriptor ~= nil then
       if descriptor.planet_name ~= nil then
         local translated = translation:get(player.locale, descriptor.planet_name)
-        if type(translated) == "string" then descriptor.search_name = translated end
+        if type(translated) == "string" then
+          descriptor.search_name = translated
+        end
       end
       table.insert(surfaces, descriptor)
     end
@@ -57,10 +61,14 @@ local function search(query, player_index, _context)
 end
 
 function SurfaceSource.register()
-  remote.add_interface("quidquid.surface-source", {search = search})
+  remote.add_interface("quidquid.surface-source", { search = search })
   remote.call("quidquid", "register_source", {
-    version = 1, id = "surfaces", type = "surface", label = SOURCE_LABEL,
-    prefixes = {"s", "surface"}, default_active = true,
+    version = 1,
+    id = "surfaces",
+    type = "surface",
+    label = SOURCE_LABEL,
+    prefixes = { "s", "surface" },
+    default_active = true,
     interface = "quidquid.surface-source",
   })
 end

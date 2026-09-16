@@ -2,7 +2,7 @@ local TranslatedPrototypeSource = require("lib.sources.translated_prototype_sour
 local TranslationCache = require("lib.sources.translation_cache")
 
 local function prototype(name)
-  return { name = name, localised_name = {"item-name." .. name} }
+  return { name = name, localised_name = { "item-name." .. name } }
 end
 
 describe("TranslatedPrototypeSource", function()
@@ -18,7 +18,7 @@ describe("TranslatedPrototypeSource", function()
     it("returns prototypes without a cached translation for the locale", function()
       local source = TranslatedPrototypeSource.new("items", function()
         return { prototype("iron-plate"), prototype("copper-plate") }
-      end, {"quidquid.source-items"})
+      end, { "quidquid.source-items" })
       TranslationCache:set("items", "en", "iron-plate", "Iron plate")
 
       local missing = source:missing("en")
@@ -30,7 +30,7 @@ describe("TranslatedPrototypeSource", function()
     it("returns an empty list once every prototype is cached", function()
       local source = TranslatedPrototypeSource.new("items", function()
         return { prototype("iron-plate") }
-      end, {"quidquid.source-items"})
+      end, { "quidquid.source-items" })
       TranslationCache:set("items", "en", "iron-plate", "Iron plate")
 
       assert.are.same({}, source:missing("en"))
@@ -39,7 +39,9 @@ describe("TranslatedPrototypeSource", function()
 
   describe(":remove_from_other_pending", function()
     it("removes the player from a pending locale other than the current one", function()
-      local source = TranslatedPrototypeSource.new("items", function() return {} end, {"quidquid.source-items"})
+      local source = TranslatedPrototypeSource.new("items", function()
+        return {}
+      end, { "quidquid.source-items" })
       source.pending = { en = { [1] = true }, ja = { [1] = true } }
 
       source:remove_from_other_pending(1, "ja")
@@ -49,7 +51,9 @@ describe("TranslatedPrototypeSource", function()
     end)
 
     it("leaves the current locale's pending entry untouched", function()
-      local source = TranslatedPrototypeSource.new("items", function() return {} end, {"quidquid.source-items"})
+      local source = TranslatedPrototypeSource.new("items", function()
+        return {}
+      end, { "quidquid.source-items" })
       source.pending = { en = { [1] = true } }
 
       source:remove_from_other_pending(1, "en")
@@ -58,7 +62,9 @@ describe("TranslatedPrototypeSource", function()
     end)
 
     it("clears a locale entirely once its last waiting player is removed", function()
-      local source = TranslatedPrototypeSource.new("items", function() return {} end, {"quidquid.source-items"})
+      local source = TranslatedPrototypeSource.new("items", function()
+        return {}
+      end, { "quidquid.source-items" })
       source.pending = { en = { [1] = true } }
 
       source:remove_from_other_pending(1, "ja")
@@ -72,7 +78,7 @@ describe("TranslatedPrototypeSource", function()
       local requested = {}
       local source = TranslatedPrototypeSource.new("items", function()
         return { prototype("iron-plate") }
-      end, {"quidquid.source-items"})
+      end, { "quidquid.source-items" })
       local player = {
         index = 1,
         locale = "en",
@@ -93,7 +99,7 @@ describe("TranslatedPrototypeSource", function()
       local request_count = 0
       local source = TranslatedPrototypeSource.new("items", function()
         return { prototype("iron-plate") }
-      end, {"quidquid.source-items"})
+      end, { "quidquid.source-items" })
       local player = {
         index = 1,
         locale = "en",
@@ -114,7 +120,7 @@ describe("TranslatedPrototypeSource", function()
       local requested = false
       local source = TranslatedPrototypeSource.new("items", function()
         return { prototype("iron-plate") }
-      end, {"quidquid.source-items"})
+      end, { "quidquid.source-items" })
       local player = {
         index = 1,
         locale = "en",
@@ -133,7 +139,9 @@ describe("TranslatedPrototypeSource", function()
 
   describe(":on_string_translated", function()
     it("ignores an event for an id that is not in flight", function()
-      local source = TranslatedPrototypeSource.new("items", function() return {} end, {"quidquid.source-items"})
+      local source = TranslatedPrototypeSource.new("items", function()
+        return {}
+      end, { "quidquid.source-items" })
 
       source:on_string_translated({ id = 999, translated = true, result = "Iron plate" })
 
@@ -143,7 +151,7 @@ describe("TranslatedPrototypeSource", function()
     it("caches the translated result and clears the in-flight entry", function()
       local source = TranslatedPrototypeSource.new("items", function()
         return { prototype("iron-plate"), prototype("copper-plate") }
-      end, {"quidquid.source-items"})
+      end, { "quidquid.source-items" })
       source.in_flight[100] = { locale = "en", name = "iron-plate" }
 
       source:on_string_translated({ id = 100, translated = true, result = "Iron plate" })
@@ -155,7 +163,7 @@ describe("TranslatedPrototypeSource", function()
     it("caches false when translation failed", function()
       local source = TranslatedPrototypeSource.new("items", function()
         return { prototype("iron-plate"), prototype("copper-plate") }
-      end, {"quidquid.source-items"})
+      end, { "quidquid.source-items" })
       source.in_flight[100] = { locale = "en", name = "iron-plate" }
 
       source:on_string_translated({ id = 100, translated = false })
@@ -167,7 +175,7 @@ describe("TranslatedPrototypeSource", function()
       local printed = {}
       local source = TranslatedPrototypeSource.new("items", function()
         return { prototype("iron-plate") }
-      end, {"quidquid.source-items"})
+      end, { "quidquid.source-items" })
       source.in_flight[100] = { locale = "en", name = "iron-plate" }
       source.pending.en = { [1] = true, [2] = true }
       _G.game = {
@@ -191,7 +199,9 @@ describe("TranslatedPrototypeSource", function()
 
   describe(":on_player_left_game", function()
     it("removes the player from pending without promoting anyone when no one else is waiting", function()
-      local source = TranslatedPrototypeSource.new("items", function() return {} end, {"quidquid.source-items"})
+      local source = TranslatedPrototypeSource.new("items", function()
+        return {}
+      end, { "quidquid.source-items" })
       source.pending.en = { [1] = true }
 
       source:on_player_left_game({ player_index = 1 })
@@ -203,7 +213,7 @@ describe("TranslatedPrototypeSource", function()
       local requested_by
       local source = TranslatedPrototypeSource.new("items", function()
         return { prototype("iron-plate") }
-      end, {"quidquid.source-items"})
+      end, { "quidquid.source-items" })
       source.pending.en = { [1] = true, [2] = true }
       _G.game = {
         get_player = function(index)
@@ -230,7 +240,9 @@ describe("TranslatedPrototypeSource", function()
     it("clears the translation cache and in-flight/pending state", function()
       TranslationCache:set("items", "en", "iron-plate", "Iron plate")
       TranslationCache:mark_complete("items", "en")
-      local source = TranslatedPrototypeSource.new("items", function() return {} end, {"quidquid.source-items"})
+      local source = TranslatedPrototypeSource.new("items", function()
+        return {}
+      end, { "quidquid.source-items" })
       source.in_flight[100] = { locale = "en", name = "iron-plate" }
       source.pending.en = { [1] = true }
       _G.game = { players = {} }

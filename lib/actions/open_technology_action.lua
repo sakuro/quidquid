@@ -17,8 +17,8 @@ function OpenTechnologyAction.register()
   remote.call("quidquid", "register_action", {
     version = 1,
     id = "open-technology",
-    types = {"technology"},
-    label = {"quidquid.action-open-technology"},
+    types = { "technology" },
+    label = { "quidquid.action-open-technology" },
     key = "quidquid-open-factoriopedia",
     interface = "quidquid.open-technology-action",
   })

@@ -9,7 +9,7 @@ This project manages its toolchain with [mise](https://mise.jdx.dev/). After clo
 
 Review `hk.pkl` and the `git-hooks` package it imports before running the above: `hk install` configures hooks that execute on every commit and push. They enforce, among other things, that commit subjects start with a GitHub `:emoji:` code.
 
-Then `mise run test` runs the unit tests and `mise tasks ls -l` lists this project's tasks (`-l` drops tasks inherited from mise's global config).
+Then `mise run format` formats Lua code, `mise run test` runs the unit tests, and `mise tasks ls -l` lists this project's tasks (`-l` drops tasks inherited from mise's global config).
 
 ### Notes
 

@@ -17,16 +17,18 @@ describe("TechnologySource", function()
   describe(".build_candidates", function()
     it("delegates to prototype_candidate with the technology type and icon prefix", function()
       local technologies = {
-        { name = "steam-power", localised_name = {"technology-name.steam-power"}, hidden = false },
+        { name = "steam-power", localised_name = { "technology-name.steam-power" }, hidden = false },
       }
 
       local candidates = TechnologySource.build_candidates("steam", technologies, "en", fake_translation_cache(), false)
 
       assert.are.equal(1, #candidates)
-      assert.are.same(
-        { type = "technology", id = "steam-power", label = {"technology-name.steam-power"}, icon = "technology/steam-power" },
-        candidates[1]
-      )
+      assert.are.same({
+        type = "technology",
+        id = "steam-power",
+        label = { "technology-name.steam-power" },
+        icon = "technology/steam-power",
+      }, candidates[1])
     end)
   end)
 end)

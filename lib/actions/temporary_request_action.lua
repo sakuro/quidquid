@@ -156,8 +156,8 @@ function TemporaryRequestAction.register()
   remote.call("quidquid", "register_action", {
     version = 1,
     id = "temporary-request",
-    types = {"item", "recipe"},
-    label = {"quidquid.action-temporary-request"},
+    types = { "item", "recipe" },
+    label = { "quidquid.action-temporary-request" },
     key = "quidquid-temporary-request",
     interface = "quidquid.temporary-request-action",
   })
