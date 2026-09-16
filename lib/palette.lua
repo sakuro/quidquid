@@ -459,6 +459,20 @@ function Palette.on_cancel_button(event)
   Palette.close(player)
 end
 
+-- When some other GUI (e.g. the temporary-request editor) reassigned player.opened away
+-- from the palette and later closes, player.opened is left nil rather than reverting --
+-- so if the palette is still around (pinned), Escape would otherwise hit nothing opened
+-- and fall through to the game's own pause menu instead of closing the palette.
+function Palette.reclaim_opened(player)
+  if player.opened ~= nil then
+    return
+  end
+  local frame = get_frame(player)
+  if frame ~= nil and frame.valid then
+    player.opened = frame
+  end
+end
+
 function Palette.on_gui_closed(event)
   local element = event.element
   if element == nil or not element.valid or element.name ~= FRAME_NAME then

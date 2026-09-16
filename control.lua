@@ -101,6 +101,10 @@ end)
 script.on_event(defines.events.on_gui_closed, function(event)
   Palette.on_gui_closed(event)
   TemporaryRequestEditor.on_gui_closed(event)
+  local player = game.get_player(event.player_index)
+  if player ~= nil then
+    Palette.reclaim_opened(player)
+  end
 end)
 
 script.on_event(defines.events.on_gui_click, TemporaryRequestEditor.on_gui_click)
