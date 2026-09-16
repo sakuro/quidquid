@@ -256,7 +256,7 @@ function TemporaryRequestEditor.open(player, selected_candidate)
       quality_row.add({
         type = "button",
         name = QUALITY_BUTTON_PREFIX .. quality,
-        style = "slot_sized_button",
+        style = "compact_slot_sized_button",
         caption = "[quality=" .. quality .. "]",
         toggled = quality == "normal",
         tags = { quidquid_quality = quality },
