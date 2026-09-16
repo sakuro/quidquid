@@ -91,11 +91,20 @@ end
 
 local function set_active_index(player, index)
   local state = navigation_states[player.index]
-  if state == nil then
+  local pane = results_pane(player)
+  local table_element = results_table(player)
+  if state == nil or pane == nil or table_element == nil then
     return
   end
   state.active_index = index
   update_active_button_styles(player)
+  for _, child in pairs(table_element.children) do
+    local tags = child.tags
+    if tags and tags.quidquid_candidate_index == index then
+      pane.scroll_to_element(child)
+      return
+    end
+  end
 end
 
 function Palette.search_all_sources(query, player_index, locked_source)
