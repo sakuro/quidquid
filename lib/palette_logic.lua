@@ -29,4 +29,19 @@ function PaletteLogic.merge_candidates(results, limit)
   return merged
 end
 
+function PaletteLogic.move_index(current_index, count, direction)
+  if count == 0 then
+    return nil
+  end
+
+  local index = current_index or (direction > 0 and 0 or count + 1)
+  index = index + direction
+  if index < 1 then
+    return count
+  elseif index > count then
+    return 1
+  end
+  return index
+end
+
 return PaletteLogic

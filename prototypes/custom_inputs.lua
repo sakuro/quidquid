@@ -49,4 +49,16 @@ data:extend({
     name = "quidquid-temporary-request-editor-confirm",
     key_sequence = "E",
   },
+  {
+    type = "custom-input",
+    name = "quidquid-palette-up",
+    key_sequence = "K",
+    consuming = "game-only",
+  },
+  {
+    type = "custom-input",
+    name = "quidquid-palette-down",
+    key_sequence = "J",
+    consuming = "game-only",
+  },
 })

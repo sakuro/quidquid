@@ -9,6 +9,7 @@ local registry = nil
 -- this remembers the player's pin choice only across that within the current session --
 -- resetting on save load is fine here, unlike e.g. surface navigation history.
 local pinned_players = {}
+local navigation_states = {}
 
 function Palette.init(registry_instance)
   registry = registry_instance
@@ -69,6 +70,41 @@ local function results_table(player)
     return nil
   end
   return pane[RESULTS_TABLE_NAME]
+end
+
+local function update_active_button_styles(player)
+  local state = navigation_states[player.index]
+  local table_element = results_table(player)
+  if state == nil or table_element == nil then
+    return
+  end
+  for _, child in pairs(table_element.children) do
+    local tags = child.tags
+    local index = tags and tags.quidquid_candidate_index
+    if index ~= nil then
+      local active = index == state.active_index
+      child.style.font_color = active and ACCENT_FONT_COLOR or DEFAULT_FONT_COLOR
+      child.style.hovered_font_color = active and ACCENT_FONT_COLOR or DEFAULT_FONT_COLOR
+    end
+  end
+end
+
+local function set_active_index(player, index)
+  local state = navigation_states[player.index]
+  local pane = results_pane(player)
+  local table_element = results_table(player)
+  if state == nil or pane == nil or table_element == nil then
+    return
+  end
+  state.active_index = index
+  update_active_button_styles(player)
+  for _, child in pairs(table_element.children) do
+    local tags = child.tags
+    if tags and tags.quidquid_candidate_index == index then
+      pane.scroll_to_element(child)
+      return
+    end
+  end
 end
 
 function Palette.search_all_sources(query, player_index, locked_source)
@@ -133,18 +169,19 @@ local function candidate_tooltip(candidate, player_index)
   return tooltip
 end
 
-local function build_candidate_row(pane, wrapped, player_index)
+local function build_candidate_row(pane, wrapped, index, player_index)
   local button = pane.add({
     type = "button",
     style = "transparent_button",
     caption = Palette.row_caption(wrapped.candidate),
     tooltip = candidate_tooltip(wrapped.candidate, player_index),
-    tags = { quidquid_candidate = wrapped.candidate },
+    tags = { quidquid_candidate = wrapped.candidate, quidquid_candidate_index = index },
+    raise_hover_events = true,
   })
   button.style.horizontally_stretchable = true
   button.style.horizontal_align = "left"
   button.style.font_color = DEFAULT_FONT_COLOR
-  button.style.hovered_font_color = ACCENT_FONT_COLOR
+  button.style.hovered_font_color = DEFAULT_FONT_COLOR
 
   local source_label = pane.add({
     type = "label",
@@ -160,6 +197,7 @@ local function clear_candidates(player)
   if pane == nil or table_element == nil then
     return
   end
+  navigation_states[player.index] = nil
   table_element.clear()
   pane.style.height = 0
 end
@@ -170,9 +208,10 @@ local function render_candidates(player, candidates)
   if pane == nil or table_element == nil then
     return
   end
+  navigation_states[player.index] = { candidates = candidates }
   table_element.clear()
-  for _, wrapped in ipairs(candidates) do
-    build_candidate_row(table_element, wrapped, player.index)
+  for index, wrapped in ipairs(candidates) do
+    build_candidate_row(table_element, wrapped, index, player.index)
   end
   pane.style.height = nil
 end
@@ -264,6 +303,7 @@ function Palette.open(player)
   local input = input_row.add({
     type = "textfield",
     name = INPUT_NAME,
+    lose_focus_on_confirm = true,
   })
   input.style.width = 0
   input.style.horizontally_stretchable = true
@@ -293,6 +333,7 @@ function Palette.close(player)
   if frame == nil then
     return
   end
+  navigation_states[player.index] = nil
   frame.destroy()
 end
 
@@ -406,7 +447,78 @@ function Palette.on_action_key(event)
   if element == nil or not element.valid or element.tags.quidquid_candidate == nil then
     return
   end
+  set_active_index(player, element.tags.quidquid_candidate_index)
   dispatch(player, element.tags.quidquid_candidate, event.input_name)
+end
+
+local function move_active_index(event, direction)
+  local player = game.get_player(event.player_index)
+  if player == nil then
+    return
+  end
+  local frame = get_frame(player)
+  if frame == nil or player.opened ~= frame then
+    return
+  end
+  local state = navigation_states[player.index]
+  if state == nil then
+    return
+  end
+  local index = PaletteLogic.move_index(state.active_index, #state.candidates, direction)
+  if index ~= nil then
+    set_active_index(player, index)
+  end
+end
+
+function Palette.on_palette_up(event)
+  move_active_index(event, -1)
+end
+
+function Palette.on_palette_down(event)
+  move_active_index(event, 1)
+end
+
+function Palette.on_gui_confirmed(event)
+  if not Palette.is_palette_input(event.element) then
+    return
+  end
+  local player = game.get_player(event.player_index)
+  if player == nil then
+    return
+  end
+  local state = navigation_states[player.index]
+  if state == nil or #state.candidates == 0 then
+    return
+  end
+
+  local index = state.active_index or 1
+  set_active_index(player, index)
+  local table_element = results_table(player)
+  if table_element == nil then
+    return
+  end
+  for _, child in pairs(table_element.children) do
+    local tags = child.tags
+    if tags and tags.quidquid_candidate_index == index then
+      child.focus()
+      return
+    end
+  end
+end
+
+function Palette.on_gui_hover(event)
+  local element = event.element
+  if element == nil or not element.valid then
+    return
+  end
+  local index = element.tags.quidquid_candidate_index
+  if index == nil then
+    return
+  end
+  local player = game.get_player(event.player_index)
+  if player ~= nil then
+    set_active_index(player, index)
+  end
 end
 
 function Palette.on_clear_source_lock(event)
@@ -447,6 +559,7 @@ end
 
 function Palette.on_player_removed(event)
   pinned_players[event.player_index] = nil
+  navigation_states[event.player_index] = nil
 end
 
 function Palette.on_cancel_button(event)
