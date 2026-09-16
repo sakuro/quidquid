@@ -200,11 +200,13 @@ function Palette.open(player)
     type = "label",
     style = "frame_title",
     caption = {"", "[virtual-signal=signal-Q] ", {"mod-name.quidquid"}},
+    ignored_by_interaction = true,
   }
 
   local titlebar_filler = titlebar.add{
     type = "empty-widget",
     style = "draggable_space_header",
+    ignored_by_interaction = true,
   }
   titlebar_filler.style.horizontally_stretchable = true
   titlebar_filler.style.height = 24

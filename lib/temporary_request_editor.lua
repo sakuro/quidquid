@@ -206,8 +206,11 @@ function TemporaryRequestEditor.open(player, selected_candidate)
   titlebar.add{
     type = "label", name = TITLE_LABEL_NAME, style = "frame_title",
     caption = title_caption(target, "normal"),
+    ignored_by_interaction = true,
   }
-  local titlebar_filler = titlebar.add{ type = "empty-widget", style = "draggable_space_header" }
+  local titlebar_filler = titlebar.add{
+    type = "empty-widget", style = "draggable_space_header", ignored_by_interaction = true,
+  }
   titlebar_filler.style.horizontally_stretchable = true
   titlebar_filler.style.height = 24
   titlebar.add{
