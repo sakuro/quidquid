@@ -1,18 +1,5 @@
 local FluidSource = require("lib.sources.fluid_source")
 
-local function fake_translation_cache(entries)
-  entries = entries or {}
-  return {
-    get = function(_, locale, internal_name)
-      local by_locale = entries[locale]
-      if by_locale == nil then
-        return nil
-      end
-      return by_locale[internal_name]
-    end,
-  }
-end
-
 describe("FluidSource", function()
   describe(".build_candidates", function()
     it("builds fluid candidates with fluid icons", function()
@@ -20,7 +7,7 @@ describe("FluidSource", function()
         { name = "water", localised_name = { "fluid-name.water" }, hidden = false },
       }
 
-      local candidates = FluidSource.build_candidates("water", fluids, "en", fake_translation_cache(), false)
+      local candidates = FluidSource.build_candidates("water", fluids, "en", {}, false)
 
       assert.are.equal(1, #candidates)
       assert.are.equal("fluid", candidates[1].type)
