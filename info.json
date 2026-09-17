@@ -6,6 +6,7 @@
   "description": "Quidquid",
   "factorio_version": "2.1",
   "dependencies": [
-    "base >= 2.1"
+    "base >= 2.1",
+    "flib"
   ]
 }
