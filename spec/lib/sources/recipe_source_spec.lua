@@ -22,14 +22,12 @@ describe("RecipeSource", function()
 
       local candidates = RecipeSource.build_candidates("iron", recipes, "en", fake_translation_cache(), false)
 
-      assert.are.same({
-        {
-          type = "recipe",
-          id = "iron-gear-wheel",
-          label = { "recipe-name.iron-gear-wheel" },
-          icon = "recipe/iron-gear-wheel",
-        },
-      }, candidates)
+      assert.are.equal(1, #candidates)
+      assert.are.equal("recipe", candidates[1].type)
+      assert.are.equal("iron-gear-wheel", candidates[1].id)
+      assert.are.same({ "recipe-name.iron-gear-wheel" }, candidates[1].label)
+      assert.are.equal("recipe/iron-gear-wheel", candidates[1].icon)
+      assert.is_number(candidates[1].search_score)
     end)
   end)
 end)

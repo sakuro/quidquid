@@ -125,6 +125,26 @@ quality selection when the Quality system is available.
 
 Show hidden or internal entries in search results.
 
+## Third-party software
+
+The fuzzy matching implementation in
+[`lib/fuzzy_match.lua`](lib/fuzzy_match.lua) is adapted from
+[fzy-lua](https://github.com/swarn/fzy-lua) by Seth Warn.
+
+Quidquid modifies the implementation to:
+
+- operate on normalized UTF-8 code point sequences instead of bytes
+- return 1-based code point positions for matched characters
+- integrate with Quidquid's multilingual search normalization
+- provide scores for ranking candidates across search sources
+
+fzy-lua is distributed under the MIT License. The applicable license text is
+included in [`LICENSE-fzy-lua.txt`](LICENSE-fzy-lua.txt).
+
 ## License
 
-MIT License
+Quidquid is licensed under the MIT License. See
+[`LICENSE.txt`](LICENSE.txt).
+
+The adapted fzy-lua implementation is separately licensed under the MIT
+License. See [`LICENSE-fzy-lua.txt`](LICENSE-fzy-lua.txt).

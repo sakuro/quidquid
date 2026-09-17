@@ -23,12 +23,11 @@ describe("TechnologySource", function()
       local candidates = TechnologySource.build_candidates("steam", technologies, "en", fake_translation_cache(), false)
 
       assert.are.equal(1, #candidates)
-      assert.are.same({
-        type = "technology",
-        id = "steam-power",
-        label = { "technology-name.steam-power" },
-        icon = "technology/steam-power",
-      }, candidates[1])
+      assert.are.equal("technology", candidates[1].type)
+      assert.are.equal("steam-power", candidates[1].id)
+      assert.are.same({ "technology-name.steam-power" }, candidates[1].label)
+      assert.are.equal("technology/steam-power", candidates[1].icon)
+      assert.is_number(candidates[1].search_score)
     end)
   end)
 end)

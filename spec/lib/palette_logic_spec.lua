@@ -37,6 +37,26 @@ describe("PaletteLogic", function()
 
       assert.are.same({ "a1", "b1", "a2" }, merged)
     end)
+
+    it("sorts scored candidates globally while keeping stable ties", function()
+      local merged = PaletteLogic.merge_candidates({
+        {
+          { candidate = { id = "a1", search_score = 2 }, source_label = "A" },
+          { candidate = { id = "a2", search_score = 1 }, source_label = "A" },
+        },
+        {
+          { candidate = { id = "b1", search_score = 3 }, source_label = "B" },
+          { candidate = { id = "b2", search_score = 1 }, source_label = "B" },
+        },
+      }, 30)
+
+      assert.are.same({ "b1", "a1", "a2", "b2" }, {
+        merged[1].candidate.id,
+        merged[2].candidate.id,
+        merged[3].candidate.id,
+        merged[4].candidate.id,
+      })
+    end)
   end)
 
   describe(".move_index", function()
