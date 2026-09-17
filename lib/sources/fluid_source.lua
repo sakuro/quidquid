@@ -1,9 +1,10 @@
-local TranslatedPrototypeSource = require("lib.sources.translated_prototype_source")
+local flib_dictionary = require("__flib__.dictionary")
 local build_candidates = require("lib.sources.prototype_candidate")
 
 local FluidSource = {}
 
 local SOURCE_LABEL = { "quidquid.source-fluids" }
+local NAMESPACE = "fluids"
 
 local function collect_fluids()
   local fluids = {}
@@ -13,32 +14,15 @@ local function collect_fluids()
   return fluids
 end
 
-local translation = TranslatedPrototypeSource.new("fluids", collect_fluids, SOURCE_LABEL)
-
-function FluidSource.build_candidates(query, fluids, locale, translation_cache, include_hidden)
-  return build_candidates("fluid", "fluid", query, fluids, locale, translation_cache, include_hidden)
+function FluidSource.register_dictionary()
+  flib_dictionary.new(NAMESPACE)
+  for _, fluid in ipairs(collect_fluids()) do
+    flib_dictionary.add(NAMESPACE, fluid.name, fluid.localised_name)
+  end
 end
 
-function FluidSource.on_string_translated(event)
-  translation:on_string_translated(event)
-end
-
-function FluidSource.on_player_joined_game(event)
-  translation:on_player_joined_game(event)
-end
-
-FluidSource.on_player_locale_changed = FluidSource.on_player_joined_game
-
-function FluidSource.on_player_left_game(event)
-  translation:on_player_left_game(event)
-end
-
-function FluidSource.on_init()
-  translation:on_init()
-end
-
-function FluidSource.on_configuration_changed()
-  translation:on_configuration_changed()
+function FluidSource.build_candidates(query, fluids, locale, translated_names, include_hidden)
+  return build_candidates("fluid", "fluid", query, fluids, locale, translated_names, include_hidden)
 end
 
 local function search(query, player_index, _context)
@@ -47,7 +31,8 @@ local function search(query, player_index, _context)
     return {}
   end
   local include_hidden = player.mod_settings["quidquid-include-hidden"].value
-  return FluidSource.build_candidates(query, collect_fluids(), player.locale, translation, include_hidden)
+  local translated_names = flib_dictionary.get(player_index, NAMESPACE) or {}
+  return FluidSource.build_candidates(query, collect_fluids(), player.locale, translated_names, include_hidden)
 end
 
 function FluidSource.register()

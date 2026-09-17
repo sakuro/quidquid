@@ -1,9 +1,10 @@
-local TranslatedPrototypeSource = require("lib.sources.translated_prototype_source")
+local flib_dictionary = require("__flib__.dictionary")
 local build_candidates = require("lib.sources.prototype_candidate")
 
 local ItemSource = {}
 
 local SOURCE_LABEL = { "quidquid.source-items" }
+local NAMESPACE = "items"
 
 local function collect_items()
   local items = {}
@@ -13,32 +14,15 @@ local function collect_items()
   return items
 end
 
-local translation = TranslatedPrototypeSource.new("items", collect_items, SOURCE_LABEL)
-
-function ItemSource.build_candidates(query, items, locale, translation_cache, include_hidden)
-  return build_candidates("item", "item", query, items, locale, translation_cache, include_hidden)
+function ItemSource.register_dictionary()
+  flib_dictionary.new(NAMESPACE)
+  for _, item in ipairs(collect_items()) do
+    flib_dictionary.add(NAMESPACE, item.name, item.localised_name)
+  end
 end
 
-function ItemSource.on_string_translated(event)
-  translation:on_string_translated(event)
-end
-
-function ItemSource.on_player_joined_game(event)
-  translation:on_player_joined_game(event)
-end
-
-ItemSource.on_player_locale_changed = ItemSource.on_player_joined_game
-
-function ItemSource.on_player_left_game(event)
-  translation:on_player_left_game(event)
-end
-
-function ItemSource.on_init()
-  translation:on_init()
-end
-
-function ItemSource.on_configuration_changed()
-  translation:on_configuration_changed()
+function ItemSource.build_candidates(query, items, locale, translated_names, include_hidden)
+  return build_candidates("item", "item", query, items, locale, translated_names, include_hidden)
 end
 
 local function search(query, player_index, _context)
@@ -47,7 +31,8 @@ local function search(query, player_index, _context)
     return {}
   end
   local include_hidden = player.mod_settings["quidquid-include-hidden"].value
-  return ItemSource.build_candidates(query, collect_items(), player.locale, translation, include_hidden)
+  local translated_names = flib_dictionary.get(player_index, NAMESPACE) or {}
+  return ItemSource.build_candidates(query, collect_items(), player.locale, translated_names, include_hidden)
 end
 
 function ItemSource.register()

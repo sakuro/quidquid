@@ -1,24 +1,11 @@
 local build_candidates = require("lib.sources.prototype_candidate")
 
-local function fake_translation_cache(entries)
-  entries = entries or {}
-  return {
-    get = function(_, locale, internal_name)
-      local by_locale = entries[locale]
-      if by_locale == nil then
-        return nil
-      end
-      return by_locale[internal_name]
-    end,
-  }
-end
-
 describe("prototype_candidate", function()
   local candidate_type = "item"
   local icon_prefix = "item"
 
   it("returns nothing for an empty prototype list", function()
-    local candidates = build_candidates(candidate_type, icon_prefix, "iron", {}, "en", fake_translation_cache(), false)
+    local candidates = build_candidates(candidate_type, icon_prefix, "iron", {}, "en", {}, false)
 
     assert.are.same({}, candidates)
   end)
@@ -28,8 +15,7 @@ describe("prototype_candidate", function()
       { name = "iron-plate", localised_name = { "item-name.iron-plate" }, hidden = false },
     }
 
-    local candidates =
-      build_candidates(candidate_type, icon_prefix, "", prototype_list, "en", fake_translation_cache(), false)
+    local candidates = build_candidates(candidate_type, icon_prefix, "", prototype_list, "en", {}, false)
 
     assert.are.same({}, candidates)
   end)
@@ -39,8 +25,7 @@ describe("prototype_candidate", function()
       { name = "iron-plate", localised_name = { "item-name.iron-plate" }, hidden = false },
     }
 
-    local candidates =
-      build_candidates(candidate_type, icon_prefix, "iron", prototype_list, "en", fake_translation_cache(), false)
+    local candidates = build_candidates(candidate_type, icon_prefix, "iron", prototype_list, "en", {}, false)
 
     assert.are.equal(1, #candidates)
     assert.are.equal("item", candidates[1].type)
@@ -57,8 +42,7 @@ describe("prototype_candidate", function()
       { name = "iron-plate", localised_name = { "item-name.iron-plate" }, hidden = false },
     }
 
-    local candidates =
-      build_candidates(candidate_type, icon_prefix, "ipl", prototype_list, "en", fake_translation_cache(), false)
+    local candidates = build_candidates(candidate_type, icon_prefix, "ipl", prototype_list, "en", {}, false)
 
     assert.are.equal(1, #candidates)
     assert.are.same({ 1, 6, 7 }, candidates[1].search_positions)
@@ -76,10 +60,10 @@ describe("prototype_candidate", function()
     local prototype_list = {
       { name = "iron-plate", localised_name = { "item-name.iron-plate" }, hidden = false },
     }
-    local translation_cache = fake_translation_cache({ en = { ["iron-plate"] = "鉄板" } })
+    local translated_names = { ["iron-plate"] = "鉄板" }
 
     local candidates =
-      build_candidates(candidate_type, icon_prefix, "鉄", prototype_list, "en", translation_cache, false)
+      build_candidates(candidate_type, icon_prefix, "鉄", prototype_list, "en", translated_names, false)
 
     assert.are.equal(1, #candidates)
     assert.are.equal("iron-plate", candidates[1].id)
@@ -89,10 +73,10 @@ describe("prototype_candidate", function()
     local prototype_list = {
       { name = "cafe", localised_name = { "item-name.cafe" }, hidden = false },
     }
-    local translation_cache = fake_translation_cache({ en = { cafe = "Café" } })
+    local translated_names = { cafe = "Café" }
 
     local candidates =
-      build_candidates(candidate_type, icon_prefix, "CAFE", prototype_list, "en", translation_cache, false)
+      build_candidates(candidate_type, icon_prefix, "CAFE", prototype_list, "en", translated_names, false)
 
     assert.are.equal(1, #candidates)
   end)
@@ -101,10 +85,10 @@ describe("prototype_candidate", function()
     local prototype_list = {
       { name = "iron-plate", localised_name = { "item-name.iron-plate" }, hidden = false },
     }
-    local translation_cache = fake_translation_cache({ en = { ["iron-plate"] = "Iron Plate" } })
+    local translated_names = { ["iron-plate"] = "Iron Plate" }
 
     local candidates =
-      build_candidates(candidate_type, icon_prefix, "ipl", prototype_list, "en", translation_cache, false)
+      build_candidates(candidate_type, icon_prefix, "ipl", prototype_list, "en", translated_names, false)
 
     assert.are.equal(1, #candidates)
     assert.are.equal("localized_name", candidates[1].search_field)
@@ -122,10 +106,10 @@ describe("prototype_candidate", function()
     local prototype_list = {
       { name = "belt", localised_name = { "item-name.belt" }, hidden = false },
     }
-    local translation_cache = fake_translation_cache({ ja = { belt = "ベルト" } })
+    local translated_names = { belt = "ベルト" }
 
     local candidates =
-      build_candidates(candidate_type, icon_prefix, "べると", prototype_list, "ja", translation_cache, false)
+      build_candidates(candidate_type, icon_prefix, "べると", prototype_list, "ja", translated_names, false)
 
     assert.are.equal(1, #candidates)
   end)
@@ -135,23 +119,20 @@ describe("prototype_candidate", function()
       { name = "iron-plate", localised_name = { "item-name.iron-plate" }, hidden = false },
     }
 
-    local candidates =
-      build_candidates(candidate_type, icon_prefix, "copper", prototype_list, "en", fake_translation_cache(), false)
+    local candidates = build_candidates(candidate_type, icon_prefix, "copper", prototype_list, "en", {}, false)
 
     assert.are.same({}, candidates)
   end)
 
-  it("does not match against a failed-translation sentinel", function()
+  it("does not match when the translated-name entry is absent", function()
     -- Same non-matching-on-internal-name query as the previous test, but this time the
-    -- cached value is the `false` sentinel (translation attempted, failed) rather than a
-    -- string — this must NOT be treated as a match.
+    -- prototype has no entry at all in translated_names (flib omits failed/not-yet-done
+    -- translations rather than storing a sentinel) — this must NOT be treated as a match.
     local prototype_list = {
       { name = "iron-plate", localised_name = { "item-name.iron-plate" }, hidden = false },
     }
-    local translation_cache = fake_translation_cache({ en = { ["iron-plate"] = false } })
 
-    local candidates =
-      build_candidates(candidate_type, icon_prefix, "鉄", prototype_list, "en", translation_cache, false)
+    local candidates = build_candidates(candidate_type, icon_prefix, "鉄", prototype_list, "en", {}, false)
 
     assert.are.same({}, candidates)
   end)
@@ -161,8 +142,7 @@ describe("prototype_candidate", function()
       { name = "debug-marker", localised_name = { "item-name.debug-marker" }, hidden = true },
     }
 
-    local candidates =
-      build_candidates(candidate_type, icon_prefix, "debug", prototype_list, "en", fake_translation_cache(), false)
+    local candidates = build_candidates(candidate_type, icon_prefix, "debug", prototype_list, "en", {}, false)
 
     assert.are.same({}, candidates)
   end)
@@ -172,8 +152,7 @@ describe("prototype_candidate", function()
       { name = "debug-marker", localised_name = { "item-name.debug-marker" }, hidden = true },
     }
 
-    local candidates =
-      build_candidates(candidate_type, icon_prefix, "debug", prototype_list, "en", fake_translation_cache(), true)
+    local candidates = build_candidates(candidate_type, icon_prefix, "debug", prototype_list, "en", {}, true)
 
     assert.are.equal(1, #candidates)
   end)
@@ -186,8 +165,7 @@ describe("prototype_candidate", function()
       { name = "secret-plate", localised_name = { "item-name.secret-plate" }, hidden = true },
     }
 
-    local candidates =
-      build_candidates(candidate_type, icon_prefix, "plate", prototype_list, "en", fake_translation_cache(), false)
+    local candidates = build_candidates(candidate_type, icon_prefix, "plate", prototype_list, "en", {}, false)
 
     assert.are.equal(2, #candidates)
     assert.are.equal("iron-plate", candidates[1].id)
@@ -199,8 +177,7 @@ describe("prototype_candidate", function()
       { name = "steam-power", localised_name = { "technology-name.steam-power" }, hidden = false },
     }
 
-    local candidates =
-      build_candidates("technology", "technology", "steam", prototype_list, "en", fake_translation_cache(), false)
+    local candidates = build_candidates("technology", "technology", "steam", prototype_list, "en", {}, false)
 
     assert.are.equal(1, #candidates)
     assert.are.equal("technology", candidates[1].type)
@@ -217,8 +194,7 @@ describe("prototype_candidate", function()
       { name = "steam-power", localised_name = { "technology-name.steam-power" }, hidden = false },
     }
 
-    local candidates =
-      build_candidates("technology", "tech-icon", "steam", prototype_list, "en", fake_translation_cache(), false)
+    local candidates = build_candidates("technology", "tech-icon", "steam", prototype_list, "en", {}, false)
 
     assert.are.equal(1, #candidates)
     assert.are.equal("technology", candidates[1].type)

@@ -1,9 +1,10 @@
-local TranslatedPrototypeSource = require("lib.sources.translated_prototype_source")
+local flib_dictionary = require("__flib__.dictionary")
 local build_candidates = require("lib.sources.prototype_candidate")
 
 local RecipeSource = {}
 
 local SOURCE_LABEL = { "quidquid.source-recipes" }
+local NAMESPACE = "recipes"
 
 local function collect_recipes()
   local recipes = {}
@@ -13,32 +14,15 @@ local function collect_recipes()
   return recipes
 end
 
-local translation = TranslatedPrototypeSource.new("recipes", collect_recipes, SOURCE_LABEL)
-
-function RecipeSource.build_candidates(query, recipes, locale, translation_cache, include_hidden)
-  return build_candidates("recipe", "recipe", query, recipes, locale, translation_cache, include_hidden)
+function RecipeSource.register_dictionary()
+  flib_dictionary.new(NAMESPACE)
+  for _, recipe in ipairs(collect_recipes()) do
+    flib_dictionary.add(NAMESPACE, recipe.name, recipe.localised_name)
+  end
 end
 
-function RecipeSource.on_string_translated(event)
-  translation:on_string_translated(event)
-end
-
-function RecipeSource.on_player_joined_game(event)
-  translation:on_player_joined_game(event)
-end
-
-RecipeSource.on_player_locale_changed = RecipeSource.on_player_joined_game
-
-function RecipeSource.on_player_left_game(event)
-  translation:on_player_left_game(event)
-end
-
-function RecipeSource.on_init()
-  translation:on_init()
-end
-
-function RecipeSource.on_configuration_changed()
-  translation:on_configuration_changed()
+function RecipeSource.build_candidates(query, recipes, locale, translated_names, include_hidden)
+  return build_candidates("recipe", "recipe", query, recipes, locale, translated_names, include_hidden)
 end
 
 local function search(query, player_index, _context)
@@ -47,7 +31,8 @@ local function search(query, player_index, _context)
     return {}
   end
   local include_hidden = player.mod_settings["quidquid-include-hidden"].value
-  return RecipeSource.build_candidates(query, collect_recipes(), player.locale, translation, include_hidden)
+  local translated_names = flib_dictionary.get(player_index, NAMESPACE) or {}
+  return RecipeSource.build_candidates(query, collect_recipes(), player.locale, translated_names, include_hidden)
 end
 
 function RecipeSource.register()

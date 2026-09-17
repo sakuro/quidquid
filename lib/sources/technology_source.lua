@@ -1,9 +1,10 @@
-local TranslatedPrototypeSource = require("lib.sources.translated_prototype_source")
+local flib_dictionary = require("__flib__.dictionary")
 local build_candidates = require("lib.sources.prototype_candidate")
 
 local TechnologySource = {}
 
 local SOURCE_LABEL = { "quidquid.source-technologies" }
+local NAMESPACE = "technologies"
 
 local function collect_technologies()
   local technologies = {}
@@ -13,32 +14,15 @@ local function collect_technologies()
   return technologies
 end
 
-local translation = TranslatedPrototypeSource.new("technologies", collect_technologies, SOURCE_LABEL)
-
-function TechnologySource.build_candidates(query, technologies, locale, translation_cache, include_hidden)
-  return build_candidates("technology", "technology", query, technologies, locale, translation_cache, include_hidden)
+function TechnologySource.register_dictionary()
+  flib_dictionary.new(NAMESPACE)
+  for _, technology in ipairs(collect_technologies()) do
+    flib_dictionary.add(NAMESPACE, technology.name, technology.localised_name)
+  end
 end
 
-function TechnologySource.on_string_translated(event)
-  translation:on_string_translated(event)
-end
-
-function TechnologySource.on_player_joined_game(event)
-  translation:on_player_joined_game(event)
-end
-
-TechnologySource.on_player_locale_changed = TechnologySource.on_player_joined_game
-
-function TechnologySource.on_player_left_game(event)
-  translation:on_player_left_game(event)
-end
-
-function TechnologySource.on_init()
-  translation:on_init()
-end
-
-function TechnologySource.on_configuration_changed()
-  translation:on_configuration_changed()
+function TechnologySource.build_candidates(query, technologies, locale, translated_names, include_hidden)
+  return build_candidates("technology", "technology", query, technologies, locale, translated_names, include_hidden)
 end
 
 local function search(query, player_index, _context)
@@ -47,7 +31,14 @@ local function search(query, player_index, _context)
     return {}
   end
   local include_hidden = player.mod_settings["quidquid-include-hidden"].value
-  return TechnologySource.build_candidates(query, collect_technologies(), player.locale, translation, include_hidden)
+  local translated_names = flib_dictionary.get(player_index, NAMESPACE) or {}
+  return TechnologySource.build_candidates(
+    query,
+    collect_technologies(),
+    player.locale,
+    translated_names,
+    include_hidden
+  )
 end
 
 function TechnologySource.register()
