@@ -131,10 +131,14 @@ function Palette.row_caption(candidate)
   display_name = search_highlight.highlight(display_name, candidate.search_display_ranges)
   local caption = { "", "[img=", candidate.icon, "] ", display_name }
   if candidate.search_internal_name ~= nil then
-    local internal_name = search_highlight.highlight(candidate.search_internal_name, candidate.search_internal_ranges)
-    table.insert(caption, " (")
+    local internal_name = search_highlight.highlight(
+      candidate.search_internal_name,
+      candidate.search_internal_ranges,
+      "default",
+      "default-bold"
+    )
+    table.insert(caption, "\n")
     table.insert(caption, internal_name)
-    table.insert(caption, ")")
   end
   return caption
 end

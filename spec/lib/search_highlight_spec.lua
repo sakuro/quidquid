@@ -60,5 +60,12 @@ describe("search_highlight", function()
     it("leaves a value unchanged without ranges", function()
       assert.are.equal("[font=default-large]iron-plate[/font]", search_highlight.highlight("iron-plate", {}))
     end)
+
+    it("supports a smaller font for secondary text", function()
+      assert.are.equal(
+        "[font=default]iron-[/font][font=default-bold]pla[/font][font=default]te[/font]",
+        search_highlight.highlight("iron-plate", { { start_byte = 6, end_byte = 8 } }, "default", "default-bold")
+      )
+    end)
   end)
 end)

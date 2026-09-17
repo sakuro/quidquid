@@ -32,9 +32,8 @@ describe("Palette", function()
         "item/iron-plate",
         "] ",
         "[font=default-large]Iron [/font][font=default-large-bold]plate[/font]",
-        " (",
-        "[font=default-large]iron-[/font][font=default-large-bold]pla[/font][font=default-large]te[/font]",
-        ")",
+        "\n",
+        "[font=default]iron-[/font][font=default-bold]pla[/font][font=default]te[/font]",
       }, caption)
     end)
 

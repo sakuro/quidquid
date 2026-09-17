@@ -1,7 +1,5 @@
-local OPEN_LARGE = "[font=default-large]"
-local CLOSE_LARGE = "[/font]"
-local OPEN_LARGE_BOLD = "[font=default-large-bold]"
-local CLOSE_LARGE_BOLD = "[/font]"
+local DEFAULT_NORMAL_FONT = "default-large"
+local DEFAULT_BOLD_FONT = "default-large-bold"
 
 local function positions_to_ranges(position_map, positions)
   local ranges = {}
@@ -39,36 +37,38 @@ local function sorted_merged_ranges(ranges, value_length)
   return merged
 end
 
-local function highlight(value, ranges)
+local function highlight(value, ranges, normal_font, bold_font)
   if type(value) ~= "string" or ranges == nil or #ranges == 0 then
     if type(value) ~= "string" then
       return value
     end
-    return OPEN_LARGE .. value .. CLOSE_LARGE
+    return "[font=" .. (normal_font or DEFAULT_NORMAL_FONT) .. "]" .. value .. "[/font]"
   end
 
   local merged = sorted_merged_ranges(ranges, #value)
   if #merged == 0 then
-    return OPEN_LARGE .. value .. CLOSE_LARGE
+    return "[font=" .. (normal_font or DEFAULT_NORMAL_FONT) .. "]" .. value .. "[/font]"
   end
 
+  normal_font = normal_font or DEFAULT_NORMAL_FONT
+  bold_font = bold_font or DEFAULT_BOLD_FONT
   local result = {}
   local next_byte = 1
   for _, range in ipairs(merged) do
     if next_byte < range.start_byte then
-      table.insert(result, OPEN_LARGE)
+      table.insert(result, "[font=" .. normal_font .. "]")
       table.insert(result, value:sub(next_byte, range.start_byte - 1))
-      table.insert(result, CLOSE_LARGE)
+      table.insert(result, "[/font]")
     end
-    table.insert(result, OPEN_LARGE_BOLD)
+    table.insert(result, "[font=" .. bold_font .. "]")
     table.insert(result, value:sub(range.start_byte, range.end_byte))
-    table.insert(result, CLOSE_LARGE_BOLD)
+    table.insert(result, "[/font]")
     next_byte = range.end_byte + 1
   end
   if next_byte <= #value then
-    table.insert(result, OPEN_LARGE)
+    table.insert(result, "[font=" .. normal_font .. "]")
     table.insert(result, value:sub(next_byte))
-    table.insert(result, CLOSE_LARGE)
+    table.insert(result, "[/font]")
   end
   return table.concat(result)
 end
