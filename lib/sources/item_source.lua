@@ -25,7 +25,7 @@ function ItemSource.build_candidates(query, items, locale, translated_names, inc
   return build_candidates("item", "item", query, items, locale, translated_names, include_hidden)
 end
 
-local function search(query, player_index, _context)
+local function search(query, player_index)
   local player = game.get_player(player_index)
   if player == nil then
     return {}

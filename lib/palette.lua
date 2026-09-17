@@ -114,7 +114,7 @@ function Palette.search_all_sources(query, player_index, locked_source)
   local results = {}
   local sources = locked_source and { locked_source } or registry:default_active_sources()
   for _, source in ipairs(sources) do
-    local ok, candidates = pcall(remote.call, source.interface, "search", query, player_index, nil)
+    local ok, candidates = pcall(remote.call, source.interface, "search", query, player_index)
     if ok then
       local wrapped = {}
       for _, candidate in ipairs(candidates) do

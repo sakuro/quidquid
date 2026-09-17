@@ -105,7 +105,7 @@ describe("Palette", function()
         { id = "items", interface = "quidquid.item-source", label = { "quidquid.source-items" } },
       }))
       _G.remote = {
-        call = function(_interface, _fn, _query, _player_index, _context)
+        call = function(_interface, _fn, _query, _player_index)
           return {
             {
               type = "item",
@@ -135,7 +135,7 @@ describe("Palette", function()
         { id = "technologies", interface = "quidquid.technology-source", label = { "quidquid.source-technologies" } },
       }))
       _G.remote = {
-        call = function(interface, _fn, _query, _player_index, _context)
+        call = function(interface, _fn, _query, _player_index)
           if interface == "quidquid.item-source" then
             error("boom")
           end
@@ -167,7 +167,7 @@ describe("Palette", function()
         end,
       })
       _G.remote = {
-        call = function(_interface, _fn, _query, _player_index, _context)
+        call = function(_interface, _fn, _query, _player_index)
           return {
             {
               type = "technology",
