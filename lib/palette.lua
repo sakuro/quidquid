@@ -29,7 +29,7 @@ local RESULTS_NAME = "quidquid-palette-results"
 local RESULTS_TABLE_NAME = "quidquid-palette-results-table"
 local DISPLAY_LIMIT = 30
 
-local ROW_HEIGHT = 28
+local ROW_HEIGHT = 44
 local VISIBLE_ROWS = 5
 local CONTENT_WIDTH = 400
 
@@ -83,9 +83,10 @@ local function update_active_button_styles(player)
     local tags = child.tags
     local index = tags and tags.quidquid_candidate_index
     if index ~= nil then
+      local button = child.children[1]
       local active = index == state.active_index
-      child.style.font_color = active and ACCENT_FONT_COLOR or DEFAULT_FONT_COLOR
-      child.style.hovered_font_color = active and ACCENT_FONT_COLOR or DEFAULT_FONT_COLOR
+      button.style.font_color = active and ACCENT_FONT_COLOR or DEFAULT_FONT_COLOR
+      button.style.hovered_font_color = active and ACCENT_FONT_COLOR or DEFAULT_FONT_COLOR
     end
   end
 end
@@ -129,18 +130,19 @@ end
 function Palette.row_caption(candidate)
   local display_name = candidate.search_display_name or candidate.label
   display_name = search_highlight.highlight(display_name, candidate.search_display_ranges)
-  local caption = { "", "[img=", candidate.icon, "] ", display_name }
+  return { "", "[img=", candidate.icon, "] ", display_name }
+end
+
+function Palette.internal_caption(candidate)
   if candidate.search_internal_name ~= nil then
-    local internal_name = search_highlight.highlight(
+    return search_highlight.highlight(
       candidate.search_internal_name,
       candidate.search_internal_ranges,
       "default",
       "default-bold"
     )
-    table.insert(caption, "\n")
-    table.insert(caption, internal_name)
   end
-  return caption
+  return nil
 end
 
 -- __CONTROL__<name>__ is a locale-string placeholder the engine substitutes with the
@@ -184,7 +186,15 @@ local function candidate_tooltip(candidate, player_index)
 end
 
 local function build_candidate_row(pane, wrapped, index, player_index)
-  local button = pane.add({
+  local row = pane.add({
+    type = "flow",
+    direction = "vertical",
+    tags = { quidquid_candidate_index = index },
+  })
+  row.style.horizontally_stretchable = true
+  row.style.vertical_spacing = 0
+
+  local button = row.add({
     type = "button",
     style = "transparent_button",
     caption = Palette.row_caption(wrapped.candidate),
@@ -196,6 +206,13 @@ local function build_candidate_row(pane, wrapped, index, player_index)
   button.style.horizontal_align = "left"
   button.style.font_color = DEFAULT_FONT_COLOR
   button.style.hovered_font_color = DEFAULT_FONT_COLOR
+
+  local internal_caption = Palette.internal_caption(wrapped.candidate)
+  if internal_caption ~= nil then
+    local internal_label = row.add({ type = "label", caption = internal_caption })
+    internal_label.style.horizontally_stretchable = true
+    internal_label.style.font_color = MUTED_FONT_COLOR
+  end
 
   local source_label = pane.add({
     type = "label",
@@ -506,7 +523,7 @@ function Palette.on_gui_confirmed(event)
   for _, child in pairs(table_element.children) do
     local tags = child.tags
     if tags and tags.quidquid_candidate_index == index then
-      child.focus()
+      child.children[1].focus()
       return
     end
   end

@@ -32,9 +32,12 @@ describe("Palette", function()
         "item/iron-plate",
         "] ",
         "[font=default-large]Iron [/font][font=default-large-bold]plate[/font]",
-        "\n",
-        "[font=default]iron-[/font][font=default-bold]pla[/font][font=default]te[/font]",
       }, caption)
+
+      assert.are.equal(
+        "[font=default]iron-[/font][font=default-bold]pla[/font][font=default]te[/font]",
+        Palette.internal_caption(candidate)
+      )
     end)
 
     it("preserves rich-text tags in a display name while highlighting the visible match", function()
