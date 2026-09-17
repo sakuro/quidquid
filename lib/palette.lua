@@ -263,6 +263,12 @@ local function render_candidates(player, candidates)
   for index, wrapped in ipairs(candidates) do
     build_candidate_row(table_element, wrapped, index, player.index)
   end
+  -- Without this, a leftover mouse hover from the previous candidate list can make a row
+  -- look "active" at the same screen position as before the query changed, even though it's
+  -- now a different candidate -- pin the active selection to a known state on every render.
+  if #candidates > 0 then
+    set_active_index(player, 1)
+  end
 end
 
 function Palette.open(player)
