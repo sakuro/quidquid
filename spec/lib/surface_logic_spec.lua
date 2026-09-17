@@ -115,6 +115,25 @@ describe("SurfaceLogic", function()
     assert.are.equal(1, #candidates)
   end)
 
+  it("does not search inside rich-text tags in platform names", function()
+    local rich_name = "[item=iron-plate] Cargo Express"
+
+    assert.are.same({}, SurfaceLogic.build_candidates("iron", { platform({ search_name = rich_name }) }, false))
+    local candidates = SurfaceLogic.build_candidates("express", { platform({ search_name = rich_name }) }, false)
+
+    assert.are.equal(rich_name, candidates[1].search_display_name)
+    local prefix = "[item=iron-plate] "
+    assert.are.same({
+      { start_byte = #prefix + 7, end_byte = #prefix + 7 },
+      { start_byte = #prefix + 8, end_byte = #prefix + 8 },
+      { start_byte = #prefix + 9, end_byte = #prefix + 9 },
+      { start_byte = #prefix + 10, end_byte = #prefix + 10 },
+      { start_byte = #prefix + 11, end_byte = #prefix + 11 },
+      { start_byte = #prefix + 12, end_byte = #prefix + 12 },
+      { start_byte = #prefix + 13, end_byte = #prefix + 13 },
+    }, candidates[1].search_display_ranges)
+  end)
+
   it("returns display-name highlight ranges", function()
     local candidates = SurfaceLogic.build_candidates("express", { platform() }, false)
 

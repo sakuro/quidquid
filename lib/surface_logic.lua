@@ -2,6 +2,7 @@ local fuzzy_match = require("lib.fuzzy_match")
 local normalization = require("lib.search_normalization")
 local search_key_cache = require("lib.search_key_cache")
 local search_highlight = require("lib.search_highlight")
+local rich_text = require("lib.rich_text")
 
 local LOCALIZED_NAME_BONUS = 0.5
 
@@ -26,8 +27,12 @@ function SurfaceLogic.build_candidates(query, surfaces, include_hidden, locale)
   for _, surface in ipairs(surfaces) do
     local best
     if surface.search_name then
+      local search_name = surface.search_name
+      if surface.kind == "platform" then
+        search_name = rich_text.mask_tags(search_name)
+      end
       local display_key, display_position_map =
-        search_key_cache.get("surface", surface.index, "display", locale, surface.search_name)
+        search_key_cache.get("surface", surface.index, "display", locale, search_name)
       local display_score, display_positions = fuzzy_match(display_query, display_key)
       if display_score ~= nil then
         best = {
