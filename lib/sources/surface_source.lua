@@ -1,9 +1,10 @@
-local TranslatedPrototypeSource = require("lib.sources.translated_prototype_source")
+local flib_dictionary = require("__flib__.dictionary")
 local SurfaceAccess = require("lib.surface_access")
 local SurfaceLogic = require("lib.surface_logic")
 
 local SurfaceSource = {}
 local SOURCE_LABEL = { "quidquid.source-surfaces" }
+local NAMESPACE = "surfaces"
 
 -- Translate prototype names, not the dynamic list of generated surfaces. Newly
 -- generated planets can then be searched immediately using the existing cache.
@@ -15,28 +16,11 @@ local function collect_planets()
   return planets
 end
 
-local translation = TranslatedPrototypeSource.new("surfaces", collect_planets, SOURCE_LABEL)
-
-function SurfaceSource.on_string_translated(event)
-  translation:on_string_translated(event)
-end
-
-function SurfaceSource.on_player_joined_game(event)
-  translation:on_player_joined_game(event)
-end
-
-SurfaceSource.on_player_locale_changed = SurfaceSource.on_player_joined_game
-
-function SurfaceSource.on_player_left_game(event)
-  translation:on_player_left_game(event)
-end
-
-function SurfaceSource.on_init()
-  translation:on_init()
-end
-
-function SurfaceSource.on_configuration_changed()
-  translation:on_configuration_changed()
+function SurfaceSource.register_dictionary()
+  flib_dictionary.new(NAMESPACE)
+  for _, planet in ipairs(collect_planets()) do
+    flib_dictionary.add(NAMESPACE, planet.name, planet.localised_name)
+  end
 end
 
 local function search(query, player_index, _context)
@@ -44,12 +28,13 @@ local function search(query, player_index, _context)
   if player == nil then
     return {}
   end
+  local translated_names = flib_dictionary.get(player_index, NAMESPACE) or {}
   local surfaces = {}
   local planet_indexes = {}
 
   for _, planet in pairs(game.planets) do
     local descriptor = SurfaceAccess.describe_planet(planet, player)
-    local translated = translation:get(player.locale, planet.name)
+    local translated = translated_names[planet.name]
     if type(translated) == "string" then
       descriptor.search_name = translated
     end
@@ -63,7 +48,7 @@ local function search(query, player_index, _context)
       if descriptor.planet_name ~= nil then
         local index = planet_indexes[descriptor.planet_name]
         if index ~= nil then
-          local translated = translation:get(player.locale, descriptor.planet_name)
+          local translated = translated_names[descriptor.planet_name]
           if type(translated) == "string" then
             descriptor.search_name = translated
           end
