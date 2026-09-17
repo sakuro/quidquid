@@ -32,7 +32,7 @@ local DISPLAY_LIMIT = 30
 local ROW_HEIGHT = 44
 local VISIBLE_ROWS = 5
 local CONTENT_WIDTH = 400
-local NAME_COLUMN_WIDTH = 280
+local NAME_COLUMN_WIDTH = 250
 
 local DEFAULT_FONT_COLOR = { r = 255, g = 255, b = 255 }
 local ACCENT_FONT_COLOR = { r = 255, g = 142, b = 42 }
@@ -197,6 +197,8 @@ local function build_candidate_row(pane, wrapped, index, player_index)
     tags = { quidquid_candidate_index = index },
   })
   row.style.horizontally_stretchable = true
+  row.style.maximal_width = CONTENT_WIDTH
+  row.style.horizontally_squashable = true
   row.style.horizontal_spacing = 4
   row.style.vertical_align = "center"
 
