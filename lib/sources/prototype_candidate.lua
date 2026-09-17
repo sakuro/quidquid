@@ -29,7 +29,7 @@ local function build_candidates(
   query,
   prototype_list,
   locale,
-  translation_cache,
+  translated_names,
   include_hidden
 )
   local candidates = {}
@@ -43,7 +43,7 @@ local function build_candidates(
       local internal_score, internal_positions = fuzzy_match(internal_query, internal_key)
       best = select_match(best, internal_score, "internal_name", internal_positions, internal_position_map)
 
-      local translated = translation_cache:get(locale, prototype.name)
+      local translated = translated_names[prototype.name]
       if type(translated) == "string" then
         local display_key, display_position_map =
           search_key_cache.get("prototype", prototype.name, "display", locale, translated)
