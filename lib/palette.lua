@@ -1,5 +1,6 @@
 local PaletteLogic = require("lib.palette_logic")
 local RemoteCaller = require("lib.remote_caller")
+local search_highlight = require("lib.search_highlight")
 
 local Palette = {}
 
@@ -126,7 +127,16 @@ function Palette.search_all_sources(query, player_index, locked_source)
 end
 
 function Palette.row_caption(candidate)
-  return { "", "[img=", candidate.icon, "] ", candidate.label }
+  local display_name = candidate.search_display_name or candidate.label
+  display_name = search_highlight.highlight(display_name, candidate.search_display_ranges)
+  local caption = { "", "[img=", candidate.icon, "] ", display_name }
+  if candidate.search_internal_name ~= nil then
+    local internal_name = search_highlight.highlight(candidate.search_internal_name, candidate.search_internal_ranges)
+    table.insert(caption, " (")
+    table.insert(caption, internal_name)
+    table.insert(caption, ")")
+  end
+  return caption
 end
 
 -- __CONTROL__<name>__ is a locale-string placeholder the engine substitutes with the

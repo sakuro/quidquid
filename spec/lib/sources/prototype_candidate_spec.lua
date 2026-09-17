@@ -47,6 +47,8 @@ describe("prototype_candidate", function()
     assert.are.equal("iron-plate", candidates[1].id)
     assert.are.same({ "item-name.iron-plate" }, candidates[1].label)
     assert.are.equal("item/iron-plate", candidates[1].icon)
+    assert.is_nil(candidates[1].search_display_name)
+    assert.are.equal("iron-plate", candidates[1].search_internal_name)
     assert.is_number(candidates[1].search_score)
   end)
 
@@ -60,6 +62,12 @@ describe("prototype_candidate", function()
 
     assert.are.equal(1, #candidates)
     assert.are.same({ 1, 6, 7 }, candidates[1].search_positions)
+    assert.are.same({}, candidates[1].search_display_ranges)
+    assert.are.same({
+      { start_byte = 1, end_byte = 1 },
+      { start_byte = 6, end_byte = 6 },
+      { start_byte = 7, end_byte = 7 },
+    }, candidates[1].search_internal_ranges)
   end)
 
   it("matches a prototype only by its cached translated name", function()
@@ -100,6 +108,14 @@ describe("prototype_candidate", function()
 
     assert.are.equal(1, #candidates)
     assert.are.equal("localized_name", candidates[1].search_field)
+    assert.are.equal("Iron Plate", candidates[1].search_display_name)
+    assert.are.equal("iron-plate", candidates[1].search_internal_name)
+    assert.are.same({
+      { start_byte = 1, end_byte = 1 },
+      { start_byte = 6, end_byte = 6 },
+      { start_byte = 7, end_byte = 7 },
+    }, candidates[1].search_display_ranges)
+    assert.are.same({}, candidates[1].search_internal_ranges)
   end)
 
   it("matches Japanese hiragana against a katakana translation", function()

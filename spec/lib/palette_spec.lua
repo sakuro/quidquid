@@ -14,6 +14,29 @@ describe("Palette", function()
 
       assert.are.same({ "", "[img=", "item/iron-plate", "] ", { "item-name.iron-plate" } }, caption)
     end)
+
+    it("bolds matching display and internal-name ranges", function()
+      local candidate = {
+        icon = "item/iron-plate",
+        search_display_name = "Iron plate",
+        search_display_ranges = { { start_byte = 6, end_byte = 10 } },
+        search_internal_name = "iron-plate",
+        search_internal_ranges = { { start_byte = 6, end_byte = 8 } },
+      }
+
+      local caption = Palette.row_caption(candidate)
+
+      assert.are.same({
+        "",
+        "[img=",
+        "item/iron-plate",
+        "] ",
+        "Iron [font=default-bold]plate[/font]",
+        " (",
+        "iron-[font=default-bold]pla[/font]te",
+        ")",
+      }, caption)
+    end)
   end)
 
   describe(".is_palette_input", function()
