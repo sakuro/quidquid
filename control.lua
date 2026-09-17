@@ -1,3 +1,4 @@
+local flib_dictionary = require("__flib__.dictionary")
 local Registry = require("lib.registry")
 local ItemSource = require("lib.sources.item_source")
 local FluidSource = require("lib.sources.fluid_source")
@@ -47,45 +48,59 @@ remote.add_interface("quidquid", {
   end,
 })
 
+local translated_sources = { ItemSource, FluidSource, RecipeSource, TechnologySource, SurfaceSource }
+
+-- flib_dictionary.new/.add may only run before flib's internal init_ran flag flips true,
+-- which happens on the first on_tick -- so dictionaries must be (re-)registered from
+-- on_init/on_configuration_changed, never deferred to on_tick like the remote.call
+-- registrations below. Both of those already fully reset storage.__flib.dictionary
+-- (flib_dictionary.on_configuration_changed is an alias for .on_init), so re-registering
+-- unconditionally here is correct, not redundant.
+local function register_dictionaries()
+  for _, source in ipairs(translated_sources) do
+    source.register_dictionary()
+  end
+end
+
+script.on_init(function()
+  flib_dictionary.on_init()
+  register_dictionaries()
+end)
+script.on_configuration_changed(function()
+  flib_dictionary.on_configuration_changed()
+  register_dictionaries()
+end)
+
 -- remote.call is only valid inside an event, never at control.lua's top level (confirmed
 -- in-game: "Attempt to remote call outside of an event"). Neither on_init (only fires for a
 -- brand-new save) nor on_configuration_changed (only fires when something actually changed)
 -- nor on_load (no game/remote API access at all) covers an ordinary continued load, so
--- each source/action's remote.call runs on the first tick after any load instead.
+-- each source/action's remote.call runs on the first tick after any load instead. Unlike that
+-- one-shot need, flib_dictionary.on_tick must keep running every tick to progress translation
+-- batching, so this handler no longer unregisters itself -- a flag gates the one-shot part.
+local remote_interfaces_registered = false
+
 script.on_event(defines.events.on_tick, function()
-  script.on_event(defines.events.on_tick, nil)
-  ItemSource.register()
-  FluidSource.register()
-  RecipeSource.register()
-  TechnologySource.register()
-  SurfaceSource.register()
-  OpenRemoteViewAction.register()
-  OpenFactoriopediaAction.register()
-  OpenTechnologyAction.register()
-  ResearchQueueAction.register()
-  CraftAction.register()
-  TemporaryRequestAction.register()
+  if not remote_interfaces_registered then
+    remote_interfaces_registered = true
+    ItemSource.register()
+    FluidSource.register()
+    RecipeSource.register()
+    TechnologySource.register()
+    SurfaceSource.register()
+    OpenRemoteViewAction.register()
+    OpenFactoriopediaAction.register()
+    OpenTechnologyAction.register()
+    ResearchQueueAction.register()
+    CraftAction.register()
+    TemporaryRequestAction.register()
+  end
+  flib_dictionary.on_tick()
 end)
 
--- All translated sources need these lifecycle events, but each of
--- script.on_init/on_configuration_changed/on_event accepts only one handler per event for the
--- whole mod (no stacking) — so a single dispatcher fans each event out to every source.
-local translated_sources = { ItemSource, FluidSource, RecipeSource, TechnologySource, SurfaceSource }
-
-local function for_each_translated_source(method_name)
-  return function(event)
-    for _, source in ipairs(translated_sources) do
-      source[method_name](event)
-    end
-  end
-end
-
-script.on_init(for_each_translated_source("on_init"))
-script.on_configuration_changed(for_each_translated_source("on_configuration_changed"))
-script.on_event(defines.events.on_player_joined_game, for_each_translated_source("on_player_joined_game"))
-script.on_event(defines.events.on_player_locale_changed, for_each_translated_source("on_player_locale_changed"))
-script.on_event(defines.events.on_player_left_game, for_each_translated_source("on_player_left_game"))
-script.on_event(defines.events.on_string_translated, for_each_translated_source("on_string_translated"))
+script.on_event(defines.events.on_string_translated, flib_dictionary.on_string_translated)
+script.on_event(defines.events.on_player_joined_game, flib_dictionary.on_player_joined_game)
+script.on_event(defines.events.on_player_locale_changed, flib_dictionary.on_player_locale_changed)
 
 script.on_event("quidquid-open-palette", Palette.on_open)
 script.on_event("quidquid-palette-up", Palette.on_palette_up)
