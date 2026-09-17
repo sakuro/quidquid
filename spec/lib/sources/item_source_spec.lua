@@ -23,10 +23,12 @@ describe("ItemSource", function()
       local candidates = ItemSource.build_candidates("iron", items, "en", fake_translation_cache(), false)
 
       assert.are.equal(1, #candidates)
-      assert.are.same(
-        { type = "item", id = "iron-plate", label = { "item-name.iron-plate" }, icon = "item/iron-plate" },
-        candidates[1]
-      )
+      assert.are.equal("item", candidates[1].type)
+      assert.are.equal("iron-plate", candidates[1].id)
+      assert.are.same({ "item-name.iron-plate" }, candidates[1].label)
+      assert.are.equal("item/iron-plate", candidates[1].icon)
+      assert.is_number(candidates[1].search_score)
+      assert.are.equal("internal_name", candidates[1].search_field)
     end)
   end)
 end)

@@ -43,10 +43,23 @@ describe("prototype_candidate", function()
       build_candidates(candidate_type, icon_prefix, "iron", prototype_list, "en", fake_translation_cache(), false)
 
     assert.are.equal(1, #candidates)
-    assert.are.same(
-      { type = "item", id = "iron-plate", label = { "item-name.iron-plate" }, icon = "item/iron-plate" },
-      candidates[1]
-    )
+    assert.are.equal("item", candidates[1].type)
+    assert.are.equal("iron-plate", candidates[1].id)
+    assert.are.same({ "item-name.iron-plate" }, candidates[1].label)
+    assert.are.equal("item/iron-plate", candidates[1].icon)
+    assert.is_number(candidates[1].search_score)
+  end)
+
+  it("matches non-consecutive characters and returns their positions", function()
+    local prototype_list = {
+      { name = "iron-plate", localised_name = { "item-name.iron-plate" }, hidden = false },
+    }
+
+    local candidates =
+      build_candidates(candidate_type, icon_prefix, "ipl", prototype_list, "en", fake_translation_cache(), false)
+
+    assert.are.equal(1, #candidates)
+    assert.are.same({ 1, 6, 7 }, candidates[1].search_positions)
   end)
 
   it("matches a prototype only by its cached translated name", function()
@@ -74,6 +87,19 @@ describe("prototype_candidate", function()
       build_candidates(candidate_type, icon_prefix, "CAFE", prototype_list, "en", translation_cache, false)
 
     assert.are.equal(1, #candidates)
+  end)
+
+  it("prefers a localized fuzzy match when both fields match", function()
+    local prototype_list = {
+      { name = "iron-plate", localised_name = { "item-name.iron-plate" }, hidden = false },
+    }
+    local translation_cache = fake_translation_cache({ en = { ["iron-plate"] = "Iron Plate" } })
+
+    local candidates =
+      build_candidates(candidate_type, icon_prefix, "ipl", prototype_list, "en", translation_cache, false)
+
+    assert.are.equal(1, #candidates)
+    assert.are.equal("localized_name", candidates[1].search_field)
   end)
 
   it("matches Japanese hiragana against a katakana translation", function()
@@ -161,12 +187,11 @@ describe("prototype_candidate", function()
       build_candidates("technology", "technology", "steam", prototype_list, "en", fake_translation_cache(), false)
 
     assert.are.equal(1, #candidates)
-    assert.are.same({
-      type = "technology",
-      id = "steam-power",
-      label = { "technology-name.steam-power" },
-      icon = "technology/steam-power",
-    }, candidates[1])
+    assert.are.equal("technology", candidates[1].type)
+    assert.are.equal("steam-power", candidates[1].id)
+    assert.are.same({ "technology-name.steam-power" }, candidates[1].label)
+    assert.are.equal("technology/steam-power", candidates[1].icon)
+    assert.is_number(candidates[1].search_score)
   end)
 
   it("keeps candidate_type and icon_prefix independent even when they differ", function()
