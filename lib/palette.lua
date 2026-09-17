@@ -363,6 +363,7 @@ function Palette.open(player)
     type = "scroll-pane",
     name = RESULTS_NAME,
     direction = "vertical",
+    horizontal_scroll_policy = "never",
   })
   results_scroll_pane.style.horizontally_stretchable = true
   results_scroll_pane.style.height = 0
@@ -374,6 +375,9 @@ function Palette.open(player)
     column_count = 1,
   })
   results_table.style.horizontally_stretchable = true
+  results_table.style.width = CONTENT_WIDTH
+  results_table.style.maximal_width = CONTENT_WIDTH
+  results_table.style.horizontally_squashable = true
 
   player.opened = frame
   input_row[INPUT_NAME].focus()
