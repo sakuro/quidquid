@@ -25,7 +25,7 @@ function RecipeSource.build_candidates(query, recipes, locale, translated_names,
   return build_candidates("recipe", "recipe", query, recipes, locale, translated_names, include_hidden)
 end
 
-local function search(query, player_index, _context)
+local function search(query, player_index)
   local player = game.get_player(player_index)
   if player == nil then
     return {}

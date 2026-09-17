@@ -25,7 +25,7 @@ function FluidSource.build_candidates(query, fluids, locale, translated_names, i
   return build_candidates("fluid", "fluid", query, fluids, locale, translated_names, include_hidden)
 end
 
-local function search(query, player_index, _context)
+local function search(query, player_index)
   local player = game.get_player(player_index)
   if player == nil then
     return {}
