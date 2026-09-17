@@ -250,7 +250,6 @@ local function clear_candidates(player)
   end
   navigation_states[player.index] = nil
   table_element.clear()
-  pane.style.height = 0
 end
 
 local function render_candidates(player, candidates)
@@ -264,7 +263,6 @@ local function render_candidates(player, candidates)
   for index, wrapped in ipairs(candidates) do
     build_candidate_row(table_element, wrapped, index, player.index)
   end
-  pane.style.height = nil
 end
 
 function Palette.open(player)
@@ -366,7 +364,9 @@ function Palette.open(player)
     horizontal_scroll_policy = "never",
   })
   results_scroll_pane.style.horizontally_stretchable = true
-  results_scroll_pane.style.height = 0
+  -- Set via maximal_height, not the style.height shorthand: `.height = n` sets
+  -- minimal_height and maximal_height together, so any later `.height` write
+  -- elsewhere (e.g. to collapse/restore the pane) would silently clobber this cap.
   results_scroll_pane.style.maximal_height = ROW_HEIGHT * VISIBLE_ROWS
 
   local results_table = results_scroll_pane.add({
