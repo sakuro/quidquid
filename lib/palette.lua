@@ -197,6 +197,7 @@ local function build_candidate_row(pane, wrapped, index, player_index)
   })
   row.style.horizontally_stretchable = true
   row.style.horizontal_spacing = 4
+  row.style.vertical_align = "center"
 
   local icon = row.add({ type = "label", caption = Palette.icon_caption(wrapped.candidate) })
   icon.style.vertical_align = "center"
