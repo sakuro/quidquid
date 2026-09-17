@@ -106,7 +106,15 @@ describe("Palette", function()
       }))
       _G.remote = {
         call = function(_interface, _fn, _query, _player_index, _context)
-          return { { type = "item", id = "iron-plate", label = { "item-name.iron-plate" }, icon = "item/iron-plate" } }
+          return {
+            {
+              type = "item",
+              id = "iron-plate",
+              label = { "item-name.iron-plate" },
+              icon = "item/iron-plate",
+              search_score = 1,
+            },
+          }
         end,
       }
 
@@ -137,6 +145,7 @@ describe("Palette", function()
               id = "automation",
               label = { "technology-name.automation" },
               icon = "technology/automation",
+              search_score = 1,
             },
           }
         end,
@@ -165,6 +174,7 @@ describe("Palette", function()
               id = "automation",
               label = { "technology-name.automation" },
               icon = "technology/automation",
+              search_score = 1,
             },
           }
         end,
