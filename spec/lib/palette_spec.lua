@@ -7,12 +7,13 @@ describe("Palette", function()
   end)
 
   describe(".row_caption", function()
-    it("builds a rich-text caption with the candidate's icon and label", function()
+    it("builds a rich-text caption for the candidate's label", function()
       local candidate = { icon = "item/iron-plate", label = { "item-name.iron-plate" } }
 
       local caption = Palette.row_caption(candidate)
 
-      assert.are.same({ "", "[img=", "item/iron-plate", "] ", { "item-name.iron-plate" } }, caption)
+      assert.are.same({ "item-name.iron-plate" }, caption)
+      assert.are.same({ "", "[img=", "item/iron-plate", "]" }, Palette.icon_caption(candidate))
     end)
 
     it("bolds matching display and internal-name ranges", function()
@@ -26,13 +27,7 @@ describe("Palette", function()
 
       local caption = Palette.row_caption(candidate)
 
-      assert.are.same({
-        "",
-        "[img=",
-        "item/iron-plate",
-        "] ",
-        "[font=default-large]Iron [/font][font=default-large-bold]plate[/font]",
-      }, caption)
+      assert.are.equal("[font=default-large]Iron [/font][font=default-large-bold]plate[/font]", caption)
 
       assert.are.equal(
         "[font=default]iron-[/font][font=default-bold]pla[/font][font=default]te[/font]",
@@ -57,13 +52,10 @@ describe("Palette", function()
 
       local caption = Palette.row_caption(candidate)
 
-      assert.are.same({
-        "",
-        "[img=",
-        "surface/space-platform",
-        "] ",
+      assert.are.equal(
         "[font=default-large][item=iron-plate] Cargo [/font][font=default-large-bold]Express[/font]",
-      }, caption)
+        caption
+      )
     end)
   end)
 

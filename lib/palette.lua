@@ -83,7 +83,7 @@ local function update_active_button_styles(player)
     local tags = child.tags
     local index = tags and tags.quidquid_candidate_index
     if index ~= nil then
-      local button = child.children[1]
+      local button = child.children[2].children[1]
       local active = index == state.active_index
       button.style.font_color = active and ACCENT_FONT_COLOR or DEFAULT_FONT_COLOR
       button.style.hovered_font_color = active and ACCENT_FONT_COLOR or DEFAULT_FONT_COLOR
@@ -130,7 +130,11 @@ end
 function Palette.row_caption(candidate)
   local display_name = candidate.search_display_name or candidate.label
   display_name = search_highlight.highlight(display_name, candidate.search_display_ranges)
-  return { "", "[img=", candidate.icon, "] ", display_name }
+  return display_name
+end
+
+function Palette.icon_caption(candidate)
+  return { "", "[img=", candidate.icon, "]" }
 end
 
 function Palette.internal_caption(candidate)
@@ -188,13 +192,20 @@ end
 local function build_candidate_row(pane, wrapped, index, player_index)
   local row = pane.add({
     type = "flow",
-    direction = "vertical",
+    direction = "horizontal",
     tags = { quidquid_candidate_index = index },
   })
   row.style.horizontally_stretchable = true
-  row.style.vertical_spacing = 0
+  row.style.horizontal_spacing = 4
 
-  local button = row.add({
+  local icon = row.add({ type = "label", caption = Palette.icon_caption(wrapped.candidate) })
+  icon.style.vertical_align = "center"
+
+  local names = row.add({ type = "flow", direction = "vertical" })
+  names.style.horizontally_stretchable = true
+  names.style.vertical_spacing = 0
+
+  local button = names.add({
     type = "button",
     style = "transparent_button",
     caption = Palette.row_caption(wrapped.candidate),
@@ -209,15 +220,16 @@ local function build_candidate_row(pane, wrapped, index, player_index)
 
   local internal_caption = Palette.internal_caption(wrapped.candidate)
   if internal_caption ~= nil then
-    local internal_label = row.add({ type = "label", caption = internal_caption })
+    local internal_label = names.add({ type = "label", caption = internal_caption })
     internal_label.style.horizontally_stretchable = true
     internal_label.style.font_color = MUTED_FONT_COLOR
   end
 
-  local source_label = pane.add({
+  local source_label = row.add({
     type = "label",
     caption = wrapped.source_label,
   })
+  source_label.style.vertical_align = "center"
   source_label.style.horizontal_align = "right"
   source_label.style.font_color = MUTED_FONT_COLOR
 end
@@ -351,7 +363,7 @@ function Palette.open(player)
   local results_table = results_scroll_pane.add({
     type = "table",
     name = RESULTS_TABLE_NAME,
-    column_count = 2,
+    column_count = 1,
   })
   results_table.style.horizontally_stretchable = true
 
@@ -523,7 +535,7 @@ function Palette.on_gui_confirmed(event)
   for _, child in pairs(table_element.children) do
     local tags = child.tags
     if tags and tags.quidquid_candidate_index == index then
-      child.children[1].focus()
+      child.children[2].children[1].focus()
       return
     end
   end
