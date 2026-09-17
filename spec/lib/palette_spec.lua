@@ -31,9 +31,9 @@ describe("Palette", function()
         "[img=",
         "item/iron-plate",
         "] ",
-        "Iron [font=default-bold]plate[/font]",
+        "[font=default-large]Iron [/font][font=default-large-bold]plate[/font]",
         " (",
-        "iron-[font=default-bold]pla[/font]te",
+        "[font=default-large]iron-[/font][font=default-large-bold]pla[/font][font=default-large]te[/font]",
         ")",
       }, caption)
     end)

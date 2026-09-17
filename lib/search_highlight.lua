@@ -1,5 +1,7 @@
-local OPEN_BOLD = "[font=default-bold]"
-local CLOSE_BOLD = "[/font]"
+local OPEN_LARGE = "[font=default-large]"
+local CLOSE_LARGE = "[/font]"
+local OPEN_LARGE_BOLD = "[font=default-large-bold]"
+local CLOSE_LARGE_BOLD = "[/font]"
 
 local function positions_to_ranges(position_map, positions)
   local ranges = {}
@@ -39,27 +41,34 @@ end
 
 local function highlight(value, ranges)
   if type(value) ~= "string" or ranges == nil or #ranges == 0 then
-    return value
+    if type(value) ~= "string" then
+      return value
+    end
+    return OPEN_LARGE .. value .. CLOSE_LARGE
   end
 
   local merged = sorted_merged_ranges(ranges, #value)
   if #merged == 0 then
-    return value
+    return OPEN_LARGE .. value .. CLOSE_LARGE
   end
 
   local result = {}
   local next_byte = 1
   for _, range in ipairs(merged) do
     if next_byte < range.start_byte then
+      table.insert(result, OPEN_LARGE)
       table.insert(result, value:sub(next_byte, range.start_byte - 1))
+      table.insert(result, CLOSE_LARGE)
     end
-    table.insert(result, OPEN_BOLD)
+    table.insert(result, OPEN_LARGE_BOLD)
     table.insert(result, value:sub(range.start_byte, range.end_byte))
-    table.insert(result, CLOSE_BOLD)
+    table.insert(result, CLOSE_LARGE_BOLD)
     next_byte = range.end_byte + 1
   end
   if next_byte <= #value then
+    table.insert(result, OPEN_LARGE)
     table.insert(result, value:sub(next_byte))
+    table.insert(result, CLOSE_LARGE)
   end
   return table.concat(result)
 end

@@ -19,7 +19,7 @@ describe("search_highlight", function()
   describe(".highlight", function()
     it("wraps matching UTF-8 byte ranges in the bold font tag", function()
       assert.are.equal(
-        "Iron [font=default-bold]plate[/font]",
+        "[font=default-large]Iron [/font][font=default-large-bold]plate[/font]",
         search_highlight.highlight("Iron plate", { { start_byte = 6, end_byte = 10 } })
       )
     end)
@@ -41,7 +41,7 @@ describe("search_highlight", function()
 
     it("merges overlapping and adjacent ranges", function()
       assert.are.equal(
-        "a[font=default-bold]bcde[/font]f",
+        "[font=default-large]a[/font][font=default-large-bold]bcde[/font][font=default-large]f[/font]",
         search_highlight.highlight("abcdef", {
           { start_byte = 2, end_byte = 3 },
           { start_byte = 4, end_byte = 5 },
@@ -52,13 +52,13 @@ describe("search_highlight", function()
 
     it("keeps a multibyte source character intact", function()
       assert.are.equal(
-        "Stra[font=default-bold]ß[/font]e",
+        "[font=default-large]Stra[/font][font=default-large-bold]ß[/font][font=default-large]e[/font]",
         search_highlight.highlight("Straße", { { start_byte = 5, end_byte = 6 } })
       )
     end)
 
     it("leaves a value unchanged without ranges", function()
-      assert.are.equal("iron-plate", search_highlight.highlight("iron-plate", {}))
+      assert.are.equal("[font=default-large]iron-plate[/font]", search_highlight.highlight("iron-plate", {}))
     end)
   end)
 end)
