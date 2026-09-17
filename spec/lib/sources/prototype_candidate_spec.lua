@@ -64,6 +64,30 @@ describe("prototype_candidate", function()
     assert.are.equal("iron-plate", candidates[1].id)
   end)
 
+  it("matches a translated name case- and accent-insensitively", function()
+    local prototype_list = {
+      { name = "cafe", localised_name = { "item-name.cafe" }, hidden = false },
+    }
+    local translation_cache = fake_translation_cache({ en = { cafe = "Café" } })
+
+    local candidates =
+      build_candidates(candidate_type, icon_prefix, "CAFE", prototype_list, "en", translation_cache, false)
+
+    assert.are.equal(1, #candidates)
+  end)
+
+  it("matches Japanese hiragana against a katakana translation", function()
+    local prototype_list = {
+      { name = "belt", localised_name = { "item-name.belt" }, hidden = false },
+    }
+    local translation_cache = fake_translation_cache({ ja = { belt = "ベルト" } })
+
+    local candidates =
+      build_candidates(candidate_type, icon_prefix, "べると", prototype_list, "ja", translation_cache, false)
+
+    assert.are.equal(1, #candidates)
+  end)
+
   it("excludes a prototype that matches neither name", function()
     local prototype_list = {
       { name = "iron-plate", localised_name = { "item-name.iron-plate" }, hidden = false },

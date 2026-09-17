@@ -1,0 +1,17 @@
+#!/usr/bin/env bash
+#MISE description="Download the pinned Unicode data for search mapping"
+set -euo pipefail
+
+unicode_version="18.0.0"
+unicode_dir="tmp/ucd-${unicode_version}"
+unicode_base_url="https://www.unicode.org/Public/${unicode_version}/ucd"
+
+mkdir -p "$unicode_dir"
+for file in UnicodeData.txt CaseFolding.txt; do
+  destination="${unicode_dir}/${file}"
+  if [ ! -s "$destination" ]; then
+    curl --fail --location --silent --show-error \
+      "${unicode_base_url}/${file}" \
+      --output "$destination"
+  fi
+done

@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+#MISE description="Generate the Unicode search mapping"
+#MISE depends=["search-mapping:download"]
+set -euo pipefail
+
+unicode_version="18.0.0"
+lua tools/generate_search_mapping.lua \
+  "tmp/ucd-${unicode_version}" \
+  lib/search_mapping.lua
