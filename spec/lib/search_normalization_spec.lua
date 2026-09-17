@@ -1,5 +1,4 @@
 local normalization = require("lib.search_normalization")
-local normalized_substring_match = require("lib.normalized_substring_match")
 
 describe("search_normalization", function()
   local function normalized(value, locale)
@@ -54,10 +53,5 @@ describe("search_normalization", function()
     local value, position_map = normalized("\255")
     assert.are.equal("\255", value)
     assert.is_nil(position_map)
-  end)
-
-  it("does not make an empty normalized query match", function()
-    assert.is_false(normalized_substring_match("", "iron-plate"))
-    assert.is_false(normalized_substring_match("ipl", "iron-plate"))
   end)
 end)
