@@ -1,5 +1,9 @@
 local ResearchQueueAction = {}
 
+-- LuaForce.research_queue's length cap. Neither the Lua API docs nor the
+-- wiki document this limit; it was determined by observing in-game that the
+-- engine refuses to queue a research past the 7th queue slot. Re-verify
+-- in-game if this ever needs to change.
 local MAX_QUEUE_SIZE = 7
 local INFINITE_LEVEL = 4294967295
 
