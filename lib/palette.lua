@@ -32,6 +32,7 @@ local DISPLAY_LIMIT = 30
 local ROW_HEIGHT = 44
 local VISIBLE_ROWS = 5
 local CONTENT_WIDTH = 400
+local NAME_COLUMN_WIDTH = 280
 
 local DEFAULT_FONT_COLOR = { r = 255, g = 255, b = 255 }
 local ACCENT_FONT_COLOR = { r = 255, g = 142, b = 42 }
@@ -203,7 +204,9 @@ local function build_candidate_row(pane, wrapped, index, player_index)
   icon.style.vertical_align = "center"
 
   local names = row.add({ type = "flow", direction = "vertical" })
-  names.style.horizontally_stretchable = true
+  names.style.width = NAME_COLUMN_WIDTH
+  names.style.maximal_width = NAME_COLUMN_WIDTH
+  names.style.horizontally_squashable = true
   names.style.vertical_spacing = 0
 
   local button = names.add({
@@ -214,7 +217,8 @@ local function build_candidate_row(pane, wrapped, index, player_index)
     tags = { quidquid_candidate = wrapped.candidate, quidquid_candidate_index = index },
     raise_hover_events = true,
   })
-  button.style.horizontally_stretchable = true
+  button.style.maximal_width = NAME_COLUMN_WIDTH
+  button.style.horizontally_squashable = true
   button.style.horizontal_align = "left"
   button.style.font_color = DEFAULT_FONT_COLOR
   button.style.hovered_font_color = DEFAULT_FONT_COLOR
@@ -222,7 +226,8 @@ local function build_candidate_row(pane, wrapped, index, player_index)
   local internal_caption = Palette.internal_caption(wrapped.candidate)
   if internal_caption ~= nil then
     local internal_label = names.add({ type = "label", caption = internal_caption })
-    internal_label.style.horizontally_stretchable = true
+    internal_label.style.maximal_width = NAME_COLUMN_WIDTH
+    internal_label.style.horizontally_squashable = true
     internal_label.style.font_color = MUTED_FONT_COLOR
   end
 
