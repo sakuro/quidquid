@@ -7,12 +7,55 @@ describe("Palette", function()
   end)
 
   describe(".row_caption", function()
-    it("builds a rich-text caption with the candidate's icon and label", function()
+    it("builds a rich-text caption for the candidate's label", function()
       local candidate = { icon = "item/iron-plate", label = { "item-name.iron-plate" } }
 
       local caption = Palette.row_caption(candidate)
 
-      assert.are.same({ "", "[img=", "item/iron-plate", "] ", { "item-name.iron-plate" } }, caption)
+      assert.are.same({ "item-name.iron-plate" }, caption)
+      assert.are.same({ "", "[img=", "item/iron-plate", "]" }, Palette.icon_caption(candidate))
+    end)
+
+    it("bolds matching display and internal-name ranges", function()
+      local candidate = {
+        icon = "item/iron-plate",
+        search_display_name = "Iron plate",
+        search_display_ranges = { { start_byte = 6, end_byte = 10 } },
+        search_internal_name = "iron-plate",
+        search_internal_ranges = { { start_byte = 6, end_byte = 8 } },
+      }
+
+      local caption = Palette.row_caption(candidate)
+
+      assert.are.equal("[font=default-large]Iron [/font][font=default-large-bold]plate[/font]", caption)
+
+      assert.are.equal(
+        "[font=default]iron-[/font][font=default-bold]pla[/font][font=default]te[/font]",
+        Palette.internal_caption(candidate)
+      )
+    end)
+
+    it("preserves rich-text tags in a display name while highlighting the visible match", function()
+      local candidate = {
+        icon = "surface/space-platform",
+        search_display_name = "[item=iron-plate] Cargo Express",
+        search_display_ranges = {
+          { start_byte = 25, end_byte = 25 },
+          { start_byte = 26, end_byte = 26 },
+          { start_byte = 27, end_byte = 27 },
+          { start_byte = 28, end_byte = 28 },
+          { start_byte = 29, end_byte = 29 },
+          { start_byte = 30, end_byte = 30 },
+          { start_byte = 31, end_byte = 31 },
+        },
+      }
+
+      local caption = Palette.row_caption(candidate)
+
+      assert.are.equal(
+        "[font=default-large][item=iron-plate] Cargo [/font][font=default-large-bold]Express[/font]",
+        caption
+      )
     end)
   end)
 
