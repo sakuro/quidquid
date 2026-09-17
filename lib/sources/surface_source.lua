@@ -76,7 +76,12 @@ local function search(query, player_index, _context)
       end
     end
   end
-  return SurfaceLogic.build_candidates(query, surfaces, player.mod_settings["quidquid-include-hidden"].value)
+  return SurfaceLogic.build_candidates(
+    query,
+    surfaces,
+    player.mod_settings["quidquid-include-hidden"].value,
+    player.locale
+  )
 end
 
 function SurfaceSource.register()

@@ -1,4 +1,6 @@
-local substring_match = require("lib.substring_match")
+local normalized_substring_match = require("lib.normalized_substring_match")
+local normalization = require("lib.search_normalization")
+local search_key_cache = require("lib.search_key_cache")
 
 local SurfaceLogic = {}
 
@@ -14,12 +16,19 @@ function SurfaceLogic.can_open_remote_view(surface, include_hidden)
     and (surface.kind ~= "planet" or surface.unlocked == true)
 end
 
-function SurfaceLogic.build_candidates(query, surfaces, include_hidden)
+function SurfaceLogic.build_candidates(query, surfaces, include_hidden, locale)
   local candidates = {}
+  local internal_query = normalization.normalize(query, "internal", nil)
+  local display_query = normalization.normalize(query, "display", locale)
   for _, surface in ipairs(surfaces) do
-    local matched = surface.search_name and substring_match(query, surface.search_name)
+    local matched = false
+    if surface.search_name then
+      local display_key = search_key_cache.get("surface", surface.index, "display", locale, surface.search_name)
+      matched = normalized_substring_match(display_query, display_key)
+    end
     if surface.kind ~= "platform" then
-      matched = matched or substring_match(query, surface.name)
+      local internal_key = search_key_cache.get("surface", surface.index, "internal", nil, surface.name)
+      matched = matched or normalized_substring_match(internal_query, internal_key)
     end
     if SurfaceLogic.is_visible(surface, include_hidden) and matched then
       local label = surface.label
