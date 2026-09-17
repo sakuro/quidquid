@@ -1,18 +1,5 @@
 local ItemSource = require("lib.sources.item_source")
 
-local function fake_translation_cache(entries)
-  entries = entries or {}
-  return {
-    get = function(_, locale, internal_name)
-      local by_locale = entries[locale]
-      if by_locale == nil then
-        return nil
-      end
-      return by_locale[internal_name]
-    end,
-  }
-end
-
 describe("ItemSource", function()
   describe(".build_candidates", function()
     it("delegates to prototype_candidate with the item type and icon prefix", function()
@@ -20,7 +7,7 @@ describe("ItemSource", function()
         { name = "iron-plate", localised_name = { "item-name.iron-plate" }, hidden = false },
       }
 
-      local candidates = ItemSource.build_candidates("iron", items, "en", fake_translation_cache(), false)
+      local candidates = ItemSource.build_candidates("iron", items, "en", {}, false)
 
       assert.are.equal(1, #candidates)
       assert.are.equal("item", candidates[1].type)
