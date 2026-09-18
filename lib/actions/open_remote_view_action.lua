@@ -36,10 +36,10 @@ local function execute(candidate, _params, player_index)
   if player == nil then
     return
   end
-  local surface = SurfaceAccess.resolve_remote_view(candidate, player)
+  local surface, reason_key = SurfaceAccess.resolve_remote_view(candidate, player)
   if surface == nil then
     player.create_local_flying_text({
-      text = { "quidquid.action-open-remote-view-unavailable", candidate.label },
+      text = { reason_key or "quidquid.action-open-remote-view-unavailable", candidate.label },
       create_at_cursor = true,
     })
     return

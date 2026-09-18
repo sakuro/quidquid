@@ -14,10 +14,22 @@ function SurfaceLogic.is_visible(surface, include_hidden)
   return not not (accessible and (include_hidden or not surface.hidden))
 end
 
-function SurfaceLogic.can_open_remote_view(surface, include_hidden)
-  return SurfaceLogic.is_visible(surface, include_hidden)
-    and surface.generated ~= false
-    and (surface.kind ~= "planet" or surface.unlocked == true)
+-- Returns true, or false plus a locale key explaining why remote view isn't
+-- available: not yet visited (never generated), or -- for a planet specifically --
+-- not unlocked by the force. nil for a surface that isn't independently visible in
+-- the first place (own/friendly/hidden rules); that state shouldn't be reachable
+-- from a search result at all, so it's not worth a message.
+function SurfaceLogic.remote_view_availability(surface, include_hidden)
+  if not SurfaceLogic.is_visible(surface, include_hidden) then
+    return false, nil
+  end
+  if surface.generated == false then
+    return false, "quidquid.action-open-remote-view-not-visited"
+  end
+  if surface.kind == "planet" and surface.unlocked ~= true then
+    return false, "quidquid.action-open-remote-view-not-unlocked"
+  end
+  return true, nil
 end
 
 function SurfaceLogic.build_candidates(query, surfaces, include_hidden, locale)

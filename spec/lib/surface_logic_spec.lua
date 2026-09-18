@@ -18,6 +18,14 @@ describe("SurfaceLogic", function()
     return value
   end
 
+  -- (...) truncates remote_view_availability's (ok, reason) pair to just ok, for
+  -- specs below that only care about the boolean and already have their own
+  -- coverage of the specific reason (see the two "...not-visited"/"...not-unlocked"
+  -- cases further down).
+  local function can_open(surface, include_hidden)
+    return (SurfaceLogic.remote_view_availability(surface, include_hidden))
+  end
+
   local function platform(overrides)
     local value = {
       kind = "platform",
@@ -41,8 +49,8 @@ describe("SurfaceLogic", function()
     for _, include_hidden in ipairs({ false, true }) do
       assert.is_true(SurfaceLogic.is_visible(planet({ unlocked = false }), include_hidden))
       assert.are.equal(1, #SurfaceLogic.build_candidates("nauv", { planet({ unlocked = false }) }, include_hidden))
-      assert.is_false(SurfaceLogic.can_open_remote_view(planet({ unlocked = false }), include_hidden))
-      assert.is_true(SurfaceLogic.can_open_remote_view(planet(), include_hidden))
+      assert.is_false(can_open(planet({ unlocked = false }), include_hidden))
+      assert.is_true(can_open(planet(), include_hidden))
     end
   end)
 
@@ -55,12 +63,42 @@ describe("SurfaceLogic", function()
   end)
 
   it("applies ownership and hidden rules to remote view too", function()
-    assert.is_false(SurfaceLogic.can_open_remote_view(platform({ own = false }), true))
-    assert.is_false(SurfaceLogic.can_open_remote_view(platform({ hidden = true }), false))
-    assert.is_true(SurfaceLogic.can_open_remote_view(platform({ hidden = true }), true))
-    assert.is_true(SurfaceLogic.can_open_remote_view(platform({ own = false, friendly = true }), false))
-    assert.is_false(SurfaceLogic.can_open_remote_view(planet({ hidden = true }), false))
-    assert.is_false(SurfaceLogic.can_open_remote_view(planet({ hidden = true, unlocked = false }), true))
+    assert.is_false(can_open(platform({ own = false }), true))
+    assert.is_false(can_open(platform({ hidden = true }), false))
+    assert.is_true(can_open(platform({ hidden = true }), true))
+    assert.is_true(can_open(platform({ own = false, friendly = true }), false))
+    assert.is_false(can_open(planet({ hidden = true }), false))
+    assert.is_false(can_open(planet({ hidden = true, unlocked = false }), true))
+  end)
+
+  describe(".remote_view_availability", function()
+    it("names the not-visited reason for an ungenerated planet", function()
+      local ok, reason = SurfaceLogic.remote_view_availability(planet({ generated = false }), false)
+
+      assert.is_false(ok)
+      assert.are.equal("quidquid.action-open-remote-view-not-visited", reason)
+    end)
+
+    it("names the not-unlocked reason for a locked planet", function()
+      local ok, reason = SurfaceLogic.remote_view_availability(planet({ unlocked = false }), false)
+
+      assert.is_false(ok)
+      assert.are.equal("quidquid.action-open-remote-view-not-unlocked", reason)
+    end)
+
+    it("gives no reason for a surface that isn't independently visible", function()
+      local ok, reason = SurfaceLogic.remote_view_availability(platform({ own = false }), false)
+
+      assert.is_false(ok)
+      assert.is_nil(reason)
+    end)
+
+    it("gives no reason when remote view is actually available", function()
+      local ok, reason = SurfaceLogic.remote_view_availability(planet(), false)
+
+      assert.is_true(ok)
+      assert.is_nil(reason)
+    end)
   end)
 
   it("applies the hidden preference only to accessible surfaces", function()
@@ -96,7 +134,7 @@ describe("SurfaceLogic", function()
 
     assert.are.equal("vulcanus", candidates[1].id)
     assert.are.equal("vulcanus", candidates[1].planet_name)
-    assert.is_false(SurfaceLogic.can_open_remote_view(ungenerated, false))
+    assert.is_false(can_open(ungenerated, false))
   end)
 
   it("matches platform display names and annotates only foreign ownership", function()

@@ -70,15 +70,19 @@ function SurfaceAccess.resolve(candidate, player)
   return nil
 end
 
+-- Returns the surface, or nil plus a locale key explaining why not (nil, nil for a
+-- candidate that doesn't resolve to a surface at all).
 function SurfaceAccess.resolve_remote_view(candidate, player)
   local surface, descriptor = SurfaceAccess.resolve(candidate, player)
-  if
-    surface ~= nil
-    and SurfaceLogic.can_open_remote_view(descriptor, player.mod_settings["quidquid-include-hidden"].value)
-  then
-    return surface
+  if surface == nil then
+    return nil, nil
   end
-  return nil
+  local ok, reason_key =
+    SurfaceLogic.remote_view_availability(descriptor, player.mod_settings["quidquid-include-hidden"].value)
+  if ok then
+    return surface, nil
+  end
+  return nil, reason_key
 end
 
 return SurfaceAccess
