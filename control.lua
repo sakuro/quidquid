@@ -13,6 +13,7 @@ local CraftAction = require("lib.actions.craft_action")
 local TemporaryRequestAction = require("lib.actions.temporary_request_action")
 local TemporaryRequestEditor = require("lib.temporary_request_editor")
 local Palette = require("lib.palette")
+local search_key_cache = require("lib.search_key_cache")
 
 local registry = Registry.new(log)
 
@@ -148,7 +149,14 @@ script.on_event({
 -- Track viewed tile positions for surface navigation; discard references when their
 -- player or surface is removed so reused indices cannot inherit old positions.
 script.on_event(defines.events.on_player_changed_position, OpenRemoteViewAction.on_player_changed_position)
-script.on_event(defines.events.on_pre_surface_deleted, OpenRemoteViewAction.on_pre_surface_deleted)
+
+-- SurfaceSource's search_key_cache entries are keyed by surface index; evict them
+-- alongside the position history above so a destroyed surface's cache doesn't linger
+-- for the rest of the session.
+script.on_event(defines.events.on_pre_surface_deleted, function(event)
+  OpenRemoteViewAction.on_pre_surface_deleted(event)
+  search_key_cache.clear("surface", event.surface_index)
+end)
 
 -- Palette also keys a small per-player table (pin state) by player_index, which needs
 -- the same reused-index cleanup as OpenRemoteViewAction's history above.
