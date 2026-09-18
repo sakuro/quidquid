@@ -79,6 +79,11 @@ jobs:
         with:
           anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
           github_token: ${{ secrets.GITHUB_TOKEN }}
+          # github.actor on a `schedule` event is github-actions[bot], not a User --
+          # without this, claude-code-action's checkHumanActor gate rejects the run
+          # before doing anything (confirmed: the first scheduled run failed
+          # instantly, 1 turn, no visible output).
+          allowed_bots: "github-actions[bot]"
           prompt: >
             Invoke the resolve-scaffold-drift skill. Open or update a PR on
             branch chore/scaffold-drift. Do nothing if there is no drift.
