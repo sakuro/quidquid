@@ -3,13 +3,13 @@ local CalculatorSource = {}
 local SOURCE_LABEL = { "quidquid.source-calculator" }
 local DECIMAL_PLACES = 4
 
--- helpers.evaluate_expression has no built-in k/M/G/T suffix notation, but a number
--- directly followed by an identifier is parsed as implicit multiplication (confirmed
--- empirically: "2k" -> 2*k), so passing these as the `variables` argument gets SI-style
--- suffixes for free: "1.5M" evaluates as 1.5 * 1000000. Case-sensitive, matching the
--- capitalization the user asked for (k lowercase; M/G/T uppercase) -- "2K" or "2m" stay
--- unknown-variable errors, not accepted aliases.
-local SUFFIX_VARIABLES = { k = 1e3, M = 1e6, G = 1e9, T = 1e12 }
+-- helpers.evaluate_expression has no built-in suffix notation, but a number directly
+-- followed by an identifier is parsed as implicit multiplication (confirmed
+-- empirically: "2k" -> 2*k), so passing these as the `variables` argument gets
+-- suffixes for free: "1.5M" evaluates as 1.5 * 1000000. Only k/K (thousand) and
+-- m/M (million) are accepted, case-insensitively either way, matching how the base
+-- game's own circuit network signal count entry treats them.
+local SUFFIX_VARIABLES = { k = 1e3, K = 1e3, m = 1e6, M = 1e6 }
 
 -- Rounds to DECIMAL_PLACES, then trims trailing zeros and a bare trailing "."
 -- so an integer result reads "3", not "3.0000".
