@@ -48,7 +48,7 @@ end
 -- whether the prototype actually resolves for this specific candidate is a
 -- per-candidate runtime fact, so it's resolved here and reported by execute, not
 -- hidden from the tooltip.
-local function execute(selected_candidate, _params, player_index)
+local function execute(selected_candidate, player_index)
   ActionDispatch.run(selected_candidate, player_index, resolve, function(prototype, _candidate, player)
     player.open_factoriopedia_gui(prototype)
   end)

@@ -40,7 +40,7 @@ end
 -- item, regardless of the "pick ghost item if no items are available" interface
 -- setting -- that setting isn't exposed to mods, so this is the only way to
 -- guarantee the behavior rather than depend on the player's own client config.
-local function execute(selected_candidate, _params, player_index)
+local function execute(selected_candidate, player_index)
   ActionDispatch.run(selected_candidate, player_index, resolve, function(prototype, _candidate, player)
     player.pipette(prototype, nil, true)
   end)

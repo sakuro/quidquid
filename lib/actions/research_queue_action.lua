@@ -186,7 +186,7 @@ function ResearchQueueAction.resolve_enqueue(force, candidate)
   return technology, key, args, new_queue
 end
 
-local function execute(candidate, _params, player_index)
+local function execute(candidate, player_index)
   local player = game.get_player(player_index)
   if player == nil then
     return

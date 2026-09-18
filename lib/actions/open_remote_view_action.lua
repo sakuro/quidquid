@@ -32,7 +32,7 @@ end
 -- whether remote view actually works for this specific surface (generated, unlocked
 -- -- see README "Surface search limitations") is a per-candidate runtime fact, so
 -- it's resolved here and reported by execute, not hidden from the tooltip.
-local function execute(candidate, _params, player_index)
+local function execute(candidate, player_index)
   ActionDispatch.run(candidate, player_index, SurfaceAccess.resolve_remote_view, function(surface, _candidate, player)
     remember(player)
     local platform = surface.platform

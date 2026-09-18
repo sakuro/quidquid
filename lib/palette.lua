@@ -453,7 +453,7 @@ local function dispatch(player, selected_candidate, key)
     frame.tags = { quidquid_suppress_close = true }
   end
 
-  local ok, err = pcall(remote.call, action.interface, "execute", selected_candidate, {}, player.index)
+  local ok, err = pcall(remote.call, action.interface, "execute", selected_candidate, player.index)
   if not ok then
     log(("quidquid: action '%s' execute failed: %s"):format(tostring(action.id), tostring(err)))
   end
