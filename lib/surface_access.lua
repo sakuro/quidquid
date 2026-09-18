@@ -53,15 +53,25 @@ function SurfaceAccess.planet_prototype(candidate)
   return planet ~= nil and planet.prototype or nil
 end
 
+-- Returns (surface, descriptor). `surface` is nil for a planet that has no
+-- LuaSurface yet (never visited/generated) -- there's nothing to act on -- but
+-- `descriptor` is still populated from the planet prototype in that case, so
+-- callers that only need to reason about availability (not act on a real surface)
+-- still get one.
 function SurfaceAccess.resolve(candidate, player)
   if candidate.type ~= "surface" then
     return nil
   end
   local surface = game.get_surface(candidate.id)
-  if surface == nil then
-    return nil
+  local descriptor
+  if surface ~= nil then
+    descriptor = SurfaceAccess.describe(surface, player)
+  elseif candidate.planet_name ~= nil then
+    local planet = game.planets[candidate.planet_name]
+    if planet ~= nil then
+      descriptor = SurfaceAccess.describe_planet(planet, player)
+    end
   end
-  local descriptor = SurfaceAccess.describe(surface, player)
   if
     descriptor ~= nil and SurfaceLogic.is_visible(descriptor, player.mod_settings["quidquid-include-hidden"].value)
   then
@@ -71,10 +81,10 @@ function SurfaceAccess.resolve(candidate, player)
 end
 
 -- Returns the surface, or nil plus a locale key explaining why not (nil, nil for a
--- candidate that doesn't resolve to a surface at all).
+-- candidate that doesn't resolve to a surface/planet at all).
 function SurfaceAccess.resolve_remote_view(candidate, player)
   local surface, descriptor = SurfaceAccess.resolve(candidate, player)
-  if surface == nil then
+  if descriptor == nil then
     return nil, nil
   end
   local ok, reason_key =
