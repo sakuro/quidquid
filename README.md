@@ -43,7 +43,7 @@ Search for items by name.
 | Key | Action |
 | --- | --- |
 | Left click | Craft 1 |
-| Middle click | Craft 5 |
+| Right click | Craft 5 |
 | `Shift` + left click | Craft all |
 | `Ctrl/Cmd` + left click | Create a temporary logistics request |
 | `Alt` + left click | Open in Factoriopedia |
@@ -78,7 +78,7 @@ not the number of items produced by each operation.
 | Key | Action |
 | --- | --- |
 | Left click | Craft 1 |
-| Middle click | Craft 5 |
+| Right click | Craft 5 |
 | `Shift` + left click | Craft all |
 | `Ctrl/Cmd` + left click | Create temporary logistics requests for recipe ingredients |
 | `Alt` + left click | Open in Factoriopedia |
