@@ -118,6 +118,8 @@ quality selection when the Quality system is available.
 - Locked planets can still be opened in Factoriopedia.
 - Space platforms are included when owned by your force or when their owner
   considers your force a friend.
+- Rich text tags in a platform's name (e.g. an icon) aren't searchable; a
+  platform named with only a tag and no other text can't be found by query.
 - Space locations such as Solar System Edge are not included because they are
   not surfaces.
 
