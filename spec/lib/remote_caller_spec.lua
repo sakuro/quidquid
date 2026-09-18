@@ -7,21 +7,21 @@ describe("RemoteCaller", function()
 
   describe(":has", function()
     it("returns true when the interface exposes the named function", function()
-      _G.remote = { interfaces = { ["my-mod.action"] = { is_applicable = true } } }
+      _G.remote = { interfaces = { ["my-mod.action"] = { is_available = true } } }
 
-      assert.is_true(RemoteCaller:has("my-mod.action", "is_applicable"))
+      assert.is_true(RemoteCaller:has("my-mod.action", "is_available"))
     end)
 
     it("returns false when the interface exists but lacks the named function", function()
       _G.remote = { interfaces = { ["my-mod.action"] = { execute = true } } }
 
-      assert.is_false(RemoteCaller:has("my-mod.action", "is_applicable"))
+      assert.is_false(RemoteCaller:has("my-mod.action", "is_available"))
     end)
 
     it("returns false when the interface is not registered", function()
       _G.remote = { interfaces = {} }
 
-      assert.is_false(RemoteCaller:has("my-mod.action", "is_applicable"))
+      assert.is_false(RemoteCaller:has("my-mod.action", "is_available"))
     end)
   end)
 

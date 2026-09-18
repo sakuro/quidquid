@@ -19,10 +19,10 @@ local function always_true_caller()
   }
 end
 
-local function caller_with_is_applicable(result)
+local function caller_with_is_available(result)
   return {
     has = function(_, _, function_name)
-      return function_name == "is_applicable"
+      return function_name == "is_available"
     end,
     call = function(_, _, _, ...)
       return result
@@ -30,10 +30,10 @@ local function caller_with_is_applicable(result)
   }
 end
 
-local function caller_with_throwing_is_applicable(error_message)
+local function caller_with_throwing_is_available(error_message)
   return {
     has = function(_, _, function_name)
-      return function_name == "is_applicable"
+      return function_name == "is_available"
     end,
     call = function(_, _, _, ...)
       error(error_message)
@@ -362,7 +362,7 @@ describe("Registry", function()
       assert.are.equal("add-to-crafting-queue", fluid_resolved["confirm"].id)
     end)
 
-    it("omits an action whose is_applicable returns false", function()
+    it("omits an action whose is_available returns false", function()
       local registry = Registry.new()
       registry:register_action({
         version = 1,
@@ -373,12 +373,12 @@ describe("Registry", function()
       })
 
       local resolved =
-        registry:resolve_actions({ type = "item", id = "iron-plate" }, 1, caller_with_is_applicable(false))
+        registry:resolve_actions({ type = "item", id = "iron-plate" }, 1, caller_with_is_available(false))
 
       assert.is_nil(resolved["confirm"])
     end)
 
-    it("includes an action that has no is_applicable implementation", function()
+    it("includes an action that has no is_available implementation", function()
       local registry = Registry.new()
       registry:register_action({
         version = 1,
@@ -393,7 +393,7 @@ describe("Registry", function()
       assert.are.equal("logistics-request", resolved["confirm"].id)
     end)
 
-    it("omits an action whose is_applicable check throws, and logs the failure", function()
+    it("omits an action whose is_available check throws, and logs the failure", function()
       local logger, messages = spy_logger()
       local registry = Registry.new(logger)
       registry:register_action({
@@ -405,7 +405,7 @@ describe("Registry", function()
       })
 
       local resolved =
-        registry:resolve_actions({ type = "item", id = "iron-plate" }, 1, caller_with_throwing_is_applicable("boom"))
+        registry:resolve_actions({ type = "item", id = "iron-plate" }, 1, caller_with_throwing_is_available("boom"))
 
       assert.is_nil(resolved["confirm"])
       assert.are.equal(1, #messages)

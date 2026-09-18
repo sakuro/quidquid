@@ -24,11 +24,10 @@ local function resolve_prototype(candidate, player)
   return nil
 end
 
-local function is_applicable(candidate, player_index)
-  local player = game.get_player(player_index)
-  return player ~= nil and resolve_prototype(candidate, player) ~= nil
-end
-
+-- is_available only gates by candidate type (via this action's registered `types`);
+-- whether the prototype actually resolves for this specific candidate is a
+-- per-candidate runtime fact, so it's resolved here and reported by execute, not
+-- hidden from the tooltip.
 local function execute(selected_candidate, _params, player_index)
   local player = game.get_player(player_index)
   if player == nil then
@@ -36,19 +35,17 @@ local function execute(selected_candidate, _params, player_index)
   end
   local prototype = resolve_prototype(selected_candidate, player)
   if prototype == nil then
-    log(
-      ("quidquid: open-factoriopedia could not resolve prototype '%s' of type '%s'"):format(
-        tostring(selected_candidate.id),
-        tostring(selected_candidate.type)
-      )
-    )
+    player.create_local_flying_text({
+      text = { "quidquid.action-open-factoriopedia-unavailable", selected_candidate.label },
+      create_at_cursor = true,
+    })
     return
   end
   player.open_factoriopedia_gui(prototype)
 end
 
 function OpenFactoriopediaAction.register()
-  remote.add_interface("quidquid.open-factoriopedia-action", { execute = execute, is_applicable = is_applicable })
+  remote.add_interface("quidquid.open-factoriopedia-action", { execute = execute })
   remote.call("quidquid", "register_action", {
     version = 1,
     id = "open-factoriopedia",

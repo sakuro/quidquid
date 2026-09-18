@@ -7,18 +7,25 @@ local function resolve_recipe(player, selected_candidate)
   return player.force.recipes[selected_candidate.id]
 end
 
-function CraftAction.is_applicable(selected_candidate, player_index)
-  local player = game.get_player(player_index)
-  if player == nil then
-    return false
-  end
+-- Decides whether selected_candidate can be hand-crafted right now. Returns the
+-- recipe to craft, or nil plus a locale key explaining why not (nil, nil for a
+-- recipe candidate with no matching force recipe -- a near-impossible case not worth
+-- a message, since RecipeSource builds candidates from prototypes.recipe directly).
+-- is_available only gates by candidate type (via this action's registered `types`);
+-- per-candidate craftability is a runtime fact about this specific item/recipe, so
+-- it's resolved here and reported by execute, not hidden from the tooltip.
+function CraftAction.resolve_craftable(selected_candidate, player)
   local recipe = resolve_recipe(player, selected_candidate)
   if recipe == nil then
-    -- Keep the craft actions available for items without a same-named recipe
-    -- so execute can explain why crafting is unavailable.
-    return selected_candidate.type == "item"
+    if selected_candidate.type == "item" then
+      return nil, "quidquid.action-craft-no-recipe"
+    end
+    return nil, nil
   end
-  return not player.force.get_hand_crafting_disabled_for_recipe(recipe)
+  if player.force.get_hand_crafting_disabled_for_recipe(recipe) then
+    return nil, "quidquid.action-craft-hand-crafting-disabled"
+  end
+  return recipe, nil
 end
 
 function CraftAction.count_of(n)
@@ -37,11 +44,11 @@ local function craft(count_for)
     if player == nil then
       return
     end
-    local recipe = resolve_recipe(player, selected_candidate)
+    local recipe, error_key = CraftAction.resolve_craftable(selected_candidate, player)
     if recipe == nil then
-      if selected_candidate.type == "item" then
+      if error_key ~= nil then
         player.create_local_flying_text({
-          text = { "quidquid.action-craft-no-recipe", selected_candidate.label },
+          text = { error_key, selected_candidate.label },
           create_at_cursor = true,
         })
       end
@@ -52,10 +59,7 @@ local function craft(count_for)
 end
 
 local function register(id, key, interface, label, count_for)
-  remote.add_interface(interface, {
-    is_applicable = CraftAction.is_applicable,
-    execute = craft(count_for),
-  })
+  remote.add_interface(interface, { execute = craft(count_for) })
   remote.call("quidquid", "register_action", {
     version = 1,
     id = id,

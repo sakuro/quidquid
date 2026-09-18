@@ -82,4 +82,60 @@ describe("TemporaryRequestAction", function()
       assert.are.equal(0, TemporaryRequestAction.combined_target({}, "iron-plate", "normal"))
     end)
   end)
+
+  describe(".resolve_requestable", function()
+    it("is always requestable for an item candidate", function()
+      local requestable, error_key = TemporaryRequestAction.resolve_requestable({ type = "item" }, { recipes = {} })
+
+      assert.is_true(requestable)
+      assert.is_nil(error_key)
+    end)
+
+    it("returns no error for a recipe candidate with no matching force recipe", function()
+      local requestable, error_key = TemporaryRequestAction.resolve_requestable(
+        { type = "recipe", id = "advanced-oil-processing" },
+        {
+          recipes = {},
+        }
+      )
+
+      assert.is_false(requestable)
+      assert.is_nil(error_key)
+    end)
+
+    it("returns the no-item-ingredients error for a recipe with only fluid ingredients", function()
+      local force = {
+        recipes = {
+          ["advanced-oil-processing"] = {
+            ingredients = {
+              { type = "fluid", name = "water" },
+              { type = "fluid", name = "crude-oil" },
+            },
+          },
+        },
+      }
+
+      local requestable, error_key =
+        TemporaryRequestAction.resolve_requestable({ type = "recipe", id = "advanced-oil-processing" }, force)
+
+      assert.is_false(requestable)
+      assert.are.equal("quidquid.action-temporary-request-no-item-ingredients", error_key)
+    end)
+
+    it("is requestable for a recipe with at least one item ingredient", function()
+      local force = {
+        recipes = {
+          ["iron-plate"] = {
+            ingredients = { { type = "item", name = "iron-ore" } },
+          },
+        },
+      }
+
+      local requestable, error_key =
+        TemporaryRequestAction.resolve_requestable({ type = "recipe", id = "iron-plate" }, force)
+
+      assert.is_true(requestable)
+      assert.is_nil(error_key)
+    end)
+  end)
 end)
