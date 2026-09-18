@@ -96,4 +96,28 @@ describe("search_key_cache", function()
 
     assert.are.equal(2, calls)
   end)
+
+  it("clear(namespace) only forces recompute within that namespace", function()
+    local restore = spy_on_normalize()
+    search_key_cache.get("prototype", "iron-plate", "display", "en", "Iron Plate")
+    search_key_cache.get("surface", "nauvis", "display", "en", "Nauvis")
+    search_key_cache.clear("prototype")
+    search_key_cache.get("prototype", "iron-plate", "display", "en", "Iron Plate")
+    search_key_cache.get("surface", "nauvis", "display", "en", "Nauvis")
+    local calls = restore()
+
+    assert.are.equal(3, calls)
+  end)
+
+  it("clear(namespace, candidate_id) only forces recompute for that candidate", function()
+    local restore = spy_on_normalize()
+    search_key_cache.get("surface", 1, "display", "en", "Nauvis")
+    search_key_cache.get("surface", 2, "display", "en", "Fulgora")
+    search_key_cache.clear("surface", 1)
+    search_key_cache.get("surface", 1, "display", "en", "Nauvis")
+    search_key_cache.get("surface", 2, "display", "en", "Fulgora")
+    local calls = restore()
+
+    assert.are.equal(3, calls)
+  end)
 end)
