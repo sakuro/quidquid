@@ -86,32 +86,52 @@ function TemporaryRequestAction.get_or_create_section(point)
   return point.add_section(GROUP)
 end
 
+-- pure, testable: decides whether selected_candidate has an item-shaped target to
+-- request. Item candidates always do; recipe candidates need at least one item
+-- ingredient (a request naming only fluid ingredients doesn't make sense). Returns
+-- true, or false plus a locale key explaining why not (nil for a recipe candidate
+-- with no matching force recipe -- a near-impossible case not worth a message, since
+-- RecipeSource builds candidates from prototypes.recipe directly).
+-- is_applicable only gates on player/logistics-network state, uniform across every
+-- candidate; this per-candidate fact is resolved here and reported by execute
+-- instead, not hidden from the tooltip.
+function TemporaryRequestAction.resolve_requestable(selected_candidate, force)
+  if selected_candidate.type ~= "recipe" then
+    return true, nil
+  end
+  local recipe = force.recipes[selected_candidate.id]
+  if recipe == nil then
+    return false, nil
+  end
+  for _, ingredient in ipairs(recipe.ingredients) do
+    if ingredient.type == "item" then
+      return true, nil
+    end
+  end
+  return false, "quidquid.action-temporary-request-no-item-ingredients"
+end
+
 local function is_applicable(selected_candidate, player_index)
   local player = game.get_player(player_index)
   if player == nil then
     return false
   end
-  if TemporaryRequestAction.logistic_point_for(player) == nil then
-    return false
-  end
-  if selected_candidate.type == "recipe" then
-    local recipe = player.force.recipes[selected_candidate.id]
-    if recipe == nil then
-      return false
-    end
-    for _, ingredient in ipairs(recipe.ingredients) do
-      if ingredient.type == "item" then
-        return true
-      end
-    end
-    return false
-  end
-  return true
+  return TemporaryRequestAction.logistic_point_for(player) ~= nil
 end
 
 local function execute(selected_candidate, _params, player_index)
   local player = game.get_player(player_index)
   if player == nil then
+    return
+  end
+  local requestable, error_key = TemporaryRequestAction.resolve_requestable(selected_candidate, player.force)
+  if not requestable then
+    if error_key ~= nil then
+      player.create_local_flying_text({
+        text = { error_key, selected_candidate.label },
+        create_at_cursor = true,
+      })
+    end
     return
   end
   editor.open(player, selected_candidate)

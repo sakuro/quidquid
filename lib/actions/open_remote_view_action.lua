@@ -27,11 +27,10 @@ function OpenRemoteViewAction.on_player_removed(event)
   history()[event.player_index] = nil
 end
 
-local function is_applicable(candidate, player_index)
-  local player = game.get_player(player_index)
-  return player ~= nil and SurfaceAccess.resolve_remote_view(candidate, player) ~= nil
-end
-
+-- is_applicable only gates by candidate type (via this action's registered `types`);
+-- whether remote view actually works for this specific surface (generated, unlocked
+-- -- see README "Surface search limitations") is a per-candidate runtime fact, so
+-- it's resolved here and reported by execute, not hidden from the tooltip.
 local function execute(candidate, _params, player_index)
   local player = game.get_player(player_index)
   if player == nil then
@@ -39,6 +38,10 @@ local function execute(candidate, _params, player_index)
   end
   local surface = SurfaceAccess.resolve_remote_view(candidate, player)
   if surface == nil then
+    player.create_local_flying_text({
+      text = { "quidquid.action-open-remote-view-unavailable", candidate.label },
+      create_at_cursor = true,
+    })
     return
   end
   remember(player)
@@ -50,10 +53,7 @@ local function execute(candidate, _params, player_index)
 end
 
 function OpenRemoteViewAction.register()
-  remote.add_interface("quidquid.open-remote-view-action", {
-    is_applicable = is_applicable,
-    execute = execute,
-  })
+  remote.add_interface("quidquid.open-remote-view-action", { execute = execute })
   remote.call("quidquid", "register_action", {
     version = 1,
     id = "open-remote-view",

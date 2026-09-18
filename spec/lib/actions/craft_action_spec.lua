@@ -47,77 +47,41 @@ describe("CraftAction", function()
     end)
   end)
 
-  describe(".is_applicable", function()
-    it("returns false when the player index does not resolve to a player", function()
-      _G.game = {
-        get_player = function(_index)
-          return nil
-        end,
-      }
+  describe(".resolve_craftable", function()
+    it("returns the craft-no-recipe error for an item candidate with no matching recipe", function()
+      local player = fake_player({}, false)
 
-      local applicable = CraftAction.is_applicable({ id = "iron-plate" }, 1)
+      local recipe, error_key = CraftAction.resolve_craftable({ type = "item", id = "iron-plate" }, player)
 
-      assert.is_false(applicable)
+      assert.is_nil(recipe)
+      assert.are.equal("quidquid.action-craft-no-recipe", error_key)
     end)
 
-    it("keeps an item candidate applicable when the recipe is not known to the player's force", function()
-      _G.game = {
-        get_player = function(_index)
-          return fake_player({}, false)
-        end,
-      }
+    it("returns no recipe and no error for a recipe candidate with no matching force recipe", function()
+      local player = fake_player({}, false)
 
-      local applicable = CraftAction.is_applicable({ type = "item", id = "iron-plate" }, 1)
+      local recipe, error_key = CraftAction.resolve_craftable({ type = "recipe", id = "iron-plate" }, player)
 
-      assert.is_true(applicable)
+      assert.is_nil(recipe)
+      assert.is_nil(error_key)
     end)
 
-    it("keeps an item candidate applicable when no same-named recipe exists", function()
-      _G.game = {
-        get_player = function(_index)
-          return fake_player({}, false)
-        end,
-      }
+    it("returns the hand-crafting-disabled error when the recipe can't be hand-crafted", function()
+      local player = fake_player({ ["iron-plate"] = "recipe-token" }, true)
 
-      local applicable = CraftAction.is_applicable({ type = "item", id = "iron-plate" }, 1)
+      local recipe, error_key = CraftAction.resolve_craftable({ id = "iron-plate" }, player)
 
-      assert.is_true(applicable)
+      assert.is_nil(recipe)
+      assert.are.equal("quidquid.action-craft-hand-crafting-disabled", error_key)
     end)
 
-    it("returns false for a recipe candidate when the force has no matching recipe", function()
-      _G.game = {
-        get_player = function(_index)
-          return fake_player({}, false)
-        end,
-      }
+    it("returns the recipe with no error when it can be hand-crafted", function()
+      local player = fake_player({ ["iron-plate"] = "recipe-token" }, false)
 
-      local applicable = CraftAction.is_applicable({ type = "recipe", id = "iron-plate" }, 1)
+      local recipe, error_key = CraftAction.resolve_craftable({ id = "iron-plate" }, player)
 
-      assert.is_false(applicable)
-    end)
-
-    it("returns false when hand crafting is disabled for the recipe", function()
-      _G.game = {
-        get_player = function(_index)
-          return fake_player({ ["iron-plate"] = "recipe-token" }, true)
-        end,
-      }
-
-      local applicable = CraftAction.is_applicable({ id = "iron-plate" }, 1)
-
-      assert.is_false(applicable)
-    end)
-
-    it("returns true when the recipe exists and hand crafting is enabled", function()
-      _G.game = {
-        get_player = function(_index)
-          return fake_player({ ["iron-plate"] = "recipe-token" }, false)
-        end,
-      }
-
-      local applicable = CraftAction.is_applicable({ id = "iron-plate" }, 1)
-
-      assert.is_true(applicable)
+      assert.are.equal("recipe-token", recipe)
+      assert.is_nil(error_key)
     end)
   end)
 end)
