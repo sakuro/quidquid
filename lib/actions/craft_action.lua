@@ -9,13 +9,35 @@ local function resolve_recipe(player, selected_candidate)
   return player.force.recipes[selected_candidate.id]
 end
 
+-- pure, testable: true when character's prototype can hand-craft at least one of
+-- recipe's categories. A recipe whose categories are all machine-only (e.g.
+-- smelting) can never be hand-crafted, regardless of the force-level
+-- get_hand_crafting_disabled_for_recipe flag -- that flag toggles a recipe that
+-- otherwise CAN be hand-crafted, it doesn't cover this case.
+function CraftAction.hand_craftable(recipe, character)
+  if character == nil then
+    return false
+  end
+  local crafting_categories = character.prototype.crafting_categories or {}
+  for _, category in ipairs(recipe.categories) do
+    if crafting_categories[category] then
+      return true
+    end
+  end
+  return false
+end
+
 -- Decides whether selected_candidate can be hand-crafted right now. Returns the
 -- recipe to craft, or nil plus a locale key explaining why not (nil, nil for a
 -- recipe candidate with no matching force recipe -- a near-impossible case not worth
 -- a message, since RecipeSource builds candidates from prototypes.recipe directly).
--- is_available only gates by candidate type (via this action's registered `types`);
--- per-candidate craftability is a runtime fact about this specific item/recipe, so
--- it's resolved here and reported by execute, not hidden from the tooltip.
+-- Each check here corresponds to a distinct way LuaControl.begin_crafting can fail
+-- silently or with one of Factorio's own (iconless, un-attributed) native flying
+-- texts -- see project_craft_action_resolve_craftable_gaps memory for how each was
+-- found. is_available only gates by candidate type (via this action's registered
+-- `types`); per-candidate craftability is a runtime fact about this specific
+-- item/recipe, so it's resolved here and reported by execute, not hidden from the
+-- tooltip.
 function CraftAction.resolve_craftable(selected_candidate, player)
   local recipe = resolve_recipe(player, selected_candidate)
   if recipe == nil then
@@ -24,8 +46,17 @@ function CraftAction.resolve_craftable(selected_candidate, player)
     end
     return nil, nil
   end
+  if not recipe.enabled then
+    return nil, "quidquid.action-craft-not-researched"
+  end
   if player.force.get_hand_crafting_disabled_for_recipe(recipe) then
     return nil, "quidquid.action-craft-hand-crafting-disabled"
+  end
+  if not CraftAction.hand_craftable(recipe, player.character) then
+    return nil, "quidquid.action-craft-requires-machine"
+  end
+  if player.get_craftable_count(recipe) <= 0 then
+    return nil, "quidquid.action-craft-not-enough-ingredients"
   end
   return recipe, nil
 end
@@ -36,8 +67,10 @@ function CraftAction.count_of(n)
   end
 end
 
+-- resolve_craftable already rejects a recipe with zero craftable count before this
+-- is ever called, so the count here is always positive.
 function CraftAction.max_craftable(player, recipe)
-  return math.max(1, player.get_craftable_count(recipe))
+  return player.get_craftable_count(recipe)
 end
 
 local function craft(count_for)
