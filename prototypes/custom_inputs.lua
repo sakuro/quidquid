@@ -41,6 +41,11 @@ data:extend({
   },
   {
     type = "custom-input",
+    name = "quidquid-pipette",
+    key_sequence = "SHIFT + mouse-button-2",
+  },
+  {
+    type = "custom-input",
     name = "quidquid-temporary-request-editor-confirm",
     key_sequence = "E",
   },
