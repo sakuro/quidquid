@@ -47,6 +47,7 @@ Search for items by name.
 | `Shift` + left click | Craft all |
 | `Ctrl/Cmd` + left click | Create a temporary logistics request |
 | `Alt` + left click | Open in Factoriopedia |
+| `Alt` + right click | Pipette |
 
 Item craft actions only use a recipe with the same name as the selected item.
 If no such recipe exists, Quidquid displays a message instead of attempting to
