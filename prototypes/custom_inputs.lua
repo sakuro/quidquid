@@ -40,9 +40,13 @@ data:extend({
     key_sequence = "COMMAND + mouse-button-1",
   },
   {
+    -- Not a SHIFT combo: SHIFT is Factorio's own reserved "place as ghost" modifier
+    -- while holding a real item, and a SHIFT-bound key here showed that mode's ghost
+    -- icon for as long as SHIFT stayed held after triggering this action, even
+    -- though a real item was correctly in the cursor (confirmed in-game).
     type = "custom-input",
     name = "quidquid-pipette",
-    key_sequence = "SHIFT + mouse-button-2",
+    key_sequence = "ALT + mouse-button-2",
   },
   {
     type = "custom-input",
