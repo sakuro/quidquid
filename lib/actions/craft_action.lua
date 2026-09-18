@@ -49,11 +49,14 @@ function CraftAction.resolve_craftable(selected_candidate, player)
   if not recipe.enabled then
     return nil, "quidquid.action-craft-not-researched"
   end
-  if player.force.get_hand_crafting_disabled_for_recipe(recipe) then
+  -- Same locale key for both: Factorio's own recipe-not-craftable-in-hand message
+  -- doesn't distinguish a force-disabled recipe from one whose category was never
+  -- hand-craftable in the first place, so quidquid's message doesn't either.
+  if
+    player.force.get_hand_crafting_disabled_for_recipe(recipe)
+    or not CraftAction.hand_craftable(recipe, player.character)
+  then
     return nil, "quidquid.action-craft-hand-crafting-disabled"
-  end
-  if not CraftAction.hand_craftable(recipe, player.character) then
-    return nil, "quidquid.action-craft-requires-machine"
   end
   if player.get_craftable_count(recipe) <= 0 then
     return nil, "quidquid.action-craft-not-enough-ingredients"

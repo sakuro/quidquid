@@ -118,7 +118,9 @@ describe("CraftAction", function()
       assert.are.equal("quidquid.action-craft-hand-crafting-disabled", error_key)
     end)
 
-    it("returns the requires-machine error for a recipe with no hand-craftable category", function()
+    it("returns the hand-crafting-disabled error for a recipe with no hand-craftable category", function()
+      -- Same key as the force-disabled case: Factorio's own message doesn't
+      -- distinguish the two either.
       local player = fake_player({
         recipes = { ["iron-plate"] = fake_recipe({ categories = { "smelting" } }) },
       })
@@ -126,7 +128,7 @@ describe("CraftAction", function()
       local recipe, error_key = CraftAction.resolve_craftable({ id = "iron-plate" }, player)
 
       assert.is_nil(recipe)
-      assert.are.equal("quidquid.action-craft-requires-machine", error_key)
+      assert.are.equal("quidquid.action-craft-hand-crafting-disabled", error_key)
     end)
 
     it("returns the not-enough-ingredients error when nothing is craftable", function()
