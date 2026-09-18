@@ -39,18 +39,23 @@ describe("ResearchQueueAction", function()
     end)
   end)
 
-  describe(".technology_caption", function()
+  describe(".technology_icon", function()
+    it("returns a bare technology icon tag", function()
+      assert.are.equal("[technology=automation]", ResearchQueueAction.technology_icon(technology("automation")))
+    end)
+  end)
+
+  describe(".technology_name", function()
     it("appends the level with one space for infinite technologies", function()
       local infinite = technology("mining-productivity", nil, { level = 12 })
       infinite.prototype.max_level = 4294967295
 
       assert.are.same({
         "",
-        "[technology=mining-productivity] ",
         { "technology-name.mining-productivity" },
         " ",
         12,
-      }, ResearchQueueAction.technology_caption(infinite))
+      }, ResearchQueueAction.technology_name(infinite))
     end)
 
     it("uses an explicitly provided level", function()
@@ -58,11 +63,10 @@ describe("ResearchQueueAction", function()
 
       assert.are.same({
         "",
-        "[technology=mining-productivity] ",
         { "technology-name.mining-productivity" },
         " ",
         14,
-      }, ResearchQueueAction.technology_caption(infinite, 14))
+      }, ResearchQueueAction.technology_name(infinite, 14))
     end)
 
     it("recognizes the infinite technology marker used by the runtime", function()
@@ -70,11 +74,10 @@ describe("ResearchQueueAction", function()
 
       assert.are.same({
         "",
-        "[technology=mining-productivity] ",
         { "technology-name.mining-productivity" },
         " ",
         12,
-      }, ResearchQueueAction.technology_caption(infinite))
+      }, ResearchQueueAction.technology_name(infinite))
     end)
 
     it("appends the level for finite technologies with multiple levels", function()
@@ -82,11 +85,10 @@ describe("ResearchQueueAction", function()
 
       assert.are.same({
         "",
-        "[technology=worker-robots-speed] ",
         { "technology-name.worker-robots-speed" },
         " ",
         3,
-      }, ResearchQueueAction.technology_caption(finite))
+      }, ResearchQueueAction.technology_name(finite))
     end)
   end)
 

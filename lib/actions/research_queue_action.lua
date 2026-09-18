@@ -12,16 +12,25 @@ local function is_level_based(technology)
   return max_level == INFINITE_LEVEL or max_level == "infinite" or type(max_level) == "number" and max_level > 1
 end
 
-local function technology_caption(technology, level)
-  local caption = { "", "[technology=" .. technology.name .. "] ", technology.localised_name }
-  if is_level_based(technology) then
-    table.insert(caption, " ")
-    table.insert(caption, level or technology.level)
-  end
-  return caption
+-- The icon and name are reported as separate flying-text arguments (__1__, __2__)
+-- rather than one fused caption, matching how the temporary-request editor's own
+-- confirm messages cite an item/recipe -- see ActionDispatch.run's flying text.
+local function technology_icon(technology)
+  return "[technology=" .. technology.name .. "]"
 end
 
-ResearchQueueAction.technology_caption = technology_caption
+ResearchQueueAction.technology_icon = technology_icon
+
+local function technology_name(technology, level)
+  local name = { "", technology.localised_name }
+  if is_level_based(technology) then
+    table.insert(name, " ")
+    table.insert(name, level or technology.level)
+  end
+  return name
+end
+
+ResearchQueueAction.technology_name = technology_name
 
 local function technology_list(technologies)
   local result = { "" }
@@ -35,11 +44,6 @@ local function technology_list(technologies)
 end
 
 ResearchQueueAction.technology_list = technology_list
-
-local function message(target, key, ...)
-  local result = { "", technology_caption(target), " ", { key, ... } }
-  return result
-end
 
 local function queued_level(queue, technology)
   local level = technology.level
@@ -57,8 +61,7 @@ end
 ResearchQueueAction.queued_level = queued_level
 
 local function queue_message(queue, target, key, ...)
-  local result = { "", technology_caption(target, queued_level(queue, target)), " ", { key, ... } }
-  return result
+  return { key, technology_icon(target), technology_name(target, queued_level(queue, target)), ... }
 end
 
 local function queued_names(queue)
