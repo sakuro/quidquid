@@ -23,11 +23,13 @@ function SurfaceLogic.remote_view_availability(surface, include_hidden)
   if not SurfaceLogic.is_visible(surface, include_hidden) then
     return false, nil
   end
-  if surface.generated == false then
-    return false, "quidquid.action-open-remote-view-not-visited"
-  end
+  -- Checked before "not visited": a locked planet is necessarily unvisited too,
+  -- and "not unlocked" is the more actionable reason to report.
   if surface.kind == "planet" and surface.unlocked ~= true then
     return false, "quidquid.action-open-remote-view-not-unlocked"
+  end
+  if surface.generated == false then
+    return false, "quidquid.action-open-remote-view-not-visited"
   end
   return true, nil
 end
