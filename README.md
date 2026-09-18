@@ -82,6 +82,7 @@ not the number of items produced by each operation.
 | `Shift` + left click | Craft all |
 | `Ctrl/Cmd` + left click | Create temporary logistics requests for recipe ingredients |
 | `Alt` + left click | Open in Factoriopedia |
+| `Alt` + right click | Pipette the recipe's item product, if it has exactly one |
 
 ### Surfaces
 
