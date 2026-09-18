@@ -109,6 +109,18 @@ describe("ResearchQueueAction", function()
       assert.are.same({}, prerequisites)
       assert.are.same({ trigger }, triggers)
     end)
+
+    it("still walks the root technology's own prerequisites even when the root is already queued", function()
+      local missing = technology("missing")
+      local target = technology("target", { missing = missing }, { max_level = "infinite" })
+
+      -- Simulates requeuing the next level of an infinite technology whose earlier
+      -- level is already in the queue, after a prerequisite was manually removed.
+      local prerequisites, triggers = ResearchQueueAction.collect_prerequisites(target, { target = true })
+
+      assert.are.same({ missing }, prerequisites)
+      assert.are.same({}, triggers)
+    end)
   end)
 
   describe(".progress_for", function()

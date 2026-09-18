@@ -77,7 +77,13 @@ function ResearchQueueAction.collect_prerequisites(technology, queued)
   local visited = {}
 
   local function visit(current)
-    if current.researched or queued[current.name] or visited[current.name] then
+    if visited[current.name] then
+      return
+    end
+    -- The root technology can already be in `queued` (e.g. requeuing the next level
+    -- of an infinite technology whose earlier level is already queued) -- that must
+    -- not stop its own prerequisites from being walked, only a *prerequisite's*.
+    if current.researched or (current ~= technology and queued[current.name]) then
       return
     end
     visited[current.name] = true
