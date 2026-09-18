@@ -59,7 +59,7 @@ function OpenRemoteViewAction.register()
     id = "open-remote-view",
     types = { "surface" },
     label = { "quidquid.action-open-remote-view" },
-    key = "quidquid-confirm",
+    key = "quidquid-open-remote-view",
     interface = "quidquid.open-remote-view-action",
   })
 end

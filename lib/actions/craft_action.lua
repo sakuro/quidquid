@@ -69,7 +69,7 @@ end
 function CraftAction.register()
   register(
     "craft-1",
-    "quidquid-confirm",
+    "quidquid-craft-1",
     "quidquid.craft-1-action",
     { "quidquid.action-craft-1" },
     CraftAction.count_of(1)
