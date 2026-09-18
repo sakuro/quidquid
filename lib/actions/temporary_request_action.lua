@@ -111,7 +111,7 @@ function TemporaryRequestAction.resolve_requestable(selected_candidate, force)
   return false, "quidquid.action-temporary-request-no-item-ingredients"
 end
 
-local function is_available(player_index)
+function TemporaryRequestAction.is_available(player_index)
   local player = game.get_player(player_index)
   if player == nil then
     return false
@@ -170,7 +170,7 @@ end
 
 function TemporaryRequestAction.register()
   remote.add_interface("quidquid.temporary-request-action", {
-    is_available = is_available,
+    is_available = TemporaryRequestAction.is_available,
     execute = execute,
   })
   remote.call("quidquid", "register_action", {

@@ -1,6 +1,11 @@
 local TemporaryRequestAction = require("lib.actions.temporary_request_action")
 
 describe("TemporaryRequestAction", function()
+  after_each(function()
+    _G.game = nil
+    _G.defines = nil
+  end)
+
   describe(".find_section_index_by_group", function()
     it("returns the index of a matching group", function()
       local groups = { "", "quidquid-group", "other" }
@@ -136,6 +141,64 @@ describe("TemporaryRequestAction", function()
 
       assert.is_true(requestable)
       assert.is_nil(error_key)
+    end)
+  end)
+
+  describe(".is_available", function()
+    before_each(function()
+      _G.defines = { logistic_member_index = { character_requester = 1 } }
+    end)
+
+    it("returns false when the player no longer exists", function()
+      _G.game = {
+        get_player = function(_player_index)
+          return nil
+        end,
+      }
+
+      assert.is_false(TemporaryRequestAction.is_available(1))
+    end)
+
+    it("returns false when the player has no character", function()
+      _G.game = {
+        get_player = function(_player_index)
+          return { character = nil }
+        end,
+      }
+
+      assert.is_false(TemporaryRequestAction.is_available(1))
+    end)
+
+    it("returns false when the character has no requester logistic point", function()
+      _G.game = {
+        get_player = function(_player_index)
+          return {
+            character = {
+              get_logistic_point = function(_member_index)
+                return nil
+              end,
+            },
+          }
+        end,
+      }
+
+      assert.is_false(TemporaryRequestAction.is_available(1))
+    end)
+
+    it("returns true when the character has a requester logistic point", function()
+      _G.game = {
+        get_player = function(_player_index)
+          return {
+            character = {
+              get_logistic_point = function(_member_index)
+                return { filters = {} }
+              end,
+            },
+          }
+        end,
+      }
+
+      assert.is_true(TemporaryRequestAction.is_available(1))
     end)
   end)
 end)
