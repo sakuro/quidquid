@@ -1,3 +1,5 @@
+local ActionDispatch = require("lib.action_dispatch")
+
 local CraftAction = {}
 
 local function resolve_recipe(player, selected_candidate)
@@ -40,21 +42,14 @@ end
 
 local function craft(count_for)
   return function(selected_candidate, _params, player_index)
-    local player = game.get_player(player_index)
-    if player == nil then
-      return
-    end
-    local recipe, error_key = CraftAction.resolve_craftable(selected_candidate, player)
-    if recipe == nil then
-      if error_key ~= nil then
-        player.create_local_flying_text({
-          text = { error_key, selected_candidate.label },
-          create_at_cursor = true,
-        })
+    ActionDispatch.run(
+      selected_candidate,
+      player_index,
+      CraftAction.resolve_craftable,
+      function(recipe, _candidate, player)
+        player.begin_crafting({ count = count_for(player, recipe), recipe = recipe })
       end
-      return
-    end
-    player.begin_crafting({ count = count_for(player, recipe), recipe = recipe })
+    )
   end
 end
 

@@ -1,3 +1,5 @@
+local ActionDispatch = require("lib.action_dispatch")
+
 local TemporaryRequestAction = {}
 
 -- Injected from control.lua (see TemporaryRequestAction.init) rather than required
@@ -119,22 +121,21 @@ function TemporaryRequestAction.is_available(player_index)
   return TemporaryRequestAction.logistic_point_for(player) ~= nil
 end
 
-local function execute(selected_candidate, _params, player_index)
-  local player = game.get_player(player_index)
-  if player == nil then
-    return
-  end
+-- Adapts the boolean resolve_requestable to ActionDispatch's nil/payload
+-- convention: the candidate itself is the payload, since editor.open needs
+-- nothing beyond what it already has.
+local function resolve(selected_candidate, player)
   local requestable, error_key = TemporaryRequestAction.resolve_requestable(selected_candidate, player.force)
   if not requestable then
-    if error_key ~= nil then
-      player.create_local_flying_text({
-        text = { error_key, selected_candidate.label },
-        create_at_cursor = true,
-      })
-    end
-    return
+    return nil, error_key
   end
-  editor.open(player, selected_candidate)
+  return selected_candidate, nil
+end
+
+local function execute(selected_candidate, _params, player_index)
+  ActionDispatch.run(selected_candidate, player_index, resolve, function(candidate, _candidate, player)
+    editor.open(player, candidate)
+  end)
 end
 
 local function check_and_clear(player)

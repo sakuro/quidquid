@@ -1,3 +1,4 @@
+local ActionDispatch = require("lib.action_dispatch")
 local SurfaceAccess = require("lib.surface_access")
 local History = require("lib.surface_position_history")
 
@@ -32,24 +33,14 @@ end
 -- -- see README "Surface search limitations") is a per-candidate runtime fact, so
 -- it's resolved here and reported by execute, not hidden from the tooltip.
 local function execute(candidate, _params, player_index)
-  local player = game.get_player(player_index)
-  if player == nil then
-    return
-  end
-  local surface, reason_key = SurfaceAccess.resolve_remote_view(candidate, player)
-  if surface == nil then
-    player.create_local_flying_text({
-      text = { reason_key or "quidquid.action-open-remote-view-unavailable", candidate.label },
-      create_at_cursor = true,
-    })
-    return
-  end
-  remember(player)
-  local platform = surface.platform
-  local fallback = platform and platform.hub and platform.hub.position or player.force.get_spawn_position(surface)
-  local position = History.get(history(), player.index, surface.index, fallback)
-  player.set_controller({ type = defines.controllers.remote, surface = surface, position = position })
-  remember(player)
+  ActionDispatch.run(candidate, player_index, SurfaceAccess.resolve_remote_view, function(surface, _candidate, player)
+    remember(player)
+    local platform = surface.platform
+    local fallback = platform and platform.hub and platform.hub.position or player.force.get_spawn_position(surface)
+    local position = History.get(history(), player.index, surface.index, fallback)
+    player.set_controller({ type = defines.controllers.remote, surface = surface, position = position })
+    remember(player)
+  end, "quidquid.action-open-remote-view-unavailable")
 end
 
 function OpenRemoteViewAction.register()
