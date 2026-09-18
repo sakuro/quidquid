@@ -34,4 +34,36 @@ function CalculatorSource.classify(ok, result)
   return result
 end
 
+local function search(query, _player_index)
+  if query == "" then
+    return {}
+  end
+  local value = CalculatorSource.classify(pcall(helpers.evaluate_expression, query, SUFFIX_VARIABLES))
+  if value == nil then
+    return {}
+  end
+  return {
+    {
+      type = "calculation",
+      id = "result",
+      label = CalculatorSource.format_result(value),
+      icon = "item/display-panel",
+      search_score = 1, -- required by PaletteLogic.merge_candidates; arbitrary, only one candidate ever exists
+    },
+  }
+end
+
+function CalculatorSource.register()
+  remote.add_interface("quidquid.calculator-source", { search = search })
+  remote.call("quidquid", "register_source", {
+    version = 1,
+    id = "calculator",
+    type = "calculation",
+    label = SOURCE_LABEL,
+    prefixes = { "=" },
+    default_active = false, -- excluded from the unlocked default search
+    interface = "quidquid.calculator-source",
+  })
+end
+
 return CalculatorSource
