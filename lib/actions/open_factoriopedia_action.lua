@@ -2,7 +2,20 @@ local OpenFactoriopediaAction = {}
 
 local SurfaceAccess = require("lib.surface_access")
 
-local function resolve_prototype(candidate, player)
+-- pure decision logic given an already-resolved surface: dispatches on the
+-- LuaSurface's own kind rather than SurfaceAccess's descriptor, since resolve()'s
+-- descriptor isn't available for a real generated surface (only carried for the
+-- ungenerated-planet fallback SurfaceAccess.resolve already handles internally).
+local function surface_prototype(surface)
+  if surface.platform ~= nil then
+    return prototypes.surface["space-platform"]
+  elseif surface.planet ~= nil then
+    return surface.planet.prototype
+  end
+  return nil
+end
+
+function OpenFactoriopediaAction.resolve_prototype(candidate, player)
   if candidate.type == "item" then
     return prototypes.item[candidate.id]
   elseif candidate.type == "fluid" then
@@ -12,14 +25,9 @@ local function resolve_prototype(candidate, player)
   elseif candidate.type == "surface" then
     local surface = SurfaceAccess.resolve(candidate, player)
     if surface ~= nil then
-      if surface.platform ~= nil then
-        return prototypes.surface["space-platform"]
-      elseif surface.planet ~= nil then
-        return surface.planet.prototype
-      end
-    else
-      return SurfaceAccess.planet_prototype(candidate)
+      return surface_prototype(surface)
     end
+    return SurfaceAccess.planet_prototype(candidate)
   end
   return nil
 end
@@ -33,7 +41,7 @@ local function execute(selected_candidate, _params, player_index)
   if player == nil then
     return
   end
-  local prototype = resolve_prototype(selected_candidate, player)
+  local prototype = OpenFactoriopediaAction.resolve_prototype(selected_candidate, player)
   if prototype == nil then
     player.create_local_flying_text({
       text = { "quidquid.action-open-factoriopedia-unavailable", selected_candidate.label },
