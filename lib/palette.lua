@@ -29,6 +29,8 @@ local RESULTS_NAME = "quidquid-palette-results"
 local RESULTS_TABLE_NAME = "quidquid-palette-results-table"
 local DISPLAY_LIMIT = 30
 
+local CALCULATOR_SOURCE_ID = "calculator"
+
 local ROW_HEIGHT = 44
 local VISIBLE_ROWS = 5
 local CONTENT_WIDTH = 400
@@ -56,6 +58,17 @@ local function content_frame_of(player)
     return nil
   end
   return frame[CONTENT_NAME]
+end
+
+local function set_input_validity(player, valid)
+  local content = content_frame_of(player)
+  if content == nil then
+    return
+  end
+  local input = content[INPUT_ROW_NAME][INPUT_NAME]
+  input.style = valid and "textbox" or "invalid_value_textfield"
+  input.style.width = 0
+  input.style.horizontally_stretchable = true
 end
 
 local function results_pane(player)
@@ -239,7 +252,10 @@ local function build_candidate_row(pane, wrapped, index, player_index)
   })
   button.style.maximal_width = NAME_COLUMN_WIDTH
   button.style.horizontally_squashable = true
-  button.style.horizontal_align = "left"
+  -- Without this, the button auto-sizes to its caption's width, leaving no slack for
+  -- horizontal_align to shift text within -- left and right would look identical.
+  button.style.horizontally_stretchable = true
+  button.style.horizontal_align = wrapped.candidate.type == "calculation" and "right" or "left"
   button.style.font_color = DEFAULT_FONT_COLOR
   button.style.hovered_font_color = DEFAULT_FONT_COLOR
 
@@ -502,9 +518,13 @@ function Palette.on_gui_text_changed(event)
   end
 
   if event.text == "" then
+    set_input_validity(player, true)
     clear_candidates(player)
   else
-    render_candidates(player, Palette.search_all_sources(event.text, event.player_index, locked_source))
+    local candidates = Palette.search_all_sources(event.text, event.player_index, locked_source)
+    local is_calculator = locked_source ~= nil and locked_source.id == CALCULATOR_SOURCE_ID
+    set_input_validity(player, not is_calculator or #candidates > 0)
+    render_candidates(player, candidates)
   end
 end
 
@@ -611,6 +631,7 @@ function Palette.on_clear_source_lock(event)
   content.tags = {}
   content[INPUT_ROW_NAME][LOCK_LABEL_NAME].visible = false
   content[INPUT_ROW_NAME][LOCK_CLOSE_NAME].visible = false
+  set_input_validity(player, true)
 
   if current_text == "" then
     clear_candidates(player)
