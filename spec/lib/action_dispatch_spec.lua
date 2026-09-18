@@ -22,7 +22,7 @@ describe("ActionDispatch", function()
     _G.game = nil
   end)
 
-  local candidate = { label = "Iron plate" }
+  local candidate = { label = "Iron plate", icon = "item/iron-plate" }
 
   describe(".run", function()
     it("does nothing when the player no longer exists", function()
@@ -69,7 +69,10 @@ describe("ActionDispatch", function()
 
       assert.is_false(applied)
       assert.are.same({
-        { text = { "quidquid.action-craft-no-recipe", candidate.label }, create_at_cursor = true },
+        {
+          text = { "quidquid.action-craft-no-recipe", "[img=item/iron-plate]", candidate.label },
+          create_at_cursor = true,
+        },
       }, flying_texts)
     end)
 
@@ -87,7 +90,10 @@ describe("ActionDispatch", function()
       end, function(_payload, _candidate, _player) end, "quidquid.action-open-remote-view-unavailable")
 
       assert.are.same({
-        { text = { "quidquid.action-open-remote-view-unavailable", candidate.label }, create_at_cursor = true },
+        {
+          text = { "quidquid.action-open-remote-view-unavailable", "[img=item/iron-plate]", candidate.label },
+          create_at_cursor = true,
+        },
       }, flying_texts)
     end)
 
@@ -97,7 +103,10 @@ describe("ActionDispatch", function()
       end, function(_payload, _candidate, _player) end, "quidquid.action-open-remote-view-unavailable")
 
       assert.are.same({
-        { text = { "quidquid.action-open-remote-view-not-visited", candidate.label }, create_at_cursor = true },
+        {
+          text = { "quidquid.action-open-remote-view-not-visited", "[img=item/iron-plate]", candidate.label },
+          create_at_cursor = true,
+        },
       }, flying_texts)
     end)
   end)
