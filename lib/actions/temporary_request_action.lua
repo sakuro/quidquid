@@ -132,7 +132,7 @@ local function resolve(selected_candidate, player)
   return selected_candidate, nil
 end
 
-local function execute(selected_candidate, _params, player_index)
+local function execute(selected_candidate, player_index)
   ActionDispatch.run(selected_candidate, player_index, resolve, function(candidate, _candidate, player)
     editor.open(player, candidate)
   end)

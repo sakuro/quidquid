@@ -41,7 +41,7 @@ function CraftAction.max_craftable(player, recipe)
 end
 
 local function craft(count_for)
-  return function(selected_candidate, _params, player_index)
+  return function(selected_candidate, player_index)
     ActionDispatch.run(
       selected_candidate,
       player_index,
