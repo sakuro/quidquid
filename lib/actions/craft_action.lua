@@ -11,7 +11,7 @@ end
 -- recipe to craft, or nil plus a locale key explaining why not (nil, nil for a
 -- recipe candidate with no matching force recipe -- a near-impossible case not worth
 -- a message, since RecipeSource builds candidates from prototypes.recipe directly).
--- is_applicable only gates by candidate type (via this action's registered `types`);
+-- is_available only gates by candidate type (via this action's registered `types`);
 -- per-candidate craftability is a runtime fact about this specific item/recipe, so
 -- it's resolved here and reported by execute, not hidden from the tooltip.
 function CraftAction.resolve_craftable(selected_candidate, player)

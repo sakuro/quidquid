@@ -27,7 +27,7 @@ function OpenRemoteViewAction.on_player_removed(event)
   history()[event.player_index] = nil
 end
 
--- is_applicable only gates by candidate type (via this action's registered `types`);
+-- is_available only gates by candidate type (via this action's registered `types`);
 -- whether remote view actually works for this specific surface (generated, unlocked
 -- -- see README "Surface search limitations") is a per-candidate runtime fact, so
 -- it's resolved here and reported by execute, not hidden from the tooltip.

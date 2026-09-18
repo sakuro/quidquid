@@ -92,7 +92,7 @@ end
 -- true, or false plus a locale key explaining why not (nil for a recipe candidate
 -- with no matching force recipe -- a near-impossible case not worth a message, since
 -- RecipeSource builds candidates from prototypes.recipe directly).
--- is_applicable only gates on player/logistics-network state, uniform across every
+-- is_available only gates on player/logistics-network state, uniform across every
 -- candidate; this per-candidate fact is resolved here and reported by execute
 -- instead, not hidden from the tooltip.
 function TemporaryRequestAction.resolve_requestable(selected_candidate, force)
@@ -111,7 +111,7 @@ function TemporaryRequestAction.resolve_requestable(selected_candidate, force)
   return false, "quidquid.action-temporary-request-no-item-ingredients"
 end
 
-local function is_applicable(selected_candidate, player_index)
+local function is_available(player_index)
   local player = game.get_player(player_index)
   if player == nil then
     return false
@@ -170,7 +170,7 @@ end
 
 function TemporaryRequestAction.register()
   remote.add_interface("quidquid.temporary-request-action", {
-    is_applicable = is_applicable,
+    is_available = is_available,
     execute = execute,
   })
   remote.call("quidquid", "register_action", {

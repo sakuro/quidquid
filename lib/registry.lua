@@ -125,15 +125,17 @@ function Registry:resolve_actions(selected_candidate, player_index, caller)
 
   for key, definition in pairs(slots) do
     local applicable = true
-    if caller:has(definition.interface, "is_applicable") then
-      local ok, result =
-        pcall(caller.call, caller, definition.interface, "is_applicable", selected_candidate, player_index)
+    -- is_available only gates on state uniform across every candidate of a type
+    -- (player/network state, say); a fact specific to one candidate belongs in
+    -- execute instead, reported to the player rather than silently hidden.
+    if caller:has(definition.interface, "is_available") then
+      local ok, result = pcall(caller.call, caller, definition.interface, "is_available", player_index)
       if ok then
         applicable = result
       else
         applicable = false
         self.logger(
-          ("quidquid: action '%s' is_applicable check failed: %s"):format(tostring(definition.id), tostring(result))
+          ("quidquid: action '%s' is_available check failed: %s"):format(tostring(definition.id), tostring(result))
         )
       end
     end

@@ -24,7 +24,7 @@ local function resolve_prototype(candidate, player)
   return nil
 end
 
--- is_applicable only gates by candidate type (via this action's registered `types`);
+-- is_available only gates by candidate type (via this action's registered `types`);
 -- whether the prototype actually resolves for this specific candidate is a
 -- per-candidate runtime fact, so it's resolved here and reported by execute, not
 -- hidden from the tooltip.
