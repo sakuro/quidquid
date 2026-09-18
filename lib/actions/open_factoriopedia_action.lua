@@ -1,5 +1,6 @@
 local OpenFactoriopediaAction = {}
 
+local ActionDispatch = require("lib.action_dispatch")
 local SurfaceAccess = require("lib.surface_access")
 
 -- pure decision logic given an already-resolved surface: dispatches on the
@@ -32,24 +33,25 @@ function OpenFactoriopediaAction.resolve_prototype(candidate, player)
   return nil
 end
 
+-- Adapts the single-value resolve_prototype to ActionDispatch's (payload, key)
+-- convention: every failure shows the same generic message, unlike other actions'
+-- resolve functions, since Factoriopedia has no distinct reasons to report.
+local function resolve(candidate, player)
+  local prototype = OpenFactoriopediaAction.resolve_prototype(candidate, player)
+  if prototype == nil then
+    return nil, "quidquid.action-open-factoriopedia-unavailable"
+  end
+  return prototype, nil
+end
+
 -- is_available only gates by candidate type (via this action's registered `types`);
 -- whether the prototype actually resolves for this specific candidate is a
 -- per-candidate runtime fact, so it's resolved here and reported by execute, not
 -- hidden from the tooltip.
 local function execute(selected_candidate, _params, player_index)
-  local player = game.get_player(player_index)
-  if player == nil then
-    return
-  end
-  local prototype = OpenFactoriopediaAction.resolve_prototype(selected_candidate, player)
-  if prototype == nil then
-    player.create_local_flying_text({
-      text = { "quidquid.action-open-factoriopedia-unavailable", selected_candidate.label },
-      create_at_cursor = true,
-    })
-    return
-  end
-  player.open_factoriopedia_gui(prototype)
+  ActionDispatch.run(selected_candidate, player_index, resolve, function(prototype, _candidate, player)
+    player.open_factoriopedia_gui(prototype)
+  end)
 end
 
 function OpenFactoriopediaAction.register()
