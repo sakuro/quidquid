@@ -48,7 +48,7 @@ function TechnologySource.register()
     id = "technologies",
     type = "technology",
     label = SOURCE_LABEL,
-    prefixes = { "t", "tech" },
+    prefixes = { "t", "technology" },
     default_active = true,
     interface = "quidquid.technology-source",
   })
