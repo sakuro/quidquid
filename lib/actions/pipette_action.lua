@@ -8,7 +8,7 @@ local PipetteAction = {}
 -- recipe explicitly opts out of the auto-inferred main product via main_product = ""
 -- (e.g. kovarex-enrichment-process, for tooltip/icon reasons unrelated to pipetting)
 -- -- both cases fall through to nil here, same as any other genuinely ambiguous recipe.
-local function resolve_item_prototype(recipe)
+function PipetteAction.resolve_item_prototype(recipe)
   local products = recipe.products
   if #products == 1 and products[1].type == "item" then
     return prototypes.item[products[1].name]
@@ -35,7 +35,7 @@ local function execute(selected_candidate, _params, player_index)
     prototype = prototypes.item[selected_candidate.id]
   else
     local recipe = prototypes.recipe[selected_candidate.id]
-    prototype = recipe and resolve_item_prototype(recipe)
+    prototype = recipe and PipetteAction.resolve_item_prototype(recipe)
   end
 
   if prototype == nil then

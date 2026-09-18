@@ -126,16 +126,19 @@ end
 
 ResearchQueueAction.queue_index = queue_index
 
-local function execute(candidate, _params, player_index)
-  local player = game.get_player(player_index)
-  if player == nil then
-    return
-  end
-
-  local force = player.force
+-- pure, testable: decides what happens when candidate's technology is added to
+-- force's research queue. Returns the technology, a locale key, and its message
+-- args -- plus the new queue to install when the outcome is an actual enqueue (nil
+-- when the outcome is only a message, e.g. already queued/researched/full). Returns
+-- nil for a candidate with no matching force technology (near-impossible, since
+-- TechnologySource builds candidates from force.technologies directly).
+-- is_available only gates on state uniform across every candidate (there is none
+-- registered for this action); per-candidate queue eligibility is a runtime fact
+-- resolved here and reported by execute, not hidden from the tooltip.
+function ResearchQueueAction.resolve_enqueue(force, candidate)
   local technology = force.technologies[candidate.id]
   if technology == nil then
-    return
+    return nil
   end
 
   local queue = force.research_queue
@@ -143,63 +146,29 @@ local function execute(candidate, _params, player_index)
   if existing_index ~= nil then
     local key = existing_index == 1 and "quidquid.action-research-queue-current"
       or "quidquid.action-research-queue-already-queued"
-    player.create_local_flying_text({
-      text = queue_message(queue, technology, key, ResearchQueueAction.progress_for(force, technology, existing_index)),
-      create_at_cursor = true,
-    })
-    return
+    return technology, key, { ResearchQueueAction.progress_for(force, technology, existing_index) }, nil
   end
 
   if technology.researched then
-    player.create_local_flying_text({
-      text = queue_message(queue, technology, "quidquid.action-research-queue-already-researched"),
-      create_at_cursor = true,
-    })
-    return
+    return technology, "quidquid.action-research-queue-already-researched", {}, nil
   end
 
   if #queue >= MAX_QUEUE_SIZE then
-    player.create_local_flying_text({
-      text = queue_message(queue, technology, "quidquid.action-research-queue-full"),
-      create_at_cursor = true,
-    })
-    return
+    return technology, "quidquid.action-research-queue-full", {}, nil
   end
 
   if technology.prototype.research_trigger ~= nil then
-    player.create_local_flying_text({
-      text = queue_message(queue, technology, "quidquid.action-research-queue-trigger"),
-      create_at_cursor = true,
-    })
-    return
+    return technology, "quidquid.action-research-queue-trigger", {}, nil
   end
 
   local queued = queued_names(queue)
   local prerequisites, triggers = ResearchQueueAction.collect_prerequisites(technology, queued)
   if #triggers > 0 then
-    player.create_local_flying_text({
-      text = queue_message(
-        queue,
-        technology,
-        "quidquid.action-research-queue-trigger-prerequisite",
-        technology_list(triggers)
-      ),
-      create_at_cursor = true,
-    })
-    return
+    return technology, "quidquid.action-research-queue-trigger-prerequisite", { technology_list(triggers) }, nil
   end
 
   if #queue + #prerequisites + 1 > MAX_QUEUE_SIZE then
-    player.create_local_flying_text({
-      text = queue_message(
-        queue,
-        technology,
-        "quidquid.action-research-queue-prerequisite-slots",
-        technology_list(prerequisites)
-      ),
-      create_at_cursor = true,
-    })
-    return
+    return technology, "quidquid.action-research-queue-prerequisite-slots", { technology_list(prerequisites) }, nil
   end
 
   local new_queue = {}
@@ -210,11 +179,30 @@ local function execute(candidate, _params, player_index)
     table.insert(new_queue, prerequisite.name)
   end
   table.insert(new_queue, technology.name)
-  force.research_queue = new_queue
 
   local key = #prerequisites == 0 and "quidquid.action-research-queue-added"
     or "quidquid.action-research-queue-added-with-prerequisites"
   local args = #prerequisites == 0 and {} or { technology_list(prerequisites) }
+  return technology, key, args, new_queue
+end
+
+local function execute(candidate, _params, player_index)
+  local player = game.get_player(player_index)
+  if player == nil then
+    return
+  end
+
+  local force = player.force
+  local queue = force.research_queue
+  local technology, key, args, new_queue = ResearchQueueAction.resolve_enqueue(force, candidate)
+  if technology == nil then
+    return
+  end
+
+  if new_queue ~= nil then
+    force.research_queue = new_queue
+  end
+
   player.create_local_flying_text({
     text = queue_message(queue, technology, key, table.unpack(args)),
     create_at_cursor = true,
