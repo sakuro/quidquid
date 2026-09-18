@@ -189,4 +189,61 @@ describe("Palette", function()
       assert.are.equal("automation", results[1].candidate.id)
     end)
   end)
+
+  describe(".build_tooltip", function()
+    local function action(id)
+      return { id = id, label = { "quidquid.action-" .. id } }
+    end
+
+    it("returns nil when there are no applicable actions", function()
+      assert.is_nil(Palette.build_tooltip({}))
+    end)
+
+    it("builds one hint per action, sorted by key and joined with newlines", function()
+      local tooltip = Palette.build_tooltip({
+        b = action("craft-all"),
+        a = action("craft-1"),
+      })
+
+      assert.are.same({
+        "",
+        { "", { "quidquid.action-craft-1" }, " (", { "quidquid.action-craft-1-hint" }, ")" },
+        "\n",
+        { "", { "quidquid.action-craft-all" }, " (", { "quidquid.action-craft-all-hint" }, ")" },
+      }, tooltip)
+    end)
+
+    it("shows every action untruncated at exactly the 10-action budget", function()
+      local resolved = {}
+      for i = 1, 10 do
+        resolved[("k%02d"):format(i)] = action("action-" .. i)
+      end
+
+      local tooltip = Palette.build_tooltip(resolved)
+
+      -- 1 leading "" + 10 hints + 9 separators = 20 top-level entries, no truncation marker.
+      assert.are.equal(20, #tooltip)
+    end)
+
+    it("truncates to 9 actions plus a trailing '...N more' entry past the 10-action budget", function()
+      local resolved = {}
+      for i = 1, 11 do
+        resolved[("k%02d"):format(i)] = action("action-" .. i)
+      end
+
+      local tooltip = Palette.build_tooltip(resolved)
+
+      -- First 9 actions only.
+      for i = 1, 9 do
+        assert.are.same(
+          { "", { "quidquid.action-action-" .. i }, " (", { "quidquid.action-action-" .. i .. "-hint" }, ")" },
+          tooltip[2 * i]
+        )
+      end
+      assert.are.same({ "quidquid.candidate-tooltip-more-actions", 2 }, tooltip[#tooltip])
+      -- 1 leading "" + 9 hints + 9 separators (one before each hint after the first, plus
+      -- one before the trailing marker) + 1 marker = 20 top-level entries, within budget.
+      assert.are.equal(20, #tooltip)
+    end)
+  end)
 end)

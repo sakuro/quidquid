@@ -169,8 +169,14 @@ local function candidate_hint(definition)
   return { "", definition.label, " (", { "quidquid.action-" .. definition.id .. "-hint" }, ")" }
 end
 
-local function candidate_tooltip(candidate, player_index)
-  local resolved = registry:resolve_actions(candidate, player_index, RemoteCaller)
+-- A LocalisedString allows at most 20 parameters per nesting level (see the comment
+-- above candidate_hint); each action past the first costs 2 slots (separator + nested
+-- hint), so 10 actions exactly fill the budget. Past that, show the first 9 and fold
+-- the rest into a trailing "...N more" entry (2 more slots), rather than let Factorio
+-- reject the tooltip outright.
+local MAX_TOOLTIP_ACTIONS = 10
+
+function Palette.build_tooltip(resolved)
   local keys = {}
   for key, _ in pairs(resolved) do
     table.insert(keys, key)
@@ -180,14 +186,26 @@ local function candidate_tooltip(candidate, player_index)
   end
   table.sort(keys)
 
+  local truncated = #keys > MAX_TOOLTIP_ACTIONS
+  local shown_count = truncated and (MAX_TOOLTIP_ACTIONS - 1) or #keys
+
   local tooltip = { "" }
-  for index, key in ipairs(keys) do
+  for index = 1, shown_count do
     if index > 1 then
       table.insert(tooltip, "\n")
     end
-    table.insert(tooltip, candidate_hint(resolved[key]))
+    table.insert(tooltip, candidate_hint(resolved[keys[index]]))
+  end
+  if truncated then
+    table.insert(tooltip, "\n")
+    table.insert(tooltip, { "quidquid.candidate-tooltip-more-actions", #keys - shown_count })
   end
   return tooltip
+end
+
+local function candidate_tooltip(candidate, player_index)
+  local resolved = registry:resolve_actions(candidate, player_index, RemoteCaller)
+  return Palette.build_tooltip(resolved)
 end
 
 local function build_candidate_row(pane, wrapped, index, player_index)
