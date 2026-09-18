@@ -252,7 +252,7 @@ local function build_candidate_row(pane, wrapped, index, player_index)
   })
   button.style.maximal_width = NAME_COLUMN_WIDTH
   button.style.horizontally_squashable = true
-  button.style.horizontal_align = "left"
+  button.style.horizontal_align = wrapped.candidate.type == "calculation" and "right" or "left"
   button.style.font_color = DEFAULT_FONT_COLOR
   button.style.hovered_font_color = DEFAULT_FONT_COLOR
 
