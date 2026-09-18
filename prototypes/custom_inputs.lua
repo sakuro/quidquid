@@ -6,7 +6,17 @@ data:extend({
   },
   {
     type = "custom-input",
-    name = "quidquid-confirm",
+    name = "quidquid-craft-1",
+    key_sequence = "mouse-button-1",
+  },
+  {
+    type = "custom-input",
+    name = "quidquid-add-to-research-queue",
+    key_sequence = "mouse-button-1",
+  },
+  {
+    type = "custom-input",
+    name = "quidquid-open-remote-view",
     key_sequence = "mouse-button-1",
   },
   {

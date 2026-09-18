@@ -228,7 +228,7 @@ function ResearchQueueAction.register()
     id = "add-to-research-queue",
     types = { "technology" },
     label = { "quidquid.action-add-to-research-queue" },
-    key = "quidquid-confirm",
+    key = "quidquid-add-to-research-queue",
     interface = "quidquid.research-queue-action",
   })
 end
