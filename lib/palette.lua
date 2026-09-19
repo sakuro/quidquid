@@ -515,6 +515,11 @@ function Palette.on_gui_text_changed(event)
       lock_to_source(player, source)
       return
     end
+  elseif event.text == " " then
+    unlock_source(player)
+    event.element.text = ""
+    clear_candidates(player)
+    return
   end
 
   if event.text == "" then
