@@ -498,6 +498,17 @@ local function lock_to_source(player, source)
   clear_candidates(player)
 end
 
+local function unlock_source(player)
+  local content = content_frame_of(player)
+  if content == nil then
+    return
+  end
+  content.tags = {}
+  content[INPUT_ROW_NAME][LOCK_LABEL_NAME].visible = false
+  content[INPUT_ROW_NAME][LOCK_CLOSE_NAME].visible = false
+  set_input_validity(player, true)
+end
+
 function Palette.on_gui_text_changed(event)
   if not Palette.is_palette_input(event.element) then
     return
@@ -615,17 +626,6 @@ function Palette.on_gui_hover(event)
   if player ~= nil then
     set_active_index(player, index)
   end
-end
-
-local function unlock_source(player)
-  local content = content_frame_of(player)
-  if content == nil then
-    return
-  end
-  content.tags = {}
-  content[INPUT_ROW_NAME][LOCK_LABEL_NAME].visible = false
-  content[INPUT_ROW_NAME][LOCK_CLOSE_NAME].visible = false
-  set_input_validity(player, true)
 end
 
 function Palette.on_clear_source_lock(event)
