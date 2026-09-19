@@ -612,6 +612,17 @@ function Palette.on_gui_hover(event)
   end
 end
 
+local function unlock_source(player)
+  local content = content_frame_of(player)
+  if content == nil then
+    return
+  end
+  content.tags = {}
+  content[INPUT_ROW_NAME][LOCK_LABEL_NAME].visible = false
+  content[INPUT_ROW_NAME][LOCK_CLOSE_NAME].visible = false
+  set_input_validity(player, true)
+end
+
 function Palette.on_clear_source_lock(event)
   local element = event.element
   if element == nil or not element.valid or element.tags.quidquid_close_lock == nil then
@@ -628,10 +639,7 @@ function Palette.on_clear_source_lock(event)
   end
 
   local current_text = content[INPUT_ROW_NAME][INPUT_NAME].text
-  content.tags = {}
-  content[INPUT_ROW_NAME][LOCK_LABEL_NAME].visible = false
-  content[INPUT_ROW_NAME][LOCK_CLOSE_NAME].visible = false
-  set_input_validity(player, true)
+  unlock_source(player)
 
   if current_text == "" then
     clear_candidates(player)
