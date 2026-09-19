@@ -498,6 +498,17 @@ local function lock_to_source(player, source)
   clear_candidates(player)
 end
 
+local function unlock_source(player)
+  local content = content_frame_of(player)
+  if content == nil then
+    return
+  end
+  content.tags = {}
+  content[INPUT_ROW_NAME][LOCK_LABEL_NAME].visible = false
+  content[INPUT_ROW_NAME][LOCK_CLOSE_NAME].visible = false
+  set_input_validity(player, true)
+end
+
 function Palette.on_gui_text_changed(event)
   if not Palette.is_palette_input(event.element) then
     return
@@ -515,6 +526,11 @@ function Palette.on_gui_text_changed(event)
       lock_to_source(player, source)
       return
     end
+  elseif event.text == " " then
+    unlock_source(player)
+    event.element.text = ""
+    clear_candidates(player)
+    return
   end
 
   if event.text == "" then
@@ -628,10 +644,7 @@ function Palette.on_clear_source_lock(event)
   end
 
   local current_text = content[INPUT_ROW_NAME][INPUT_NAME].text
-  content.tags = {}
-  content[INPUT_ROW_NAME][LOCK_LABEL_NAME].visible = false
-  content[INPUT_ROW_NAME][LOCK_CLOSE_NAME].visible = false
-  set_input_validity(player, true)
+  unlock_source(player)
 
   if current_text == "" then
     clear_candidates(player)
