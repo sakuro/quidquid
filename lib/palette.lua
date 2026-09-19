@@ -124,10 +124,11 @@ local function set_active_index(player, index)
 end
 
 function Palette.search_all_sources(query, player_index, locked_source)
+  local trimmed_query = query:match("^%s*(.-)%s*$")
   local results = {}
   local sources = locked_source and { locked_source } or registry:default_active_sources()
   for _, source in ipairs(sources) do
-    local ok, candidates = pcall(remote.call, source.interface, "search", query, player_index)
+    local ok, candidates = pcall(remote.call, source.interface, "search", trimmed_query, player_index)
     if ok then
       local wrapped = {}
       for _, candidate in ipairs(candidates) do

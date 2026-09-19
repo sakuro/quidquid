@@ -188,6 +188,23 @@ describe("Palette", function()
       assert.are.equal(1, #results)
       assert.are.equal("automation", results[1].candidate.id)
     end)
+
+    it("trims leading and trailing whitespace from the query before searching sources", function()
+      local received_query
+      Palette.init(fake_registry({
+        { id = "items", interface = "quidquid.item-source", label = { "quidquid.source-items" } },
+      }))
+      _G.remote = {
+        call = function(_interface, _fn, query, _player_index)
+          received_query = query
+          return {}
+        end,
+      }
+
+      Palette.search_all_sources("  iron  ", 1)
+
+      assert.are.equal("iron", received_query)
+    end)
   end)
 
   describe(".build_tooltip", function()
