@@ -290,6 +290,10 @@ local function build_candidate_row(pane, wrapped, index, player_index)
     caption = wrapped.source_label,
   })
   source_label.style.vertical_align = "center"
+  -- Without this, the label auto-sizes to its caption's width, leaving no slack for
+  -- horizontal_align to shift text within -- it hugs whatever comes before it instead
+  -- of the row's right edge.
+  source_label.style.horizontally_stretchable = true
   source_label.style.horizontal_align = "right"
   source_label.style.font_color = MUTED_FONT_COLOR
 end
