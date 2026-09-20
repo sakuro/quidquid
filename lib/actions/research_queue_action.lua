@@ -1,3 +1,5 @@
+local rich_text = require("lib.rich_text")
+
 local ResearchQueueAction = {}
 
 -- LuaForce.research_queue's length cap. Neither the Lua API docs nor the
@@ -6,6 +8,16 @@ local ResearchQueueAction = {}
 -- in-game if this ever needs to change.
 local MAX_QUEUE_SIZE = 7
 local INFINITE_LEVEL = 4294967295
+
+-- The most prerequisites that could ever actually fit in the queue alongside
+-- the target technology itself (queue + prerequisites + target <=
+-- MAX_QUEUE_SIZE), reused here as technology_list's display cap so the
+-- number means something concrete rather than being an arbitrary
+-- readability guess. (Coincidentally also 6 in
+-- lib/temporary_request_editor.lua's MAX_LISTED_INGREDIENTS -- that's an
+-- unrelated number from an unrelated domain; don't derive one from the
+-- other.)
+local MAX_LISTED_TECHNOLOGIES = MAX_QUEUE_SIZE - 1
 
 local function is_level_based(technology)
   local max_level = technology.prototype.max_level
@@ -33,14 +45,12 @@ end
 ResearchQueueAction.technology_name = technology_name
 
 local function technology_list(technologies)
-  local result = { "" }
-  for i, technology in ipairs(technologies) do
-    if i > 1 then
-      table.insert(result, ", ")
-    end
-    table.insert(result, "[technology=" .. technology.name .. "]")
-  end
-  return result
+  return rich_text.joined_list(
+    technologies,
+    technology_icon,
+    MAX_LISTED_TECHNOLOGIES,
+    "quidquid.action-research-queue-technology-list-more"
+  )
 end
 
 ResearchQueueAction.technology_list = technology_list
