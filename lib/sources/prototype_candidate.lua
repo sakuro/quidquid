@@ -37,7 +37,7 @@ local function build_candidates(
   local display_query = normalization.normalize(query, "display", locale)
   for _, prototype in ipairs(prototype_list) do
     if include_hidden or not prototype.hidden then
-      local best
+      local best = nil
       local internal_key, internal_position_map =
         search_key_cache.get("prototype", prototype.name, "internal", nil, prototype.name)
       local internal_score, internal_positions = fuzzy_match(internal_query, internal_key)

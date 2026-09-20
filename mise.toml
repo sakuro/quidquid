@@ -16,6 +16,7 @@ lua = "5.2" # Factorio's Lua version; never bump (see .github/renovate.json)
 postinstall = [
   'test -n "$CI" || hk install',
   '! luarocks --version >/dev/null 2>&1 || luarocks install --local busted 2.3.0',
+  '! luarocks --version >/dev/null 2>&1 || luarocks install --local luacheck 1.2.0',
 ]
 
 [settings]

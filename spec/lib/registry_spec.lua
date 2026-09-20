@@ -24,7 +24,7 @@ local function caller_with_is_available(result)
     has = function(_, _, function_name)
       return function_name == "is_available"
     end,
-    call = function(_, _, _, ...)
+    call = function(_, _, _)
       return result
     end,
   }
@@ -35,7 +35,7 @@ local function caller_with_throwing_is_available(error_message)
     has = function(_, _, function_name)
       return function_name == "is_available"
     end,
-    call = function(_, _, _, ...)
+    call = function(_, _, _)
       error(error_message)
     end,
   }
