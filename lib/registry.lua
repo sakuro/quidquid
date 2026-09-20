@@ -46,7 +46,11 @@ function Registry:register_source(definition)
   end
 
   for _, prefix in ipairs(definition.prefixes or {}) do
-    if self.prefix_owners[prefix] == nil then
+    if prefix == "" then
+      self.logger(
+        ("quidquid: source '%s' prefix '' ignored: empty prefixes are not allowed"):format(tostring(definition.id))
+      )
+    elseif self.prefix_owners[prefix] == nil then
       self.prefix_owners[prefix] = definition
     else
       self.logger(

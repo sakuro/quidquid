@@ -161,6 +161,24 @@ describe("Registry", function()
       assert.is_true(item_ok)
       assert.is_true(fluid_ok)
     end)
+
+    it("ignores an empty-string prefix but still registers the source and its other prefixes", function()
+      local logger, messages = spy_logger()
+      local registry = Registry.new(logger)
+
+      local ok = registry:register_source({
+        version = 1,
+        id = "items",
+        type = "item",
+        prefixes = { "i", "" },
+        interface = "my-mod.source-items",
+      })
+
+      assert.is_true(ok)
+      assert.are.equal(1, #messages)
+      assert.is_nil(registry:source_for_prefix(""))
+      assert.are.equal("items", registry:source_for_prefix("i").id)
+    end)
   end)
 
   describe(":source_for_prefix", function()
