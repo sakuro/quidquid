@@ -29,10 +29,10 @@ local DISPLAY_TIERS = {
 }
 
 -- Compact form of a value for the secondary line: one decimal digit per tier, except that
--- the k tier drops it from 10k up (the digit adds little there). Values under 1000 read
--- as format_result does. Digits beyond the shown precision are truncated, never rounded,
--- so a value never displays as more than it is (999999 is "999k", not "1.0M"); this also
--- means a value cannot carry into the next tier.
+-- the k tier drops it from 10k up (the digit adds little there), and values under 1000
+-- are whole numbers. Digits beyond the shown precision are truncated toward zero, never
+-- rounded, so a value never displays as more than it is (999999 is "999k", not "1.0M");
+-- this also means a value cannot carry into the next tier.
 function CalculatorSource.format_suffixed(value)
   local magnitude = math.abs(value)
   local tier_index
@@ -41,8 +41,11 @@ function CalculatorSource.format_suffixed(value)
       tier_index = index
     end
   end
+  local sign = value < 0 and "-" or ""
   if tier_index == nil then
-    return CalculatorSource.format_result(value)
+    local whole = math.floor(magnitude)
+    -- A negative value below one truncates to zero, and "-0" would be misleading.
+    return (whole == 0 and "" or sign) .. ("%d"):format(whole)
   end
 
   local tier = DISPLAY_TIERS[tier_index]
@@ -55,7 +58,7 @@ function CalculatorSource.format_suffixed(value)
     local tenths = math.floor(magnitude / (tier.divisor / 10))
     text = ("%d.%d"):format(math.floor(tenths / 10), tenths % 10)
   end
-  return (value < 0 and "-" or "") .. text .. tier.suffix
+  return sign .. text .. tier.suffix
 end
 
 -- Takes a pcall(helpers.evaluate_expression, query, SUFFIX_VARIABLES) result pair.
