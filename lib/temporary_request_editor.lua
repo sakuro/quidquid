@@ -1,5 +1,6 @@
 local TemporaryRequestAction = require("lib.actions.temporary_request_action")
 local TemporaryRequestEditorLogic = require("lib.temporary_request_editor_logic")
+local rich_text = require("lib.rich_text")
 
 local TemporaryRequestEditor = {}
 
@@ -162,16 +163,31 @@ local function target_ingredients(player, target, craft_count, quality)
   return TemporaryRequestEditorLogic.recipe_ingredients(ingredients_for(player, target), craft_count, quality)
 end
 
+-- The current actual maximum number of item ingredients any recipe has
+-- (fusion-reactor-equipment; confirmed empirically via RCON against base +
+-- Space Age + elevated-rails + quality + recycler -- entity ingredient_count
+-- gives no useful bound here, since every crafting machine except
+-- furnaces/recycler reports 65535, an "effectively unlimited" sentinel, not
+-- a real per-machine cap). Chosen so this cap essentially never truncates a
+-- real recipe's list today, while still bounding the pathological case the
+-- same way MAX_LISTED_TECHNOLOGIES bounds research's dependency graphs.
+-- (Coincidentally also 6 in lib/actions/research_queue_action.lua's
+-- MAX_LISTED_TECHNOLOGIES -- that's an unrelated number from an unrelated
+-- domain; don't derive one from the other.)
+local MAX_LISTED_INGREDIENTS = 6
+
+local function ingredient_icon(ingredient)
+  local quality = quality_system_active() and ",quality=" .. ingredient.quality or ""
+  return "[item=" .. ingredient.name .. quality .. "]"
+end
+
 local function ingredient_caption(ingredients)
-  local caption = { "" }
-  for index, ingredient in ipairs(ingredients) do
-    if index > 1 then
-      table.insert(caption, ", ")
-    end
-    local quality = quality_system_active() and ",quality=" .. ingredient.quality or ""
-    table.insert(caption, "[item=" .. ingredient.name .. quality .. "]")
-  end
-  return caption
+  return rich_text.joined_icon_list(
+    ingredients,
+    ingredient_icon,
+    MAX_LISTED_INGREDIENTS,
+    "quidquid.action-temporary-request-ingredient-list-more"
+  )
 end
 
 local function item_caption(target, quality)

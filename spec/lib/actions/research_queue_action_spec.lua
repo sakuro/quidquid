@@ -26,16 +26,32 @@ end
 
 describe("ResearchQueueAction", function()
   describe(".technology_list", function()
-    it("lists prerequisite technologies as icons only", function()
+    it("lists prerequisite technologies as a single concatenated string", function()
       local prerequisites = {
         technology("automation"),
         technology("steel-processing"),
       }
 
       assert.are.same(
-        { "", "[technology=automation]", ", ", "[technology=steel-processing]" },
+        { "", "[technology=automation], [technology=steel-processing]" },
         ResearchQueueAction.technology_list(prerequisites)
       )
+    end)
+
+    it("truncates past MAX_LISTED_TECHNOLOGIES and names the correct remainder", function()
+      local technologies = {}
+      for i = 1, 8 do
+        technologies[i] = technology("tech-" .. i)
+      end
+
+      local result = ResearchQueueAction.technology_list(technologies)
+
+      assert.are.same({
+        "",
+        "[technology=tech-1], [technology=tech-2], [technology=tech-3], "
+          .. "[technology=tech-4], [technology=tech-5], [technology=tech-6], ",
+        { "quidquid.action-research-queue-technology-list-more", 2 },
+      }, result)
     end)
   end)
 
@@ -262,7 +278,7 @@ describe("ResearchQueueAction", function()
 
       assert.are.equal(target, result_technology)
       assert.are.equal("quidquid.action-research-queue-prerequisite-slots", key)
-      assert.are.same({ "", "[technology=iron]", ", ", "[technology=steel]" }, args[1])
+      assert.are.same({ "", "[technology=iron], [technology=steel]" }, args[1])
       assert.is_nil(new_queue)
     end)
 
@@ -289,7 +305,7 @@ describe("ResearchQueueAction", function()
 
       assert.are.equal(target, result_technology)
       assert.are.equal("quidquid.action-research-queue-added-with-prerequisites", key)
-      assert.are.same({ "", "[technology=iron]", ", ", "[technology=steel]" }, args[1])
+      assert.are.same({ "", "[technology=iron], [technology=steel]" }, args[1])
       assert.are.same({ "iron", "steel", "target" }, new_queue)
     end)
   end)

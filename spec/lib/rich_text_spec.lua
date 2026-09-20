@@ -14,4 +14,34 @@ describe("rich_text", function()
       assert.are.equal("Cargo Express", rich_text.mask_tags("Cargo Express"))
     end)
   end)
+
+  describe(".joined_icon_list", function()
+    local function icon(item)
+      return "[x=" .. item.name .. "]"
+    end
+
+    it("concatenates every item when under the limit", function()
+      local items = { { name = "a" }, { name = "b" } }
+
+      local result = rich_text.joined_icon_list(items, icon, 5, "mod.more-key")
+
+      assert.are.same({ "", "[x=a], [x=b]" }, result)
+    end)
+
+    it("concatenates every item with no trailing entry when exactly at the limit", function()
+      local items = { { name = "a" }, { name = "b" }, { name = "c" } }
+
+      local result = rich_text.joined_icon_list(items, icon, 3, "mod.more-key")
+
+      assert.are.same({ "", "[x=a], [x=b], [x=c]" }, result)
+    end)
+
+    it("truncates to the limit and names the correct remainder past it", function()
+      local items = { { name = "a" }, { name = "b" }, { name = "c" }, { name = "d" } }
+
+      local result = rich_text.joined_icon_list(items, icon, 3, "mod.more-key")
+
+      assert.are.same({ "", "[x=a], [x=b], [x=c], ", { "mod.more-key", 1 } }, result)
+    end)
+  end)
 end)

@@ -22,6 +22,31 @@ local function mask_tags(value)
   return table.concat(result)
 end
 
+-- Builds a plain-text, comma-separated list of rich-text tags (via icon_fn
+-- per item), capped at `limit` entries with a trailing "N more" locale
+-- entry (more_key) when there are more. Every entry is an untranslated
+-- rich-text tag, so the list itself is built as a single concatenated
+-- string -- not a LocalisedString array -- meaning it costs exactly one
+-- parameter in whatever LocalisedString it's embedded into, regardless of
+-- how many items it lists. (A LocalisedString array used to be built here
+-- directly at each call site; Factorio's hard 20-parameters-per-array limit
+-- was hit in production once an item list grew past ~10 entries.)
+local function joined_icon_list(items, icon_fn, limit, more_key)
+  local truncated = #items > limit
+  local shown_count = truncated and limit or #items
+  local icons = {}
+  for i = 1, shown_count do
+    table.insert(icons, icon_fn(items[i]))
+  end
+  local joined = table.concat(icons, ", ")
+  local result = { "", truncated and (joined .. ", ") or joined }
+  if truncated then
+    table.insert(result, { more_key, #items - shown_count })
+  end
+  return result
+end
+
 return {
   mask_tags = mask_tags,
+  joined_icon_list = joined_icon_list,
 }
