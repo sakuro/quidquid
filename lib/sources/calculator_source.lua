@@ -30,8 +30,9 @@ local DISPLAY_TIERS = {
 
 -- Compact form of a value for the secondary line: one decimal digit per tier, except that
 -- the k tier drops it from 10k up (the digit adds little there). Values under 1000 read
--- as format_result does. Rounding can carry a value into the next tier (999999 is "1.0M",
--- not "1000k"), so the tier is re-checked after formatting.
+-- as format_result does. Digits beyond the shown precision are truncated, never rounded,
+-- so a value never displays as more than it is (999999 is "999k", not "1.0M"); this also
+-- means a value cannot carry into the next tier.
 function CalculatorSource.format_suffixed(value)
   local magnitude = math.abs(value)
   local tier_index
@@ -44,21 +45,17 @@ function CalculatorSource.format_suffixed(value)
     return CalculatorSource.format_result(value)
   end
 
-  local sign = value < 0 and "-" or ""
-  while true do
-    local tier = DISPLAY_TIERS[tier_index]
-    local scaled = magnitude / tier.divisor
-    local decimals = 1
-    if tier_index == 1 and tonumber(("%.1f"):format(scaled)) >= 10 then
-      decimals = 0
-    end
-    local text = ("%." .. decimals .. "f"):format(scaled)
-    if tonumber(text) >= 1000 and tier_index < #DISPLAY_TIERS then
-      tier_index = tier_index + 1
-    else
-      return sign .. text .. tier.suffix
-    end
+  local tier = DISPLAY_TIERS[tier_index]
+  local text
+  if tier_index == 1 and magnitude >= 10 * tier.divisor then
+    text = ("%d"):format(math.floor(magnitude / tier.divisor))
+  else
+    -- Counting in tenths of the tier keeps the truncation on an exact integer division
+    -- rather than on a scaled float that can land just below a whole tenth.
+    local tenths = math.floor(magnitude / (tier.divisor / 10))
+    text = ("%d.%d"):format(math.floor(tenths / 10), tenths % 10)
   end
+  return (value < 0 and "-" or "") .. text .. tier.suffix
 end
 
 -- Takes a pcall(helpers.evaluate_expression, query, SUFFIX_VARIABLES) result pair.
