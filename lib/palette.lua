@@ -259,6 +259,10 @@ local function build_candidate_row(pane, wrapped, index, player_index)
   names.style.maximal_width = NAME_COLUMN_WIDTH
   names.style.horizontally_squashable = true
   names.style.vertical_spacing = 0
+  local align = wrapped.candidate.numeric and "right" or "left"
+  -- The secondary line is a label, which can't stretch to fill the column, so the column
+  -- flow aligns its children instead.
+  names.style.horizontal_align = align
 
   local button = names.add({
     type = "button",
@@ -273,7 +277,7 @@ local function build_candidate_row(pane, wrapped, index, player_index)
   -- Without this, the button auto-sizes to its caption's width, leaving no slack for
   -- horizontal_align to shift text within -- left and right would look identical.
   button.style.horizontally_stretchable = true
-  button.style.horizontal_align = wrapped.candidate.numeric and "right" or "left"
+  button.style.horizontal_align = align
   button.style.font_color = DEFAULT_FONT_COLOR
   button.style.hovered_font_color = DEFAULT_FONT_COLOR
 
