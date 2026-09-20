@@ -273,7 +273,7 @@ local function build_candidate_row(pane, wrapped, index, player_index)
   -- Without this, the button auto-sizes to its caption's width, leaving no slack for
   -- horizontal_align to shift text within -- left and right would look identical.
   button.style.horizontally_stretchable = true
-  button.style.horizontal_align = wrapped.candidate.type == "calculation" and "right" or "left"
+  button.style.horizontal_align = wrapped.candidate.numeric and "right" or "left"
   button.style.font_color = DEFAULT_FONT_COLOR
   button.style.hovered_font_color = DEFAULT_FONT_COLOR
 

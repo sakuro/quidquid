@@ -120,6 +120,12 @@ describe("SurfaceLogic", function()
     assert.are.equal(1, #SurfaceLogic.build_candidates("nauv", { planet({ search_name = false }) }, false))
   end)
 
+  it("does not mark a candidate as numeric -- only the calculator source's own results are", function()
+    local candidates = SurfaceLogic.build_candidates("nauv", { planet() }, false)
+
+    assert.is_nil(candidates[1].numeric)
+  end)
+
   it("includes an ungenerated planet but does not allow remote view", function()
     local ungenerated = planet({
       index = "vulcanus",

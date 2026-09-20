@@ -37,6 +37,16 @@ describe("prototype_candidate", function()
     assert.is_number(candidates[1].search_score)
   end)
 
+  it("does not mark a candidate as numeric -- only the calculator source's own results are", function()
+    local prototype_list = {
+      { name = "iron-plate", localised_name = { "item-name.iron-plate" }, hidden = false },
+    }
+
+    local candidates = build_candidates(candidate_type, icon_prefix, "iron", prototype_list, "en", {}, false)
+
+    assert.is_nil(candidates[1].numeric)
+  end)
+
   it("matches non-consecutive characters and returns their positions", function()
     local prototype_list = {
       { name = "iron-plate", localised_name = { "item-name.iron-plate" }, hidden = false },

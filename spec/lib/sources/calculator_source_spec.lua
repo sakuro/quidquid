@@ -48,4 +48,21 @@ describe("CalculatorSource", function()
       assert.is_nil(CalculatorSource.classify(true, -1 / 0))
     end)
   end)
+
+  describe(".build_candidate", function()
+    it("marks the candidate as numeric so the palette right-aligns it", function()
+      assert.is_true(CalculatorSource.build_candidate(9).numeric)
+    end)
+
+    it("formats the value as the candidate's label", function()
+      assert.are.equal("0.3333", CalculatorSource.build_candidate(1 / 3).label)
+    end)
+
+    it("has a fixed type and id, since only one candidate ever exists", function()
+      local candidate = CalculatorSource.build_candidate(9)
+
+      assert.are.equal("calculation", candidate.type)
+      assert.are.equal("result", candidate.id)
+    end)
+  end)
 end)
