@@ -123,11 +123,11 @@ describe("ResearchQueueAction", function()
 
   describe(".progress_for", function()
     it("uses force progress for the current research and saved progress otherwise", function()
-      local force = { research_progress = 0.234 }
+      local test_force = { research_progress = 0.234 }
       local queued = technology("queued", nil, { saved_progress = 0.678 })
 
-      assert.are.equal(23, ResearchQueueAction.progress_for(force, queued, 1))
-      assert.are.equal(68, ResearchQueueAction.progress_for(force, queued, 2))
+      assert.are.equal(23, ResearchQueueAction.progress_for(test_force, queued, 1))
+      assert.are.equal(68, ResearchQueueAction.progress_for(test_force, queued, 2))
     end)
   end)
 

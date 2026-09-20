@@ -410,15 +410,15 @@ function Palette.open(player)
   -- elsewhere (e.g. to collapse/restore the pane) would silently clobber this cap.
   results_scroll_pane.style.maximal_height = ROW_HEIGHT * VISIBLE_ROWS
 
-  local results_table = results_scroll_pane.add({
+  local results_table_element = results_scroll_pane.add({
     type = "table",
     name = RESULTS_TABLE_NAME,
     column_count = 1,
   })
-  results_table.style.horizontally_stretchable = true
-  results_table.style.width = CONTENT_WIDTH
-  results_table.style.maximal_width = CONTENT_WIDTH
-  results_table.style.horizontally_squashable = true
+  results_table_element.style.horizontally_stretchable = true
+  results_table_element.style.width = CONTENT_WIDTH
+  results_table_element.style.maximal_width = CONTENT_WIDTH
+  results_table_element.style.horizontally_squashable = true
 
   player.opened = frame
   input_row[INPUT_NAME].focus()

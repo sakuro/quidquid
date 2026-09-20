@@ -43,7 +43,7 @@ unicode_data:close()
 local case_folding = {}
 local folding_data = assert(io.open(ucd_dir .. "/CaseFolding.txt", "r"))
 for line in folding_data:lines() do
-  local codepoint, status, mapping = line:match("^%s*([0-9A-F]+)%s*;%s*([CF])%s*;%s*([^;]+)%s*;")
+  local codepoint, _, mapping = line:match("^%s*([0-9A-F]+)%s*;%s*([CF])%s*;%s*([^;]+)%s*;")
   if codepoint ~= nil then
     case_folding[tonumber(codepoint, 16)] = parse_codepoints(mapping)
   end
