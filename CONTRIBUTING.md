@@ -5,11 +5,11 @@
 This project manages its toolchain with [mise](https://mise.jdx.dev/). After cloning:
 
 1. `mise trust` — `mise.toml` defines `[env]` and `[hooks]`, which mise applies only for trusted configs.
-2. `mise install` — installs the pinned tools. Its `postinstall` hook then runs `hk install` to register this repository's Git hooks, and installs `busted` for the test suite.
+2. `mise install` — installs the pinned tools. Its `postinstall` hook then runs `hk install` to register this repository's Git hooks, and installs `busted` for the test suite and `luacheck` for static analysis.
 
 Review `hk.pkl` and the `git-hooks` package it imports before running the above: `hk install` configures hooks that execute on every commit and push. They enforce, among other things, that commit subjects start with a GitHub `:emoji:` code.
 
-Then `mise run format` formats Lua code, `mise run test` runs the unit tests, and `mise tasks ls -l` lists this project's tasks (`-l` drops tasks inherited from mise's global config).
+Then `mise run format` formats Lua code, `mise run lint` runs `luacheck`, `mise run test` runs the unit tests, and `mise tasks ls -l` lists this project's tasks (`-l` drops tasks inherited from mise's global config).
 
 ### Notes
 

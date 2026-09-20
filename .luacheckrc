@@ -10,7 +10,7 @@ read_globals = {
   "log",
 }
 
-local data_stage_globals = { "data" }
+local data_stage_globals = { "data", "settings" }
 local control_stage_globals = {
   "game",
   "script",
@@ -21,6 +21,7 @@ local control_stage_globals = {
   "commands",
   "rcon",
   "rendering",
+  "settings",
 }
 
 -- `storage` is the one control-stage global mods are meant to write into (it
@@ -41,8 +42,8 @@ local function concat(...)
   return result
 end
 
-files["settings.lua"] = { read_globals = data_stage_globals }
-files["data.lua"] = { read_globals = data_stage_globals }
+files["settings*.lua"] = { read_globals = data_stage_globals }
+files["data*.lua"] = { read_globals = data_stage_globals }
 files["prototypes/**/*.lua"] = { read_globals = data_stage_globals }
 files["control.lua"] = { read_globals = control_stage_globals, globals = control_stage_write_globals }
 files["lib/**/*.lua"] = {
