@@ -304,6 +304,28 @@ describe("Palette", function()
       assert.is_true(result)
       assert.are.equal(1, #logged)
     end)
+
+    it("trims leading and trailing whitespace from the query before consulting sources", function()
+      local received_query
+      Palette.init({
+        default_active_sources = function()
+          return {
+            { id = "calculator", interface = "quidquid.calculator-source", label = { "quidquid.source-calculator" } },
+          }
+        end,
+      })
+      _G.remote = {
+        interfaces = { ["quidquid.calculator-source"] = { is_query_valid = true } },
+        call = function(_interface, _fn, query, _player_index)
+          received_query = query
+          return true
+        end,
+      }
+
+      Palette.is_query_valid("  1 + 2  ", 1)
+
+      assert.are.equal("1 + 2", received_query)
+    end)
   end)
 
   describe(".build_tooltip", function()
