@@ -53,8 +53,18 @@ local function search(query, _player_index)
   }
 end
 
+-- Reuses the same "did this evaluate to a usable number" check search()
+-- itself uses, so the calculator's invalid-input signal (an empty search
+-- result) and its palette-invalid-style signal never disagree.
+local function is_query_valid(query, _player_index)
+  if query == "" then
+    return true
+  end
+  return CalculatorSource.classify(pcall(helpers.evaluate_expression, query, SUFFIX_VARIABLES)) ~= nil
+end
+
 function CalculatorSource.register()
-  remote.add_interface("quidquid.calculator-source", { search = search })
+  remote.add_interface("quidquid.calculator-source", { search = search, is_query_valid = is_query_valid })
   remote.call("quidquid", "register_source", {
     version = 1,
     id = "calculator",
