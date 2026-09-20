@@ -207,6 +207,127 @@ describe("Palette", function()
     end)
   end)
 
+  describe(".is_query_valid", function()
+    it("returns true when no consulted source implements is_query_valid", function()
+      Palette.init({
+        default_active_sources = function()
+          return { { id = "items", interface = "quidquid.item-source", label = { "quidquid.source-items" } } }
+        end,
+      })
+      _G.remote = {
+        interfaces = { ["quidquid.item-source"] = { search = true } },
+      }
+
+      assert.is_true(Palette.is_query_valid("iron", 1))
+    end)
+
+    it("returns true when the implementing source reports the query valid", function()
+      Palette.init({
+        default_active_sources = function()
+          return {
+            { id = "calculator", interface = "quidquid.calculator-source", label = { "quidquid.source-calculator" } },
+          }
+        end,
+      })
+      _G.remote = {
+        interfaces = { ["quidquid.calculator-source"] = { is_query_valid = true } },
+        call = function(_interface, _fn, _query, _player_index)
+          return true
+        end,
+      }
+
+      assert.is_true(Palette.is_query_valid("1 + 2", 1))
+    end)
+
+    it("returns false when the implementing source reports the query invalid", function()
+      Palette.init({
+        default_active_sources = function()
+          return {
+            { id = "calculator", interface = "quidquid.calculator-source", label = { "quidquid.source-calculator" } },
+          }
+        end,
+      })
+      _G.remote = {
+        interfaces = { ["quidquid.calculator-source"] = { is_query_valid = true } },
+        call = function(_interface, _fn, _query, _player_index)
+          return false
+        end,
+      }
+
+      assert.is_false(Palette.is_query_valid("1 + ", 1))
+    end)
+
+    it("consults only the locked source when one is locked", function()
+      local default_active_called = false
+      Palette.init({
+        default_active_sources = function()
+          default_active_called = true
+          return {}
+        end,
+      })
+      _G.remote = {
+        interfaces = { ["quidquid.calculator-source"] = { is_query_valid = true } },
+        call = function(_interface, _fn, _query, _player_index)
+          return false
+        end,
+      }
+      local locked_source =
+        { id = "calculator", interface = "quidquid.calculator-source", label = { "quidquid.source-calculator" } }
+
+      local result = Palette.is_query_valid("1 + ", 1, locked_source)
+
+      assert.is_false(default_active_called)
+      assert.is_false(result)
+    end)
+
+    it("treats a failed remote call as valid and logs it", function()
+      local logged = {}
+      _G.log = function(message)
+        table.insert(logged, message)
+      end
+      Palette.init({
+        default_active_sources = function()
+          return {
+            { id = "calculator", interface = "quidquid.calculator-source", label = { "quidquid.source-calculator" } },
+          }
+        end,
+      })
+      _G.remote = {
+        interfaces = { ["quidquid.calculator-source"] = { is_query_valid = true } },
+        call = function(_interface, _fn, _query, _player_index)
+          error("boom")
+        end,
+      }
+
+      local result = Palette.is_query_valid("1 + ", 1)
+
+      assert.is_true(result)
+      assert.are.equal(1, #logged)
+    end)
+
+    it("trims leading and trailing whitespace from the query before consulting sources", function()
+      local received_query
+      Palette.init({
+        default_active_sources = function()
+          return {
+            { id = "calculator", interface = "quidquid.calculator-source", label = { "quidquid.source-calculator" } },
+          }
+        end,
+      })
+      _G.remote = {
+        interfaces = { ["quidquid.calculator-source"] = { is_query_valid = true } },
+        call = function(_interface, _fn, query, _player_index)
+          received_query = query
+          return true
+        end,
+      }
+
+      Palette.is_query_valid("  1 + 2  ", 1)
+
+      assert.are.equal("1 + 2", received_query)
+    end)
+  end)
+
   describe(".build_tooltip", function()
     local function action(id)
       return { id = id, label = { "quidquid.action-" .. id } }

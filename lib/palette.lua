@@ -29,8 +29,6 @@ local RESULTS_NAME = "quidquid-palette-results"
 local RESULTS_TABLE_NAME = "quidquid-palette-results-table"
 local DISPLAY_LIMIT = 30
 
-local CALCULATOR_SOURCE_ID = "calculator"
-
 local ROW_HEIGHT = 44
 local VISIBLE_ROWS = 5
 local CONTENT_WIDTH = 400
@@ -140,6 +138,25 @@ function Palette.search_all_sources(query, player_index, locked_source)
     end
   end
   return PaletteLogic.merge_candidates(results, DISPLAY_LIMIT)
+end
+
+function Palette.is_query_valid(query, player_index, locked_source)
+  local trimmed_query = query:match("^%s*(.-)%s*$")
+  local sources = locked_source and { locked_source } or registry:default_active_sources()
+  for _, source in ipairs(sources) do
+    if RemoteCaller:has(source.interface, "is_query_valid") then
+      local ok, result =
+        pcall(RemoteCaller.call, RemoteCaller, source.interface, "is_query_valid", trimmed_query, player_index)
+      if ok then
+        if result == false then
+          return false
+        end
+      else
+        log(("quidquid: source '%s' is_query_valid check failed: %s"):format(tostring(source.id), tostring(result)))
+      end
+    end
+  end
+  return true
 end
 
 function Palette.row_caption(candidate)
@@ -538,8 +555,7 @@ function Palette.on_gui_text_changed(event)
     clear_candidates(player)
   else
     local candidates = Palette.search_all_sources(event.text, event.player_index, locked_source)
-    local is_calculator = locked_source ~= nil and locked_source.id == CALCULATOR_SOURCE_ID
-    set_input_validity(player, not is_calculator or #candidates > 0)
+    set_input_validity(player, Palette.is_query_valid(event.text, event.player_index, locked_source))
     render_candidates(player, candidates)
   end
 end
