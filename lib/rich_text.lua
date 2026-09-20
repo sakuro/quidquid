@@ -38,7 +38,8 @@ local function joined_list(items, icon_fn, limit, more_key)
   for i = 1, shown_count do
     table.insert(icons, icon_fn(items[i]))
   end
-  local result = { "", table.concat(icons, ", ") }
+  local joined = table.concat(icons, ", ")
+  local result = { "", truncated and (joined .. ", ") or joined }
   if truncated then
     table.insert(result, { more_key, #items - shown_count })
   end

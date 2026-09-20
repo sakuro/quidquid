@@ -49,7 +49,7 @@ describe("ResearchQueueAction", function()
       assert.are.same({
         "",
         "[technology=tech-1], [technology=tech-2], [technology=tech-3], "
-          .. "[technology=tech-4], [technology=tech-5], [technology=tech-6]",
+          .. "[technology=tech-4], [technology=tech-5], [technology=tech-6], ",
         { "quidquid.action-research-queue-technology-list-more", 2 },
       }, result)
     end)

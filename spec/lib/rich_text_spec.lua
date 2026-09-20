@@ -41,7 +41,7 @@ describe("rich_text", function()
 
       local result = rich_text.joined_list(items, icon, 3, "mod.more-key")
 
-      assert.are.same({ "", "[x=a], [x=b], [x=c]", { "mod.more-key", 1 } }, result)
+      assert.are.same({ "", "[x=a], [x=b], [x=c], ", { "mod.more-key", 1 } }, result)
     end)
   end)
 end)
