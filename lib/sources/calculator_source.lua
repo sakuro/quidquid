@@ -49,6 +49,7 @@ local function search(query, _player_index)
       label = CalculatorSource.format_result(value),
       icon = "item/display-panel",
       search_score = 1, -- required by PaletteLogic.merge_candidates; arbitrary, only one candidate ever exists
+      numeric = true, -- tells the palette this candidate's label is a value, not a name, so it renders right-aligned
     },
   }
 end
