@@ -24,13 +24,17 @@ search available entries and perform actions on the selected result.
 Press `Ctrl/Cmd + K` to open the command palette.
 
 Type a search query to find matching entries. A recognized prefix followed by a
-space restricts the search to that source. For example:
+space locks the search to that source. For example:
 
 - `item `
 - `fluid `
 - `recipe `
 - `technology `
 - `surface `
+
+While locked, typing another recognized prefix switches directly to that
+source. To unlock and search across all sources again, click the × next to
+the source label, or type a space with the search field empty.
 
 Select a result and use the available action keys shown in the palette.
 
