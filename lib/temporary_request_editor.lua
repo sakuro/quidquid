@@ -182,7 +182,7 @@ local function ingredient_icon(ingredient)
 end
 
 local function ingredient_caption(ingredients)
-  return rich_text.joined_list(
+  return rich_text.joined_icon_list(
     ingredients,
     ingredient_icon,
     MAX_LISTED_INGREDIENTS,

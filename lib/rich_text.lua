@@ -31,7 +31,7 @@ end
 -- how many items it lists. (A LocalisedString array used to be built here
 -- directly at each call site; Factorio's hard 20-parameters-per-array limit
 -- was hit in production once an item list grew past ~10 entries.)
-local function joined_list(items, icon_fn, limit, more_key)
+local function joined_icon_list(items, icon_fn, limit, more_key)
   local truncated = #items > limit
   local shown_count = truncated and limit or #items
   local icons = {}
@@ -48,5 +48,5 @@ end
 
 return {
   mask_tags = mask_tags,
-  joined_list = joined_list,
+  joined_icon_list = joined_icon_list,
 }

@@ -45,7 +45,7 @@ end
 ResearchQueueAction.technology_name = technology_name
 
 local function technology_list(technologies)
-  return rich_text.joined_list(
+  return rich_text.joined_icon_list(
     technologies,
     technology_icon,
     MAX_LISTED_TECHNOLOGIES,
