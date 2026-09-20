@@ -34,6 +34,17 @@ function CalculatorSource.classify(ok, result)
   return result
 end
 
+function CalculatorSource.build_candidate(value)
+  return {
+    type = "calculation",
+    id = "result",
+    label = CalculatorSource.format_result(value),
+    icon = "item/display-panel",
+    search_score = 1, -- required by PaletteLogic.merge_candidates; arbitrary, only one candidate ever exists
+    numeric = true, -- tells the palette this candidate's label is a value, not a name, so it renders right-aligned
+  }
+end
+
 local function search(query, _player_index)
   if query == "" then
     return {}
@@ -42,16 +53,7 @@ local function search(query, _player_index)
   if value == nil then
     return {}
   end
-  return {
-    {
-      type = "calculation",
-      id = "result",
-      label = CalculatorSource.format_result(value),
-      icon = "item/display-panel",
-      search_score = 1, -- required by PaletteLogic.merge_candidates; arbitrary, only one candidate ever exists
-      numeric = true, -- tells the palette this candidate's label is a value, not a name, so it renders right-aligned
-    },
-  }
+  return { CalculatorSource.build_candidate(value) }
 end
 
 -- Reuses the same "did this evaluate to a usable number" check search()
