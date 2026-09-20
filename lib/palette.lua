@@ -496,6 +496,7 @@ local function lock_to_source(player, source)
   content[INPUT_ROW_NAME][LOCK_LABEL_NAME].caption = source.label
   content[INPUT_ROW_NAME][LOCK_LABEL_NAME].visible = true
   content[INPUT_ROW_NAME][LOCK_CLOSE_NAME].visible = true
+  set_input_validity(player, true)
   clear_candidates(player)
 end
 
@@ -520,14 +521,12 @@ function Palette.on_gui_text_changed(event)
   end
 
   local locked_source = get_locked_source(player)
-  if locked_source == nil then
-    local prefix = Palette.trigger_prefix(event.text)
-    local source = prefix and registry:source_for_prefix(prefix)
-    if source ~= nil then
-      lock_to_source(player, source)
-      return
-    end
-  elseif event.text == " " then
+  local prefix = Palette.trigger_prefix(event.text)
+  local source = prefix and registry:source_for_prefix(prefix)
+  if source ~= nil then
+    lock_to_source(player, source)
+    return
+  elseif locked_source ~= nil and event.text == " " then
     unlock_source(player)
     event.element.text = ""
     clear_candidates(player)
