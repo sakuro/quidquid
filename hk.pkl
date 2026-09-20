@@ -22,7 +22,10 @@ hooks {
         glob = "**/*.lua"
         check = "stylua --check {{files}} || { echo 'Lua formatting check failed. Run `mise run format`, then stage the changes and commit again.' >&2; exit 1; }"
       }
-      ["luacheck"] = Builtins.luacheck
+      ["luacheck"] {
+        glob = "**/*.lua"
+        check = "eval \"$(luarocks path --bin)\" && luacheck {{files}}"
+      }
     }
   }
   ["pre-push"] {
