@@ -19,6 +19,48 @@ function CalculatorSource.format_result(value)
   return formatted
 end
 
+-- Display tiers for format_suffixed, ascending. Separate from SUFFIX_VARIABLES, which
+-- only covers what the player may type (k/K, m/M) and has no B or T.
+local DISPLAY_TIERS = {
+  { divisor = 1e3, suffix = "k" },
+  { divisor = 1e6, suffix = "M" },
+  { divisor = 1e9, suffix = "B" },
+  { divisor = 1e12, suffix = "T" },
+}
+
+-- Compact form of a value for the secondary line: one decimal digit per tier, except that
+-- the k tier drops it from 10k up (the digit adds little there). Values under 1000 read
+-- as format_result does. Rounding can carry a value into the next tier (999999 is "1.0M",
+-- not "1000k"), so the tier is re-checked after formatting.
+function CalculatorSource.format_suffixed(value)
+  local magnitude = math.abs(value)
+  local tier_index
+  for index, tier in ipairs(DISPLAY_TIERS) do
+    if magnitude >= tier.divisor then
+      tier_index = index
+    end
+  end
+  if tier_index == nil then
+    return CalculatorSource.format_result(value)
+  end
+
+  local sign = value < 0 and "-" or ""
+  while true do
+    local tier = DISPLAY_TIERS[tier_index]
+    local scaled = magnitude / tier.divisor
+    local decimals = 1
+    if tier_index == 1 and tonumber(("%.1f"):format(scaled)) >= 10 then
+      decimals = 0
+    end
+    local text = ("%." .. decimals .. "f"):format(scaled)
+    if tonumber(text) >= 1000 and tier_index < #DISPLAY_TIERS then
+      tier_index = tier_index + 1
+    else
+      return sign .. text .. tier.suffix
+    end
+  end
+end
+
 -- Takes a pcall(helpers.evaluate_expression, query, SUFFIX_VARIABLES) result pair.
 -- Returns the numeric value on success, or nil for a parse/eval error, a non-number
 -- result, or a non-finite one (NaN, +-inf -- e.g. "1/0") -- there is no meaningful
@@ -39,6 +81,7 @@ function CalculatorSource.build_candidate(value)
     type = "calculation",
     id = "result",
     label = CalculatorSource.format_result(value),
+    search_internal_name = CalculatorSource.format_suffixed(value), -- shown as the muted secondary line
     icon = "item/display-panel",
     search_score = 1, -- required by PaletteLogic.merge_candidates; arbitrary, only one candidate ever exists
     numeric = true, -- tells the palette this candidate's label is a value, not a name, so it renders right-aligned
