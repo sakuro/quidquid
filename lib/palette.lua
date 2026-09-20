@@ -285,12 +285,17 @@ local function build_candidate_row(pane, wrapped, index, player_index)
     internal_label.style.font_color = MUTED_FONT_COLOR
   end
 
+  -- label doesn't support horizontally_stretchable (confirmed: setting it had no visible
+  -- effect), so an empty-widget spacer absorbs the row's leftover width instead, pushing
+  -- source_label flush against the row's right edge.
+  local spacer = row.add({ type = "empty-widget" })
+  spacer.style.horizontally_stretchable = true
+
   local source_label = row.add({
     type = "label",
     caption = wrapped.source_label,
   })
   source_label.style.vertical_align = "center"
-  source_label.style.horizontal_align = "right"
   source_label.style.font_color = MUTED_FONT_COLOR
 end
 
