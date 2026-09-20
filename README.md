@@ -156,3 +156,9 @@ Quidquid is licensed under the MIT License. See
 
 The adapted fzy-lua implementation is separately licensed under the MIT
 License. See [`LICENSE-fzy-lua.txt`](LICENSE-fzy-lua.txt).
+
+The calculator icon (`graphics/icons/calculator.png`) is derived from the
+`calculator` icon of [Font Awesome Free](https://fontawesome.com/license/free)
+(Copyright Fonticons, Inc., licensed under
+[CC BY 4.0](https://creativecommons.org/licenses/by/4.0/)). It was recolored
+white and resized into mipmaps.
