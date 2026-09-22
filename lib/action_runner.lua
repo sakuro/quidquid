@@ -1,4 +1,4 @@
-local ActionDispatch = {}
+local ActionRunner = {}
 
 -- Shared flow for an action whose per-candidate feasibility is a runtime fact
 -- resolved here rather than gated by is_available (is_available only gates on
@@ -14,7 +14,7 @@ local ActionDispatch = {}
 -- impossible to reach in practice, where fallback_locale_key is for ones that are merely
 -- rare (e.g. the candidate having stopped resolving to anything between search and
 -- execute).
-function ActionDispatch.run(candidate, player_index, resolve_fn, apply_fn, fallback_locale_key)
+function ActionRunner.run(candidate, player_index, resolve_fn, apply_fn, fallback_locale_key)
   local player = game.get_player(player_index)
   if player == nil then
     return
@@ -33,4 +33,4 @@ function ActionDispatch.run(candidate, player_index, resolve_fn, apply_fn, fallb
   apply_fn(payload, candidate, player)
 end
 
-return ActionDispatch
+return ActionRunner

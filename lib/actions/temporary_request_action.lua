@@ -1,4 +1,4 @@
-local ActionDispatch = require("lib.action_dispatch")
+local ActionRunner = require("lib.action_runner")
 
 local TemporaryRequestAction = {}
 
@@ -121,7 +121,7 @@ function TemporaryRequestAction.is_available(player_index)
   return TemporaryRequestAction.requester_point_for(player) ~= nil
 end
 
--- Adapts the boolean resolve_requestable to ActionDispatch's nil/payload
+-- Adapts the boolean resolve_requestable to ActionRunner's nil/payload
 -- convention: the candidate itself is the payload, since editor.open needs
 -- nothing beyond what it already has.
 local function resolve(selected_candidate, player)
@@ -133,7 +133,7 @@ local function resolve(selected_candidate, player)
 end
 
 local function execute(selected_candidate, player_index)
-  ActionDispatch.run(selected_candidate, player_index, resolve, function(candidate, _candidate, player)
+  ActionRunner.run(selected_candidate, player_index, resolve, function(candidate, _candidate, player)
     editor.open(player, candidate)
   end)
 end
