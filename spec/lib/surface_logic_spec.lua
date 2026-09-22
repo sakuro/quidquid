@@ -22,8 +22,8 @@ describe("SurfaceLogic", function()
   -- specs below that only care about the boolean and already have their own
   -- coverage of the specific reason (see the two "...not-visited"/"...not-unlocked"
   -- cases further down).
-  local function can_open(surface, include_hidden)
-    return (SurfaceLogic.remote_view_availability(surface, include_hidden))
+  local function can_open(descriptor, include_hidden)
+    return (SurfaceLogic.remote_view_availability(descriptor, include_hidden))
   end
 
   local function platform(overrides)

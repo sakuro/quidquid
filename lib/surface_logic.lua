@@ -9,9 +9,10 @@ local DISPLAY_NAME_BONUS = 0.5
 local SurfaceLogic = {}
 
 -- Descriptors contain only plain values, extracted for the current player's force.
-function SurfaceLogic.is_visible(surface, include_hidden)
-  local accessible = surface.kind == "planet" or surface.kind == "platform" and (surface.own or surface.friendly)
-  return not not (accessible and (include_hidden or not surface.hidden))
+function SurfaceLogic.is_visible(descriptor, include_hidden)
+  local accessible = descriptor.kind == "planet"
+    or descriptor.kind == "platform" and (descriptor.own or descriptor.friendly)
+  return not not (accessible and (include_hidden or not descriptor.hidden))
 end
 
 -- Returns true, or false plus a locale key explaining why remote view isn't
@@ -19,34 +20,34 @@ end
 -- not unlocked by the force. nil for a surface that isn't independently visible in
 -- the first place (own/friendly/hidden rules); that state shouldn't be reachable
 -- from a search result at all, so it's not worth a message.
-function SurfaceLogic.remote_view_availability(surface, include_hidden)
-  if not SurfaceLogic.is_visible(surface, include_hidden) then
+function SurfaceLogic.remote_view_availability(descriptor, include_hidden)
+  if not SurfaceLogic.is_visible(descriptor, include_hidden) then
     return false, nil
   end
   -- Checked before "not visited": a locked planet is necessarily unvisited too,
   -- and "not unlocked" is the more actionable reason to report.
-  if surface.kind == "planet" and surface.unlocked ~= true then
+  if descriptor.kind == "planet" and descriptor.unlocked ~= true then
     return false, "quidquid.action-open-remote-view-not-unlocked"
   end
-  if surface.generated == false then
+  if descriptor.generated == false then
     return false, "quidquid.action-open-remote-view-not-visited"
   end
   return true, nil
 end
 
-function SurfaceLogic.build_candidates(query, surfaces, include_hidden, locale)
+function SurfaceLogic.build_candidates(query, descriptors, include_hidden, locale)
   local candidates = {}
   local internal_query = normalization.normalize(query, "internal", nil)
   local display_query = normalization.normalize(query, "display", locale)
-  for _, surface in ipairs(surfaces) do
+  for _, descriptor in ipairs(descriptors) do
     local best
-    if surface.search_name then
-      local search_name = surface.search_name
-      if surface.kind == "platform" then
+    if descriptor.search_name then
+      local search_name = descriptor.search_name
+      if descriptor.kind == "platform" then
         search_name = rich_text.mask_tags(search_name)
       end
       local display_target, display_position_map =
-        search_key_cache.get("surface", surface.id, "display", locale, search_name)
+        search_key_cache.get("surface", descriptor.id, "display", locale, search_name)
       local display_score, display_positions = fuzzy_match(display_query, display_target)
       if display_score ~= nil then
         best = {
@@ -57,9 +58,9 @@ function SurfaceLogic.build_candidates(query, surfaces, include_hidden, locale)
         }
       end
     end
-    if surface.kind ~= "platform" then
+    if descriptor.kind ~= "platform" then
       local internal_target, internal_position_map =
-        search_key_cache.get("surface", surface.id, "internal", nil, surface.name)
+        search_key_cache.get("surface", descriptor.id, "internal", nil, descriptor.name)
       local internal_score, internal_positions = fuzzy_match(internal_query, internal_target)
       if internal_score ~= nil and (best == nil or internal_score > best.score) then
         best = {
@@ -70,19 +71,19 @@ function SurfaceLogic.build_candidates(query, surfaces, include_hidden, locale)
         }
       end
     end
-    if SurfaceLogic.is_visible(surface, include_hidden) and best ~= nil then
-      local label = surface.label
-      if surface.kind == "platform" and not surface.own then
-        label = { "quidquid.surface-with-force", label, surface.force_name }
+    if SurfaceLogic.is_visible(descriptor, include_hidden) and best ~= nil then
+      local label = descriptor.label
+      if descriptor.kind == "platform" and not descriptor.own then
+        label = { "quidquid.surface-with-force", label, descriptor.force_name }
       end
       table.insert(candidates, {
         type = "surface",
-        id = surface.id,
-        planet_name = surface.planet_name,
+        id = descriptor.id,
+        planet_name = descriptor.planet_name,
         label = label,
-        icon = surface.icon,
-        search_display_name = type(surface.search_name) == "string" and surface.search_name or nil,
-        search_internal_name = surface.kind ~= "platform" and surface.name or nil,
+        icon = descriptor.icon,
+        search_display_name = type(descriptor.search_name) == "string" and descriptor.search_name or nil,
+        search_internal_name = descriptor.kind ~= "platform" and descriptor.name or nil,
         search_display_ranges = best.field == "display" and best.ranges or {},
         search_internal_ranges = best.field == "internal" and best.ranges or {},
         search_score = best.score,
