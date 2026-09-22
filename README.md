@@ -19,6 +19,8 @@ search available entries and perform actions on the selected result.
 - Automatic removal of temporary requests once they are fulfilled
 - Item results show the player's inventory count and, once connected to a
   logistic network, its stock of that item
+- Technology results show research state (not researched, available,
+  researched) and, for a research trigger, what completes it
 - Position history for remote surface views
 
 ## Usage
@@ -80,6 +82,12 @@ Search for technologies by name.
 
 Technologies can also be added to the research queue with left click. Missing
 prerequisites are queued first when there is enough room.
+
+Each result's state is color-coded: red for not yet researchable, orange for
+researchable once its queued prerequisites finish, yellow for researchable
+now, green for already researched. Hover a result for missing prerequisites,
+current progress, and — for a technology unlocked by an in-game action rather
+than research — what that action is.
 
 ### Recipes
 
