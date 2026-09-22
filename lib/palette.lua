@@ -32,15 +32,19 @@ local DISPLAY_LIMIT = 30
 
 local ROW_HEIGHT = 44
 local VISIBLE_ROWS = 5
-local CONTENT_WIDTH = 400
+-- #136: 400/100 clipped Japanese annotation/source-label text mid-character
+-- in-game (e.g. "研究済み" down to "研究", "テクノロジー" down to "テクノロ") --
+-- CJK glyphs need more width per character than the original estimate
+-- assumed. Widened pending further in-game confirmation, not a measured fit.
+local CONTENT_WIDTH = 500
 local NAME_COLUMN_WIDTH = 250
--- #136: roughly what's left of CONTENT_WIDTH after NAME_COLUMN_WIDTH, the
--- icon, and horizontal_spacing -- an estimate pending in-game confirmation,
--- not a measured value. Without a width/squash constraint here, a long
--- annotation caption (e.g. the technology source's "Not researched") has
--- nothing stopping it from claiming space the row would otherwise give
--- `names`, since `names` -- unlike this column, previously -- is squashable.
-local SIDE_COLUMN_WIDTH = 100
+-- #136: what's left of CONTENT_WIDTH after NAME_COLUMN_WIDTH, the icon, and
+-- horizontal_spacing -- an estimate pending in-game confirmation, not a
+-- measured value. Without a width/squash constraint here, a long annotation
+-- caption (e.g. the technology source's "Not researched") has nothing
+-- stopping it from claiming space the row would otherwise give `names`,
+-- since `names` -- unlike this column, previously -- is squashable.
+local SIDE_COLUMN_WIDTH = 160
 
 local DEFAULT_FONT_COLOR = FontColors.DEFAULT
 local ACCENT_FONT_COLOR = FontColors.ACCENT
