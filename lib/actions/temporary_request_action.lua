@@ -110,7 +110,7 @@ function TemporaryRequestAction.resolve_requestable(selected_candidate, force)
       return true, nil
     end
   end
-  return false, "quidquid.action-temporary-request-no-item-ingredients"
+  return false, "quidquid.action-recipe-temporary-request-no-item-ingredients"
 end
 
 function TemporaryRequestAction.is_available(player_index)

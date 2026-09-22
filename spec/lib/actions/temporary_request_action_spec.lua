@@ -127,7 +127,7 @@ describe("TemporaryRequestAction", function()
         TemporaryRequestAction.resolve_requestable({ type = "recipe", id = "advanced-oil-processing" }, force)
 
       assert.is_false(requestable)
-      assert.are.equal("quidquid.action-temporary-request-no-item-ingredients", reason_locale_key)
+      assert.are.equal("quidquid.action-recipe-temporary-request-no-item-ingredients", reason_locale_key)
     end)
 
     it("is requestable for a recipe with at least one item ingredient", function()
