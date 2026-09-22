@@ -22,24 +22,26 @@ local function mask_tags(value)
   return table.concat(result)
 end
 
--- Builds a plain-text, comma-separated list of rich-text tags (via icon_fn
+-- Builds a plain-text, separator-joined list of rich-text tags (via icon_fn
 -- per item), capped at `limit` entries with a trailing "N more" locale
--- entry (more_locale_key) when there are more. Every entry is an untranslated
--- rich-text tag, so the list itself is built as a single concatenated
--- string -- not a LocalisedString array -- meaning it costs exactly one
--- parameter in whatever LocalisedString it's embedded into, regardless of
--- how many items it lists. (A LocalisedString array used to be built here
--- directly at each call site; Factorio's hard 20-parameters-per-array limit
--- was hit in production once an item list grew past ~10 entries.)
-local function icon_list_caption(items, icon_fn, limit, more_locale_key)
+-- entry (more_locale_key) when there are more. `separator` defaults to ", ".
+-- Every entry is an untranslated rich-text tag, so the list itself is built
+-- as a single concatenated string -- not a LocalisedString array -- meaning
+-- it costs exactly one parameter in whatever LocalisedString it's embedded
+-- into, regardless of how many items it lists. (A LocalisedString array used
+-- to be built here directly at each call site; Factorio's hard
+-- 20-parameters-per-array limit was hit in production once an item list grew
+-- past ~10 entries.)
+local function icon_list_caption(items, icon_fn, limit, more_locale_key, separator)
+  separator = separator or ", "
   local truncated = #items > limit
   local shown_count = truncated and limit or #items
   local icons = {}
   for i = 1, shown_count do
     table.insert(icons, icon_fn(items[i]))
   end
-  local joined = table.concat(icons, ", ")
-  local result = { "", truncated and (joined .. ", ") or joined }
+  local joined = table.concat(icons, separator)
+  local result = { "", truncated and (joined .. separator) or joined }
   if truncated then
     table.insert(result, { more_locale_key, #items - shown_count })
   end

@@ -43,5 +43,21 @@ describe("rich_text", function()
 
       assert.are.same({ "", "[x=a], [x=b], [x=c], ", { "mod.more-key", 1 } }, result)
     end)
+
+    it("uses a custom separator when given", function()
+      local items = { { name = "a" }, { name = "b" } }
+
+      local result = rich_text.icon_list_caption(items, icon, 5, "mod.more-key", "\n")
+
+      assert.are.same({ "", "[x=a]\n[x=b]" }, result)
+    end)
+
+    it("uses the custom separator for the trailing entry before truncation too", function()
+      local items = { { name = "a" }, { name = "b" }, { name = "c" } }
+
+      local result = rich_text.icon_list_caption(items, icon, 2, "mod.more-key", "\n")
+
+      assert.are.same({ "", "[x=a]\n[x=b]\n", { "mod.more-key", 1 } }, result)
+    end)
   end)
 end)
