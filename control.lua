@@ -35,7 +35,7 @@ remote.add_interface("quidquid", {
   end,
 })
 
-local translated_sources = { ItemSource, FluidSource, RecipeSource, TechnologySource, SurfaceSource }
+local dictionary_sources = { ItemSource, FluidSource, RecipeSource, TechnologySource, SurfaceSource }
 
 -- flib_dictionary.new/.add may only run before flib's internal init_ran flag flips true,
 -- which happens on the first on_tick -- so dictionaries must be (re-)registered from
@@ -44,7 +44,7 @@ local translated_sources = { ItemSource, FluidSource, RecipeSource, TechnologySo
 -- (flib_dictionary.on_configuration_changed is an alias for .on_init), so re-registering
 -- unconditionally here is correct, not redundant.
 local function register_dictionaries()
-  for _, source in ipairs(translated_sources) do
+  for _, source in ipairs(dictionary_sources) do
     source.register_dictionary()
   end
 end
