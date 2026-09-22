@@ -138,12 +138,17 @@ script.on_event({
 -- player or surface is removed so reused indices cannot inherit old positions.
 script.on_event(defines.events.on_player_changed_position, OpenRemoteViewAction.on_player_changed_position)
 
--- SurfaceSource's search_key_cache entries are keyed by surface index; evict them
+-- SurfaceSource's search_key_cache entries are keyed by surface name; evict them
 -- alongside the position history above so a destroyed surface's cache doesn't linger
--- for the rest of the session.
+-- for the rest of the session. on_pre_surface_deleted only gives surface_index, so
+-- the surface (still valid -- this fires just before deletion) is looked up to get
+-- its name.
 script.on_event(defines.events.on_pre_surface_deleted, function(event)
   OpenRemoteViewAction.on_pre_surface_deleted(event)
-  search_key_cache.clear("surface", event.surface_index)
+  local surface = game.get_surface(event.surface_index)
+  if surface ~= nil then
+    search_key_cache.clear("surface", surface.name)
+  end
 end)
 
 -- Palette also keys a small per-player table (pin state) by player_index, which needs

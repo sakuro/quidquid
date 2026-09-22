@@ -46,7 +46,7 @@ function SurfaceLogic.build_candidates(query, surfaces, include_hidden, locale)
         search_name = rich_text.mask_tags(search_name)
       end
       local display_target, display_position_map =
-        search_key_cache.get("surface", surface.index, "display", locale, search_name)
+        search_key_cache.get("surface", surface.id, "display", locale, search_name)
       local display_score, display_positions = fuzzy_match(display_query, display_target)
       if display_score ~= nil then
         best = {
@@ -59,7 +59,7 @@ function SurfaceLogic.build_candidates(query, surfaces, include_hidden, locale)
     end
     if surface.kind ~= "platform" then
       local internal_target, internal_position_map =
-        search_key_cache.get("surface", surface.index, "internal", nil, surface.name)
+        search_key_cache.get("surface", surface.id, "internal", nil, surface.name)
       local internal_score, internal_positions = fuzzy_match(internal_query, internal_target)
       if internal_score ~= nil and (best == nil or internal_score > best.score) then
         best = {
@@ -77,7 +77,7 @@ function SurfaceLogic.build_candidates(query, surfaces, include_hidden, locale)
       end
       table.insert(candidates, {
         type = "surface",
-        id = surface.index,
+        id = surface.id,
         planet_name = surface.planet_name,
         label = label,
         icon = surface.icon,
@@ -91,10 +91,12 @@ function SurfaceLogic.build_candidates(query, surfaces, include_hidden, locale)
       })
     end
   end
+  -- This order only ever surfaces as a tiebreak: Palette.search_all_sources
+  -- feeds every source's candidates through PaletteLogic.merge_candidates,
+  -- which re-sorts everything by search_score. id is always a unique string
+  -- now, so a plain comparison suffices -- no more mixing a generated
+  -- surface's numeric index against an ungenerated planet's name.
   table.sort(candidates, function(a, b)
-    if type(a.id) ~= type(b.id) then
-      return tostring(a.id) < tostring(b.id)
-    end
     return a.id < b.id
   end)
   return candidates
