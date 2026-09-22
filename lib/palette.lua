@@ -34,6 +34,13 @@ local ROW_HEIGHT = 44
 local VISIBLE_ROWS = 5
 local CONTENT_WIDTH = 400
 local NAME_COLUMN_WIDTH = 250
+-- #136: roughly what's left of CONTENT_WIDTH after NAME_COLUMN_WIDTH, the
+-- icon, and horizontal_spacing -- an estimate pending in-game confirmation,
+-- not a measured value. Without a width/squash constraint here, a long
+-- annotation caption (e.g. the technology source's "Not researched") has
+-- nothing stopping it from claiming space the row would otherwise give
+-- `names`, since `names` -- unlike this column, previously -- is squashable.
+local SIDE_COLUMN_WIDTH = 100
 
 local DEFAULT_FONT_COLOR = FontColors.DEFAULT
 local ACCENT_FONT_COLOR = FontColors.ACCENT
@@ -372,13 +379,20 @@ local function build_candidate_row(pane, wrapped, index, player_index)
   local annotation_caption = wrapped.annotation and wrapped.annotation.caption
   if annotation_caption ~= nil then
     local side = row.add({ type = "flow", direction = "vertical" })
+    side.style.maximal_width = SIDE_COLUMN_WIDTH
+    side.style.horizontally_squashable = true
     side.style.horizontal_align = "right"
     side.style.vertical_spacing = 0
 
     local annotation_label = side.add({ type = "label", caption = annotation_caption })
+    annotation_label.style.maximal_width = SIDE_COLUMN_WIDTH
+    annotation_label.style.horizontally_squashable = true
+    annotation_label.style.single_line = false
     annotation_label.style.horizontal_align = "right"
 
     local source_label = side.add({ type = "label", caption = wrapped.source_label })
+    source_label.style.maximal_width = SIDE_COLUMN_WIDTH
+    source_label.style.horizontally_squashable = true
     source_label.style.horizontal_align = "right"
     source_label.style.font_color = MUTED_FONT_COLOR
   else
