@@ -47,4 +47,99 @@ describe("TechnologySource", function()
       )
     end)
   end)
+
+  describe(".build_trigger_content", function()
+    it("describes a craft-item trigger with count 1", function()
+      local research_trigger = { type = "craft-item", item = { name = "lab" }, count = 1 }
+
+      assert.are.same(
+        { "technology-trigger.craft-item", "[item=lab]" },
+        TechnologySource.build_trigger_content(research_trigger)
+      )
+    end)
+
+    it("describes a craft-item trigger with count > 1, count before the item", function()
+      local research_trigger = { type = "craft-item", item = { name = "iron-plate" }, count = 50 }
+
+      assert.are.same(
+        { "technology-trigger.craft-items", 50, "[item=iron-plate]" },
+        TechnologySource.build_trigger_content(research_trigger)
+      )
+    end)
+
+    it("describes a mine-entity trigger with one entity", function()
+      local research_trigger = { type = "mine-entity", entities = { "crude-oil" } }
+
+      assert.are.same(
+        { "technology-trigger.mine-entity", "[entity=crude-oil]" },
+        TechnologySource.build_trigger_content(research_trigger)
+      )
+    end)
+
+    it("describes a mine-entity trigger with several entities as a newline-joined list", function()
+      local research_trigger = { type = "mine-entity", entities = { "big-volcanic-rock", "huge-volcanic-rock" } }
+
+      assert.are.same(
+        { "technology-trigger.mine-entities", { "", "[entity=big-volcanic-rock]\n[entity=huge-volcanic-rock]" } },
+        TechnologySource.build_trigger_content(research_trigger)
+      )
+    end)
+
+    it("describes a build-entity trigger", function()
+      local research_trigger = { type = "build-entity", entity = { name = "asteroid-collector" } }
+
+      assert.are.same(
+        { "technology-trigger.build-entity", "[entity=asteroid-collector]" },
+        TechnologySource.build_trigger_content(research_trigger)
+      )
+    end)
+
+    it("describes a capture-spawner trigger with a specific entity", function()
+      local research_trigger = { type = "capture-spawner", entity = { name = "biter-spawner" } }
+
+      assert.are.same(
+        { "technology-trigger.capture-spawner", "[entity=biter-spawner]" },
+        TechnologySource.build_trigger_content(research_trigger)
+      )
+    end)
+
+    it("describes a capture-spawner trigger with no specific entity", function()
+      local research_trigger = { type = "capture-spawner" }
+
+      assert.are.same(
+        { "technology-trigger.capture-any-spawner" },
+        TechnologySource.build_trigger_content(research_trigger)
+      )
+    end)
+
+    it("describes a create-space-platform trigger", function()
+      local research_trigger = { type = "create-space-platform" }
+
+      assert.are.same(
+        { "technology-trigger.create-space-platform" },
+        TechnologySource.build_trigger_content(research_trigger)
+      )
+    end)
+
+    it("describes a send-item-to-orbit trigger", function()
+      local research_trigger = { type = "send-item-to-orbit", item = { name = "space-platform-starter-pack" } }
+
+      assert.are.same(
+        { "technology-trigger.send-item-to-orbit", "[item=space-platform-starter-pack]" },
+        TechnologySource.build_trigger_content(research_trigger)
+      )
+    end)
+
+    it("uses the trigger's own trigger_description for a scripted trigger", function()
+      local research_trigger = { type = "scripted", trigger_description = { "mod.some-scripted-trigger" } }
+
+      assert.are.same({ "mod.some-scripted-trigger" }, TechnologySource.build_trigger_content(research_trigger))
+    end)
+
+    it("returns nil for craft-fluid, deferred", function()
+      local research_trigger = { type = "craft-fluid", fluid = "water", amount = 100 }
+
+      assert.is_nil(TechnologySource.build_trigger_content(research_trigger))
+    end)
+  end)
 end)

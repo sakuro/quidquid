@@ -1,5 +1,6 @@
 local flib_dictionary = require("__flib__.dictionary")
 local build_candidates = require("lib.sources.prototype_candidate")
+local rich_text = require("lib.rich_text")
 
 local TechnologySource = {}
 
@@ -19,6 +20,69 @@ function TechnologySource.build_caption(state)
   local spec = STATE_CAPTIONS[state]
   local color = spec.color
   return { "", ("[color=%d,%d,%d]"):format(color.r, color.g, color.b), { spec.text_key }, "[/color]" }
+end
+
+-- Defensive bound: no real mine-entity trigger lists more than 2 alternatives
+-- today (lithium-processing), but nothing guarantees a mod won't add more --
+-- see the design doc's LocalisedString parameter budget section.
+local MAX_LISTED_ENTITIES = 10
+
+local function item_icon(item_id_filter)
+  return "[item=" .. item_id_filter.name .. "]"
+end
+
+local function entity_icon(entity_name)
+  return "[entity=" .. entity_name .. "]"
+end
+
+-- Maps a research_trigger to core's own [technology-trigger] locale wording
+-- (core.cfg) instead of inventing new text -- see the design doc's Tooltip
+-- section. Returns nil for craft-fluid (no vanilla/Space Age technology uses
+-- it and there is no core.cfg key for it yet -- deferred) and for any
+-- unrecognized type.
+function TechnologySource.build_trigger_content(research_trigger)
+  local trigger_type = research_trigger.type
+  if trigger_type == "craft-item" then
+    local icon = item_icon(research_trigger.item)
+    if research_trigger.count == 1 then
+      return { "technology-trigger.craft-item", icon }
+    end
+    return { "technology-trigger.craft-items", research_trigger.count, icon }
+  end
+  if trigger_type == "mine-entity" then
+    if #research_trigger.entities == 1 then
+      return { "technology-trigger.mine-entity", entity_icon(research_trigger.entities[1]) }
+    end
+    return {
+      "technology-trigger.mine-entities",
+      rich_text.icon_list_caption(
+        research_trigger.entities,
+        entity_icon,
+        MAX_LISTED_ENTITIES,
+        "quidquid.technology-entity-list-more",
+        "\n"
+      ),
+    }
+  end
+  if trigger_type == "build-entity" then
+    return { "technology-trigger.build-entity", entity_icon(research_trigger.entity.name) }
+  end
+  if trigger_type == "capture-spawner" then
+    if research_trigger.entity == nil then
+      return { "technology-trigger.capture-any-spawner" }
+    end
+    return { "technology-trigger.capture-spawner", entity_icon(research_trigger.entity.name) }
+  end
+  if trigger_type == "create-space-platform" then
+    return { "technology-trigger.create-space-platform" }
+  end
+  if trigger_type == "send-item-to-orbit" then
+    return { "technology-trigger.send-item-to-orbit", item_icon(research_trigger.item) }
+  end
+  if trigger_type == "scripted" then
+    return research_trigger.trigger_description
+  end
+  return nil
 end
 
 local SOURCE_LABEL = { "quidquid.source-technologies" }
