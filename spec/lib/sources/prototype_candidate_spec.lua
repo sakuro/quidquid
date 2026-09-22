@@ -101,7 +101,7 @@ describe("prototype_candidate", function()
       build_candidates(candidate_type, icon_prefix, "ipl", prototype_list, "en", translated_names, false)
 
     assert.are.equal(1, #candidates)
-    assert.are.equal("localized_name", candidates[1].search_field)
+    assert.are.equal("display", candidates[1].search_field)
     assert.are.equal("Iron Plate", candidates[1].search_display_name)
     assert.are.equal("iron-plate", candidates[1].search_internal_name)
     assert.are.same({

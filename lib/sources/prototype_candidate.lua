@@ -3,16 +3,16 @@ local normalization = require("lib.search_normalization")
 local search_key_cache = require("lib.search_key_cache")
 local search_highlight = require("lib.search_highlight")
 
-local LOCALIZED_NAME_BONUS = 0.5
+local DISPLAY_NAME_BONUS = 0.5
 
 local function select_match(best, score, field, positions, position_map)
   if score == nil then
     return best
   end
-  if field == "localized_name" then
-    score = score + LOCALIZED_NAME_BONUS
+  if field == "display" then
+    score = score + DISPLAY_NAME_BONUS
   end
-  if best == nil or score > best.score or (score == best.score and field == "localized_name") then
+  if best == nil or score > best.score or (score == best.score and field == "display") then
     return {
       score = score,
       field = field,
@@ -41,14 +41,14 @@ local function build_candidates(
       local internal_target, internal_position_map =
         search_key_cache.get("prototype", prototype.name, "internal", nil, prototype.name)
       local internal_score, internal_positions = fuzzy_match(internal_query, internal_target)
-      best = select_match(best, internal_score, "internal_name", internal_positions, internal_position_map)
+      best = select_match(best, internal_score, "internal", internal_positions, internal_position_map)
 
       local translated = translated_names[prototype.name]
       if type(translated) == "string" then
         local display_target, display_position_map =
           search_key_cache.get("prototype", prototype.name, "display", locale, translated)
         local display_score, display_positions = fuzzy_match(display_query, display_target)
-        best = select_match(best, display_score, "localized_name", display_positions, display_position_map)
+        best = select_match(best, display_score, "display", display_positions, display_position_map)
       end
       if best ~= nil then
         table.insert(candidates, {
@@ -58,8 +58,8 @@ local function build_candidates(
           icon = icon_prefix .. "/" .. prototype.name,
           search_display_name = translated,
           search_internal_name = prototype.name,
-          search_display_ranges = best.field == "localized_name" and best.ranges or {},
-          search_internal_ranges = best.field == "internal_name" and best.ranges or {},
+          search_display_ranges = best.field == "display" and best.ranges or {},
+          search_internal_ranges = best.field == "internal" and best.ranges or {},
           search_score = best.score,
           search_field = best.field,
           search_positions = best.positions,
