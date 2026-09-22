@@ -178,45 +178,61 @@ local function queued_names(research_queue)
   return names
 end
 
--- force.research_progress is only meaningful for the technology actually
--- being researched right now (force.current_research); every other
--- technology's own progress is its saved_progress, which is 0 unless it was
--- previously researched partway and then interrupted.
-local function current_progress(force, technology)
-  if force.current_research ~= nil and force.current_research.name == technology.name then
-    return math.floor(force.research_progress * 100 + 0.5)
+-- Takes the flattened context rather than a LuaForce, so this and everything
+-- above it stay functions of plain values.
+local function current_progress(ctx, technology)
+  if ctx.current_research_name == technology.name then
+    return math.floor(ctx.research_progress * 100 + 0.5)
   end
   return math.floor(technology.saved_progress * 100 + 0.5)
 end
 
+-- The force is flattened into plain values here so TechnologySource.annotate
+-- never navigates a LuaForce, which is what lets it be spec'd. Research state is
+-- force-wide, so unlike the item source there is no character to check for.
+local function gather_annotation_context(player)
+  local force = player.force
+  return {
+    technologies = force.technologies,
+    queued = queued_names(force.research_queue),
+    current_research_name = force.current_research and force.current_research.name,
+    research_progress = force.research_progress,
+  }
+end
+
+function TechnologySource.annotate(candidate, ctx)
+  local technology = ctx.technologies[candidate.id]
+  if technology == nil then
+    return nil
+  end
+  local state = TechnologyPrerequisites.classify_state(technology, ctx.queued)
+  local prerequisites, triggers = TechnologyPrerequisites.collect_prerequisites(technology, ctx.queued)
+  local trigger_content = nil
+  if not technology.researched and technology.prototype.research_trigger ~= nil then
+    trigger_content = TechnologySource.build_trigger_content(technology.prototype.research_trigger)
+  end
+  return TechnologySource.build_annotation(
+    state,
+    prerequisites,
+    triggers,
+    current_progress(ctx, technology),
+    trigger_content
+  )
+end
+
 -- Called once per render with only the displayed technology candidates (see
--- Palette.annotate_candidates), so force.research_queue is read and
--- converted to a name set once here rather than per candidate. Unlike the
--- item source's annotate, the skip here isn't gated on controller type --
--- research is force-wide, not tied to a character -- a candidate is only
--- skipped if force.technologies has no entry for it at all.
+-- Palette.annotate_candidates), so the context is gathered once here rather than
+-- per candidate.
 local function annotate(candidates, player_index)
   local player = game.get_player(player_index)
   if player == nil then
     return {}
   end
-  local force = player.force
-  local queued = queued_names(force.research_queue)
-
+  local ctx = gather_annotation_context(player)
   local probe = Bench.probe()
   local annotations = {}
   for index, candidate in ipairs(candidates) do
-    local technology = force.technologies[candidate.id]
-    if technology ~= nil then
-      local state = TechnologyPrerequisites.classify_state(technology, queued)
-      local prerequisites, triggers = TechnologyPrerequisites.collect_prerequisites(technology, queued)
-      local progress = current_progress(force, technology)
-      local trigger_content = nil
-      if not technology.researched and technology.prototype.research_trigger ~= nil then
-        trigger_content = TechnologySource.build_trigger_content(technology.prototype.research_trigger)
-      end
-      annotations[index] = TechnologySource.build_annotation(state, prerequisites, triggers, progress, trigger_content)
-    end
+    annotations[index] = TechnologySource.annotate(candidate, ctx)
   end
   Bench.record("bench.annotate.technologies", probe)
   Bench.count("bench.count.technologies", #candidates)
