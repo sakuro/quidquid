@@ -39,7 +39,16 @@ end
 
 -- The per-quality breakdown for the tooltip. Callers decide whether it's worth
 -- showing (e.g. only when more than one quality is present).
-function ItemCounts.breakdown(index, name)
+--
+-- quality_order, when given, is a {quality_name = tier_level} lookup (e.g. built
+-- from prototypes.quality[name].level by the caller -- this stays pure and
+-- testable by taking the lookup as plain data instead of reading prototypes
+-- itself) sorting low tier to high tier instead of alphabetically. Confirmed over
+-- RCON that quality levels aren't contiguous (normal=0, uncommon=1, rare=2,
+-- epic=3, legendary=5) and that a level can repeat (quality-unknown=0, same as
+-- normal), so ties -- including an omitted quality_order entry, treated as tying
+-- at level 0 -- fall back to quality name for a stable order.
+function ItemCounts.breakdown(index, name, quality_order)
   local by_quality = index[name]
   if by_quality == nil then
     return {}
@@ -49,6 +58,13 @@ function ItemCounts.breakdown(index, name)
     table.insert(list, { quality = quality, count = count })
   end
   table.sort(list, function(a, b)
+    if quality_order ~= nil then
+      local a_level = quality_order[a.quality] or 0
+      local b_level = quality_order[b.quality] or 0
+      if a_level ~= b_level then
+        return a_level < b_level
+      end
+    end
     return a.quality < b.quality
   end)
   return list

@@ -176,6 +176,19 @@ local function personal_inventory_index(character)
   return ItemCounts.merge(table.unpack(contents_lists))
 end
 
+-- {quality_name = tier_level}, for ItemCounts.breakdown's low-to-high tier sort.
+-- Rebuilt on every call rather than cached at module scope: qualities can only
+-- change between a data-stage reload, but nothing here is expensive enough
+-- (Quality tops out at 5 tiers vanilla, low double digits with a mod like
+-- More Quality Tiers) to be worth caching against that edge case.
+local function quality_levels()
+  local levels = {}
+  for name, quality in pairs(prototypes.quality) do
+    levels[name] = quality.level
+  end
+  return levels
+end
+
 -- Called once per render with only the displayed item candidates (see
 -- Palette.annotate_candidates), so every per-player fact below (state, the
 -- inventory/network/delivery indexes) is gathered once here rather than per
@@ -190,6 +203,7 @@ local function annotate(candidates, player_index)
   local state = LogisticsState.classify(true, requester_point)
 
   local inventory_index = personal_inventory_index(character)
+  local quality_order = quality_levels()
 
   local network_index = ItemCounts.merge({})
   local deliver_index = ItemCounts.merge({})
@@ -205,9 +219,9 @@ local function annotate(candidates, player_index)
     annotations[index] = ItemSource.build_annotation(
       state,
       ItemCounts.total(inventory_index, candidate.id),
-      ItemCounts.breakdown(inventory_index, candidate.id),
+      ItemCounts.breakdown(inventory_index, candidate.id, quality_order),
       ItemCounts.total(network_index, candidate.id),
-      ItemCounts.breakdown(network_index, candidate.id),
+      ItemCounts.breakdown(network_index, candidate.id, quality_order),
       ItemCounts.total(deliver_index, candidate.id),
       ItemCounts.total(pickup_index, candidate.id)
     )

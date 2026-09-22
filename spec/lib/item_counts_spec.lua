@@ -53,5 +53,20 @@ describe("ItemCounts", function()
 
       assert.are.same({}, ItemCounts.breakdown(index, "iron-plate"))
     end)
+
+    it("sorts by quality_order (e.g. tier level) instead of quality name when given", function()
+      local index = ItemCounts.merge({
+        { name = "iron-plate", quality = "legendary", count = 5 },
+        { name = "iron-plate", quality = "normal", count = 40 },
+        { name = "iron-plate", quality = "rare", count = 8 },
+      })
+      local quality_order = { normal = 0, uncommon = 1, rare = 2, epic = 3, legendary = 5 }
+
+      assert.are.same({
+        { quality = "normal", count = 40 },
+        { quality = "rare", count = 8 },
+        { quality = "legendary", count = 5 },
+      }, ItemCounts.breakdown(index, "iron-plate", quality_order))
+    end)
   end)
 end)
