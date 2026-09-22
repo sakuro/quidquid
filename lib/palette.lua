@@ -43,7 +43,7 @@ local CONTENT_WIDTH = 500
 -- shrinking the row area for it. Rows (and the table itself) use
 -- ROW_WIDTH -- CONTENT_WIDTH minus the scrollbar's own width -- so there's
 -- room left for the scrollbar without covering anything.
-local SCROLLBAR_WIDTH = 32
+local SCROLLBAR_WIDTH = 24
 local ROW_WIDTH = CONTENT_WIDTH - SCROLLBAR_WIDTH
 -- #138: a ceiling on how far the candidate-name column can stretch, not a
 -- fixed width -- previously it was fixed (NAME_COLUMN_WIDTH), so `names`
@@ -54,7 +54,7 @@ local NAME_COLUMN_MAX_WIDTH = 350
 -- the technology source's "Not researched") can't grow without bound and
 -- starve `names` of the space it stretches into. An estimate pending
 -- in-game confirmation, not a measured fit.
-local SIDE_COLUMN_WIDTH = 160
+local SIDE_COLUMN_WIDTH = 200
 
 local DEFAULT_FONT_COLOR = FontColors.DEFAULT
 local ACCENT_FONT_COLOR = FontColors.ACCENT
