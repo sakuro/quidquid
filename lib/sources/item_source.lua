@@ -1,5 +1,7 @@
 local flib_dictionary = require("__flib__.dictionary")
 local FontColors = require("lib.font_colors")
+local ItemCounts = require("lib.item_counts")
+local LogisticsState = require("lib.logistics_state")
 local NumberFormat = require("lib.number_format")
 local rich_text = require("lib.rich_text")
 local build_candidates = require("lib.sources.prototype_candidate")
@@ -150,8 +152,71 @@ local function search(query, player_index)
   return ItemSource.build_candidates(query, collect_items(), player.locale, translated_names, include_hidden)
 end
 
+-- Inventories counted toward the "inventory" total: main inventory, cursor stack,
+-- ammo and guns -- the same scope QuickItemSearch used (confirmed over RCON that
+-- character.get_item_count covers exactly this set, but only for a single quality
+-- at a time, hence merging get_contents() here instead). Deliberately excludes the
+-- trash slots: those hold items already released back to the network, not items
+-- the player still has.
+local function personal_inventory_index(character)
+  local contents_lists = { character.get_main_inventory().get_contents() }
+  local cursor_stack = character.cursor_stack
+  if cursor_stack ~= nil and cursor_stack.valid_for_read then
+    table.insert(
+      contents_lists,
+      { { name = cursor_stack.name, quality = cursor_stack.quality.name, count = cursor_stack.count } }
+    )
+  end
+  for _, inventory_def in ipairs({ defines.inventory.character_ammo, defines.inventory.character_guns }) do
+    local inventory = character.get_inventory(inventory_def)
+    if inventory ~= nil then
+      table.insert(contents_lists, inventory.get_contents())
+    end
+  end
+  return ItemCounts.merge(table.unpack(contents_lists))
+end
+
+-- Called once per render with only the displayed item candidates (see
+-- Palette.annotate_candidates), so every per-player fact below (state, the
+-- inventory/network/delivery indexes) is gathered once here rather than per
+-- candidate.
+local function annotate(candidates, player_index)
+  local player = game.get_player(player_index)
+  if player == nil or player.character == nil then
+    return {}
+  end
+  local character = player.character
+  local requester_point = character.get_logistic_point(defines.logistic_member_index.character_requester)
+  local state = LogisticsState.classify(true, requester_point)
+
+  local inventory_index = personal_inventory_index(character)
+
+  local network_index = ItemCounts.merge({})
+  local deliver_index = ItemCounts.merge({})
+  local pickup_index = ItemCounts.merge({})
+  if state == "connected" then
+    network_index = ItemCounts.merge(requester_point.logistic_network.get_contents())
+    deliver_index = ItemCounts.merge(requester_point.targeted_items_deliver)
+    pickup_index = ItemCounts.merge(requester_point.targeted_items_pickup)
+  end
+
+  local annotations = {}
+  for index, candidate in ipairs(candidates) do
+    annotations[index] = ItemSource.build_annotation(
+      state,
+      ItemCounts.total(inventory_index, candidate.id),
+      ItemCounts.breakdown(inventory_index, candidate.id),
+      ItemCounts.total(network_index, candidate.id),
+      ItemCounts.breakdown(network_index, candidate.id),
+      ItemCounts.total(deliver_index, candidate.id),
+      ItemCounts.total(pickup_index, candidate.id)
+    )
+  end
+  return annotations
+end
+
 function ItemSource.register()
-  remote.add_interface("quidquid.item-source", { search = search })
+  remote.add_interface("quidquid.item-source", { search = search, annotate = annotate })
   remote.call("quidquid", "register_source", {
     contract_version = 1,
     id = "items",
