@@ -26,7 +26,7 @@ end
 
 -- The icon and name are reported as separate flying-text arguments (__1__, __2__)
 -- rather than one fused caption, matching how the temporary-request editor's own
--- confirm messages cite an item/recipe -- see ActionDispatch.run's flying text.
+-- confirm messages cite an item/recipe -- see ActionRunner.run's flying text.
 local function technology_icon(technology)
   return "[technology=" .. technology.name .. "]"
 end

@@ -1,6 +1,6 @@
-local ActionDispatch = require("lib.action_dispatch")
+local ActionRunner = require("lib.action_runner")
 
-describe("ActionDispatch", function()
+describe("ActionRunner", function()
   local flying_texts
   local player
 
@@ -31,7 +31,7 @@ describe("ActionDispatch", function()
       end
       local applied = false
 
-      ActionDispatch.run(candidate, 1, function(_candidate, _player)
+      ActionRunner.run(candidate, 1, function(_candidate, _player)
         return "payload", nil
       end, function(_payload, _candidate, _player)
         applied = true
@@ -44,7 +44,7 @@ describe("ActionDispatch", function()
     it("applies the payload and shows no message on success", function()
       local applied_payload, applied_candidate, applied_player
 
-      ActionDispatch.run(candidate, 1, function(_candidate, _player)
+      ActionRunner.run(candidate, 1, function(_candidate, _player)
         return "recipe-token", nil
       end, function(payload, resolved_candidate, resolved_player)
         applied_payload = payload
@@ -61,7 +61,7 @@ describe("ActionDispatch", function()
     it("shows the resolved locale key and does not apply when the payload is nil", function()
       local applied = false
 
-      ActionDispatch.run(candidate, 1, function(_candidate, _player)
+      ActionRunner.run(candidate, 1, function(_candidate, _player)
         return nil, "quidquid.action-craft-no-recipe"
       end, function(_payload, _candidate, _player)
         applied = true
@@ -77,7 +77,7 @@ describe("ActionDispatch", function()
     end)
 
     it("shows nothing when the payload and locale key are both nil and there is no fallback", function()
-      ActionDispatch.run(candidate, 1, function(_candidate, _player)
+      ActionRunner.run(candidate, 1, function(_candidate, _player)
         return nil, nil
       end, function(_payload, _candidate, _player) end)
 
@@ -85,7 +85,7 @@ describe("ActionDispatch", function()
     end)
 
     it("falls back to the fallback locale key when the payload and locale key are both nil", function()
-      ActionDispatch.run(candidate, 1, function(_candidate, _player)
+      ActionRunner.run(candidate, 1, function(_candidate, _player)
         return nil, nil
       end, function(_payload, _candidate, _player) end, "quidquid.action-open-remote-view-unavailable")
 
@@ -98,7 +98,7 @@ describe("ActionDispatch", function()
     end)
 
     it("prefers the resolved locale key over the fallback locale key", function()
-      ActionDispatch.run(candidate, 1, function(_candidate, _player)
+      ActionRunner.run(candidate, 1, function(_candidate, _player)
         return nil, "quidquid.action-open-remote-view-not-visited"
       end, function(_payload, _candidate, _player) end, "quidquid.action-open-remote-view-unavailable")
 

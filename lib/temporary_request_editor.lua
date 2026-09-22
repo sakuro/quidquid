@@ -211,12 +211,7 @@ local function recipe_caption(target, quality)
 end
 
 function TemporaryRequestEditor.open(player, selected_candidate)
-  local target
-  if type(selected_candidate) == "string" then
-    target = { type = "item", name = selected_candidate }
-  else
-    target = { type = selected_candidate.type, name = selected_candidate.id }
-  end
+  local target = { type = selected_candidate.type, name = selected_candidate.id }
 
   TemporaryRequestEditor.close(player)
   local qualities = available_qualities(player.force)

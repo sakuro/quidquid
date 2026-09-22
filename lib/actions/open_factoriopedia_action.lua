@@ -1,6 +1,6 @@
 local OpenFactoriopediaAction = {}
 
-local ActionDispatch = require("lib.action_dispatch")
+local ActionRunner = require("lib.action_runner")
 local SurfaceAccess = require("lib.surface_access")
 
 -- pure decision logic given an already-resolved surface: dispatches on the
@@ -33,7 +33,7 @@ function OpenFactoriopediaAction.resolve_prototype(candidate, player)
   return nil
 end
 
--- Adapts the single-value resolve_prototype to ActionDispatch's (payload, locale_key)
+-- Adapts the single-value resolve_prototype to ActionRunner's (payload, locale_key)
 -- convention: every failure shows the same generic message, unlike other actions'
 -- resolve functions, since Factoriopedia has no distinct reasons to report.
 local function resolve(candidate, player)
@@ -49,7 +49,7 @@ end
 -- per-candidate runtime fact, so it's resolved here and reported by execute, not
 -- hidden from the tooltip.
 local function execute(selected_candidate, player_index)
-  ActionDispatch.run(selected_candidate, player_index, resolve, function(prototype, _candidate, player)
+  ActionRunner.run(selected_candidate, player_index, resolve, function(prototype, _candidate, player)
     player.open_factoriopedia_gui(prototype)
   end)
 end

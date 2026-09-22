@@ -1,4 +1,4 @@
-local ActionDispatch = require("lib.action_dispatch")
+local ActionRunner = require("lib.action_runner")
 
 local CraftAction = {}
 
@@ -78,7 +78,7 @@ end
 
 local function craft(count_for)
   return function(selected_candidate, player_index)
-    ActionDispatch.run(
+    ActionRunner.run(
       selected_candidate,
       player_index,
       CraftAction.resolve_craftable,
