@@ -61,8 +61,6 @@ local function build_candidates(
           search_display_ranges = best.field == "display" and best.ranges or {},
           search_internal_ranges = best.field == "internal" and best.ranges or {},
           search_score = best.score,
-          search_field = best.field,
-          search_positions = best.positions,
         })
       end
     end
