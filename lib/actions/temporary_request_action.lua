@@ -125,9 +125,9 @@ end
 -- convention: the candidate itself is the payload, since editor.open needs
 -- nothing beyond what it already has.
 local function resolve(selected_candidate, player)
-  local requestable, error_key = TemporaryRequestAction.resolve_requestable(selected_candidate, player.force)
+  local requestable, reason_locale_key = TemporaryRequestAction.resolve_requestable(selected_candidate, player.force)
   if not requestable then
-    return nil, error_key
+    return nil, reason_locale_key
   end
   return selected_candidate, nil
 end
@@ -175,11 +175,11 @@ function TemporaryRequestAction.register()
     execute = execute,
   })
   remote.call("quidquid", "register_action", {
-    version = 1,
+    contract_version = 1,
     id = "temporary-request",
     types = { "item", "recipe" },
     label = { "quidquid.action-temporary-request" },
-    key = "quidquid-temporary-request",
+    input_name = "quidquid-temporary-request",
     interface = "quidquid.temporary-request-action",
   })
 end

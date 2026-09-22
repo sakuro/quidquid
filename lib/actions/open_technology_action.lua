@@ -15,11 +15,11 @@ end
 function OpenTechnologyAction.register()
   remote.add_interface("quidquid.open-technology-action", { execute = execute })
   remote.call("quidquid", "register_action", {
-    version = 1,
+    contract_version = 1,
     id = "open-technology",
     types = { "technology" },
     label = { "quidquid.action-open-technology" },
-    key = "quidquid-open-factoriopedia",
+    input_name = "quidquid-open-factoriopedia",
     interface = "quidquid.open-technology-action",
   })
 end

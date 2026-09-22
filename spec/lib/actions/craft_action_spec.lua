@@ -85,50 +85,50 @@ describe("CraftAction", function()
     it("returns the craft-no-recipe error for an item candidate with no matching recipe", function()
       local player = fake_player({ recipes = {} })
 
-      local recipe, error_key = CraftAction.resolve_craftable({ type = "item", id = "iron-plate" }, player)
+      local recipe, reason_locale_key = CraftAction.resolve_craftable({ type = "item", id = "iron-plate" }, player)
 
       assert.is_nil(recipe)
-      assert.are.equal("quidquid.action-craft-no-recipe", error_key)
+      assert.are.equal("quidquid.action-craft-no-recipe", reason_locale_key)
     end)
 
     it("returns no recipe and no error for a recipe candidate with no matching force recipe", function()
       local player = fake_player({ recipes = {} })
 
-      local recipe, error_key = CraftAction.resolve_craftable({ type = "recipe", id = "iron-plate" }, player)
+      local recipe, reason_locale_key = CraftAction.resolve_craftable({ type = "recipe", id = "iron-plate" }, player)
 
       assert.is_nil(recipe)
-      assert.is_nil(error_key)
+      assert.is_nil(reason_locale_key)
     end)
 
     it("returns the not-researched error for an unresearched recipe", function()
       local player = fake_player({ recipes = { ["iron-plate"] = fake_recipe({ enabled = false }) } })
 
-      local recipe, error_key = CraftAction.resolve_craftable({ id = "iron-plate" }, player)
+      local recipe, reason_locale_key = CraftAction.resolve_craftable({ id = "iron-plate" }, player)
 
       assert.is_nil(recipe)
-      assert.are.equal("quidquid.action-craft-not-researched", error_key)
+      assert.are.equal("quidquid.action-craft-not-researched", reason_locale_key)
     end)
 
     it("returns the hand-crafting-disabled error when the force disabled it", function()
       local player = fake_player({ recipes = { ["iron-plate"] = fake_recipe() }, hand_crafting_disabled = true })
 
-      local recipe, error_key = CraftAction.resolve_craftable({ id = "iron-plate" }, player)
+      local recipe, reason_locale_key = CraftAction.resolve_craftable({ id = "iron-plate" }, player)
 
       assert.is_nil(recipe)
-      assert.are.equal("quidquid.action-craft-hand-crafting-disabled", error_key)
+      assert.are.equal("quidquid.action-craft-hand-crafting-disabled", reason_locale_key)
     end)
 
     it("returns the hand-crafting-disabled error for a recipe with no hand-craftable category", function()
-      -- Same key as the force-disabled case: Factorio's own message doesn't
+      -- Same locale key as the force-disabled case: Factorio's own message doesn't
       -- distinguish the two either.
       local player = fake_player({
         recipes = { ["iron-plate"] = fake_recipe({ categories = { "smelting" } }) },
       })
 
-      local recipe, error_key = CraftAction.resolve_craftable({ id = "iron-plate" }, player)
+      local recipe, reason_locale_key = CraftAction.resolve_craftable({ id = "iron-plate" }, player)
 
       assert.is_nil(recipe)
-      assert.are.equal("quidquid.action-craft-hand-crafting-disabled", error_key)
+      assert.are.equal("quidquid.action-craft-hand-crafting-disabled", reason_locale_key)
     end)
 
     it("returns the not-enough-ingredients error when nothing is craftable", function()
@@ -137,10 +137,10 @@ describe("CraftAction", function()
         craftable_count = 0,
       })
 
-      local recipe, error_key = CraftAction.resolve_craftable({ id = "iron-plate" }, player)
+      local recipe, reason_locale_key = CraftAction.resolve_craftable({ id = "iron-plate" }, player)
 
       assert.is_nil(recipe)
-      assert.are.equal("quidquid.action-craft-not-enough-ingredients", error_key)
+      assert.are.equal("quidquid.action-craft-not-enough-ingredients", reason_locale_key)
     end)
 
     it("returns the recipe with no error when it can be hand-crafted", function()
@@ -149,10 +149,10 @@ describe("CraftAction", function()
         craftable_count = 3,
       })
 
-      local recipe, error_key = CraftAction.resolve_craftable({ id = "iron-plate" }, player)
+      local recipe, reason_locale_key = CraftAction.resolve_craftable({ id = "iron-plate" }, player)
 
       assert.are.same(fake_recipe(), recipe)
-      assert.is_nil(error_key)
+      assert.is_nil(reason_locale_key)
     end)
   end)
 end)

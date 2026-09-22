@@ -38,12 +38,12 @@ end
 function RecipeSource.register()
   remote.add_interface("quidquid.recipe-source", { search = search })
   remote.call("quidquid", "register_source", {
-    version = 1,
+    contract_version = 1,
     id = "recipes",
     type = "recipe",
     label = SOURCE_LABEL,
     prefixes = { "r", "recipe" },
-    default_active = true,
+    in_default_search = true,
     interface = "quidquid.recipe-source",
   })
 end

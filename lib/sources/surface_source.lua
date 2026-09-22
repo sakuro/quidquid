@@ -72,12 +72,12 @@ end
 function SurfaceSource.register()
   remote.add_interface("quidquid.surface-source", { search = search })
   remote.call("quidquid", "register_source", {
-    version = 1,
+    contract_version = 1,
     id = "surfaces",
     type = "surface",
     label = SOURCE_LABEL,
     prefixes = { "s", "surface" },
-    default_active = true,
+    in_default_search = true,
     interface = "quidquid.surface-source",
   })
 end

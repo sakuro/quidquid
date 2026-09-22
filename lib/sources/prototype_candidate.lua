@@ -38,16 +38,16 @@ local function build_candidates(
   for _, prototype in ipairs(prototype_list) do
     if include_hidden or not prototype.hidden then
       local best = nil
-      local internal_key, internal_position_map =
+      local internal_target, internal_position_map =
         search_key_cache.get("prototype", prototype.name, "internal", nil, prototype.name)
-      local internal_score, internal_positions = fuzzy_match(internal_query, internal_key)
+      local internal_score, internal_positions = fuzzy_match(internal_query, internal_target)
       best = select_match(best, internal_score, "internal_name", internal_positions, internal_position_map)
 
       local translated = translated_names[prototype.name]
       if type(translated) == "string" then
-        local display_key, display_position_map =
+        local display_target, display_position_map =
           search_key_cache.get("prototype", prototype.name, "display", locale, translated)
-        local display_score, display_positions = fuzzy_match(display_query, display_key)
+        local display_score, display_positions = fuzzy_match(display_query, display_target)
         best = select_match(best, display_score, "localized_name", display_positions, display_position_map)
       end
       if best ~= nil then

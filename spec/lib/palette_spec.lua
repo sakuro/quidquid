@@ -94,7 +94,7 @@ describe("Palette", function()
   describe(".search_all_sources", function()
     local function fake_registry(sources)
       return {
-        default_active_sources = function()
+        default_search_sources = function()
           return sources
         end,
       }
@@ -158,11 +158,11 @@ describe("Palette", function()
       assert.are.equal(1, #logged)
     end)
 
-    it("searches only the locked source, ignoring default_active_sources", function()
-      local default_active_called = false
+    it("searches only the locked source, ignoring default_search_sources", function()
+      local default_search_called = false
       Palette.init({
-        default_active_sources = function()
-          default_active_called = true
+        default_search_sources = function()
+          default_search_called = true
           return {}
         end,
       })
@@ -184,7 +184,7 @@ describe("Palette", function()
 
       local results = Palette.search_all_sources("auto", 1, locked_source)
 
-      assert.is_false(default_active_called)
+      assert.is_false(default_search_called)
       assert.are.equal(1, #results)
       assert.are.equal("automation", results[1].candidate.id)
     end)
@@ -210,7 +210,7 @@ describe("Palette", function()
   describe(".is_query_valid", function()
     it("returns true when no consulted source implements is_query_valid", function()
       Palette.init({
-        default_active_sources = function()
+        default_search_sources = function()
           return { { id = "items", interface = "quidquid.item-source", label = { "quidquid.source-items" } } }
         end,
       })
@@ -223,7 +223,7 @@ describe("Palette", function()
 
     it("returns true when the implementing source reports the query valid", function()
       Palette.init({
-        default_active_sources = function()
+        default_search_sources = function()
           return {
             { id = "calculator", interface = "quidquid.calculator-source", label = { "quidquid.source-calculator" } },
           }
@@ -241,7 +241,7 @@ describe("Palette", function()
 
     it("returns false when the implementing source reports the query invalid", function()
       Palette.init({
-        default_active_sources = function()
+        default_search_sources = function()
           return {
             { id = "calculator", interface = "quidquid.calculator-source", label = { "quidquid.source-calculator" } },
           }
@@ -258,10 +258,10 @@ describe("Palette", function()
     end)
 
     it("consults only the locked source when one is locked", function()
-      local default_active_called = false
+      local default_search_called = false
       Palette.init({
-        default_active_sources = function()
-          default_active_called = true
+        default_search_sources = function()
+          default_search_called = true
           return {}
         end,
       })
@@ -276,7 +276,7 @@ describe("Palette", function()
 
       local result = Palette.is_query_valid("1 + ", 1, locked_source)
 
-      assert.is_false(default_active_called)
+      assert.is_false(default_search_called)
       assert.is_false(result)
     end)
 
@@ -286,7 +286,7 @@ describe("Palette", function()
         table.insert(logged, message)
       end
       Palette.init({
-        default_active_sources = function()
+        default_search_sources = function()
           return {
             { id = "calculator", interface = "quidquid.calculator-source", label = { "quidquid.source-calculator" } },
           }
@@ -308,7 +308,7 @@ describe("Palette", function()
     it("trims leading and trailing whitespace from the query before consulting sources", function()
       local received_query
       Palette.init({
-        default_active_sources = function()
+        default_search_sources = function()
           return {
             { id = "calculator", interface = "quidquid.calculator-source", label = { "quidquid.source-calculator" } },
           }
@@ -337,7 +337,7 @@ describe("Palette", function()
       assert.is_nil(Palette.build_tooltip({}))
     end)
 
-    it("builds one hint per action, sorted by key and joined with newlines", function()
+    it("builds one hint per action, sorted by input name and joined with newlines", function()
       local tooltip = Palette.build_tooltip({
         b = action("craft-all"),
         a = action("craft-1"),

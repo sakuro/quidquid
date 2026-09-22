@@ -38,12 +38,12 @@ end
 function FluidSource.register()
   remote.add_interface("quidquid.fluid-source", { search = search })
   remote.call("quidquid", "register_source", {
-    version = 1,
+    contract_version = 1,
     id = "fluids",
     type = "fluid",
     label = SOURCE_LABEL,
     prefixes = { "f", "fluid" },
-    default_active = true,
+    in_default_search = true,
     interface = "quidquid.fluid-source",
   })
 end

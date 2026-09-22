@@ -112,12 +112,12 @@ end
 function CalculatorSource.register()
   remote.add_interface("quidquid.calculator-source", { search = search, is_query_valid = is_query_valid })
   remote.call("quidquid", "register_source", {
-    version = 1,
+    contract_version = 1,
     id = "calculator",
     type = "calculation",
     label = SOURCE_LABEL,
     prefixes = { "=" },
-    default_active = false, -- excluded from the unlocked default search
+    in_default_search = false, -- excluded from the unlocked default search
     interface = "quidquid.calculator-source",
   })
 end

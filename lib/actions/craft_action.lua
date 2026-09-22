@@ -89,14 +89,14 @@ local function craft(count_for)
   end
 end
 
-local function register(id, key, interface, label, count_for)
+local function register(id, input_name, interface, label, count_for)
   remote.add_interface(interface, { execute = craft(count_for) })
   remote.call("quidquid", "register_action", {
-    version = 1,
+    contract_version = 1,
     id = id,
     types = { "item", "recipe" },
     label = label,
-    key = key,
+    input_name = input_name,
     interface = interface,
   })
 end
