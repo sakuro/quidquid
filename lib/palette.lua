@@ -392,21 +392,24 @@ local function build_candidate_row(pane, wrapped, index, player_index)
   -- an annotation still gets.
   local annotation_caption = wrapped.annotation and wrapped.annotation.caption
   if annotation_caption ~= nil then
+    -- #138: not squashable -- `names` is the column meant to flex both ways
+    -- (stretching into free space, squashing under pressure); `side` should
+    -- keep its actual content's natural size (up to SIDE_COLUMN_WIDTH) so
+    -- `names`'s stretch pressure can't squeeze it below what it needs,
+    -- which is what reintroduced #136's clipping when both columns were
+    -- squashable at once.
     local side = row.add({ type = "flow", direction = "vertical" })
     side.style.maximal_width = SIDE_COLUMN_WIDTH
-    side.style.horizontally_squashable = true
     side.style.horizontal_align = "right"
     side.style.vertical_spacing = 0
 
     local annotation_label = side.add({ type = "label", caption = annotation_caption })
     annotation_label.style.maximal_width = SIDE_COLUMN_WIDTH
-    annotation_label.style.horizontally_squashable = true
     annotation_label.style.single_line = false
     annotation_label.style.horizontal_align = "right"
 
     local source_label = side.add({ type = "label", caption = wrapped.source_label })
     source_label.style.maximal_width = SIDE_COLUMN_WIDTH
-    source_label.style.horizontally_squashable = true
     source_label.style.horizontal_align = "right"
     source_label.style.font_color = MUTED_FONT_COLOR
   else
