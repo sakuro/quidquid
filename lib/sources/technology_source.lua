@@ -199,9 +199,9 @@ end
 -- Called once per render with only the displayed technology candidates (see
 -- Palette.annotate_candidates), so force.research_queue is read and
 -- converted to a name set once here rather than per candidate. Unlike the
--- item source's annotate, every candidate always gets an annotation: a
--- technology's research state applies regardless of controller type
--- (research is force-wide, not tied to a character).
+-- item source's annotate, the skip here isn't gated on controller type --
+-- research is force-wide, not tied to a character -- a candidate is only
+-- skipped if force.technologies has no entry for it at all.
 local function annotate(candidates, player_index)
   local player = game.get_player(player_index)
   if player == nil then

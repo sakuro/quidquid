@@ -23,6 +23,10 @@ end
 
 ResearchQueueAction.queued_level = queued_level
 
+-- Icon and name are passed as separate message arguments rather than
+-- pre-combined into one string: technology_name's level suffix means it
+-- returns a nested LocalisedString table, not a plain string, so it can't be
+-- concatenated with the icon string via "..".
 local function queue_message(queue, target, locale_key, ...)
   return {
     locale_key,
