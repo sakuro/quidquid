@@ -6,21 +6,23 @@ local TechnologyPrerequisites = require("lib.technology_prerequisites")
 local TechnologySource = {}
 
 local STATE_CAPTIONS = {
-  not_available = { text_key = "quidquid.technology-state-not-available", color = { r = 255, g = 214, b = 213 } },
-  conditionally_available = { text_key = "quidquid.technology-state-available", color = { r = 255, g = 234, b = 206 } },
-  available = { text_key = "quidquid.technology-state-available", color = { r = 255, g = 241, b = 183 } },
-  researched = { text_key = "quidquid.technology-state-researched", color = { r = 165, g = 255, b = 171 } },
+  not_available = { text_key = "quidquid.technology-state-not-available", color = "red" },
+  conditionally_available = { text_key = "quidquid.technology-state-available", color = "orange" },
+  available = { text_key = "quidquid.technology-state-available", color = "yellow" },
+  researched = { text_key = "quidquid.technology-state-researched", color = "green" },
 }
 
--- Colors are flib's technology-slot-style.lua level_range_color values, the
--- same ones UltimateResearchQueue uses for the same four research states --
--- see docs/superpowers/specs/2026-09-22-technology-research-state-design.md.
+-- Uses Factorio's standard named rich-text colors (see
+-- https://wiki.factorio.com/Rich_text) rather than custom RGB values --
+-- two earlier RGB-based attempts (flib's pale level_range_color, then a mix
+-- of it and the darker level_color) both failed real in-game legibility
+-- testing against the Aug 22 save's braking-force-4/5 pair -- see
+-- docs/superpowers/specs/2026-09-22-technology-research-state-design.md.
 -- available and conditionally_available share their text (研究可); only the
 -- color tells them apart.
 function TechnologySource.build_caption(state)
   local spec = STATE_CAPTIONS[state]
-  local color = spec.color
-  return { "", ("[color=%d,%d,%d]"):format(color.r, color.g, color.b), { spec.text_key }, "[/color]" }
+  return { "", "[color=" .. spec.color .. "]", { spec.text_key }, "[/color]" }
 end
 
 -- Defensive bound: no real mine-entity trigger lists more than 2 alternatives
