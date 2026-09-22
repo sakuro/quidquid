@@ -142,4 +142,85 @@ describe("TechnologySource", function()
       assert.is_nil(TechnologySource.build_trigger_content(research_trigger))
     end)
   end)
+
+  describe(".build_tooltip", function()
+    it("returns nil when there is nothing to show", function()
+      assert.is_nil(TechnologySource.build_tooltip("researched", {}, {}, 0, nil))
+    end)
+
+    it("shows the missing (transitive) prerequisites when present", function()
+      local prerequisites = { { name = "steel-processing" } }
+
+      local tooltip = TechnologySource.build_tooltip("available", prerequisites, {}, 0, nil)
+
+      assert.are.same({
+        "",
+        "\n",
+        { "", { "quidquid.technology-missing-prerequisites" }, ": ", { "", "[technology=steel-processing]" } },
+      }, tooltip)
+    end)
+
+    it("shows blocking trigger technologies alongside the prerequisites block", function()
+      local prerequisites = { { name = "steel-processing" } }
+      local triggers = { { name = "oil-processing" } }
+
+      local tooltip = TechnologySource.build_tooltip("not_available", prerequisites, triggers, 0, nil)
+
+      assert.are.same({
+        "",
+        "\n",
+        { "", { "quidquid.technology-missing-prerequisites" }, ": ", { "", "[technology=steel-processing]" } },
+        "\n",
+        { "", { "quidquid.technology-blocked-by-triggers" }, ": ", { "", "[technology=oil-processing]" } },
+      }, tooltip)
+    end)
+
+    it("shows progress when available and progress is greater than 0", function()
+      local tooltip = TechnologySource.build_tooltip("available", {}, {}, 37, nil)
+
+      assert.are.same({
+        "",
+        "\n",
+        { "quidquid.technology-progress", 37 },
+      }, tooltip)
+    end)
+
+    it("hides progress when available but progress is 0", function()
+      assert.is_nil(TechnologySource.build_tooltip("available", {}, {}, 0, nil))
+    end)
+
+    it("hides progress when conditionally_available, even if progress is somehow greater than 0", function()
+      assert.is_nil(TechnologySource.build_tooltip("conditionally_available", {}, {}, 37, nil))
+    end)
+
+    it("shows the research-complete-condition header and trigger content when given", function()
+      local trigger_content = { "technology-trigger.craft-item", "[item=lab]" }
+
+      local tooltip = TechnologySource.build_tooltip("available", {}, {}, 0, trigger_content)
+
+      assert.are.same({
+        "",
+        "\n",
+        { "", { "gui-technology-preview.unit-research-trigger-requirements" }, ": ", trigger_content },
+      }, tooltip)
+    end)
+
+    it("combines every block when all apply", function()
+      local prerequisites = { { name = "steel-processing" } }
+      local triggers = { { name = "oil-processing" } }
+      local trigger_content = { "technology-trigger.craft-item", "[item=lab]" }
+
+      local tooltip = TechnologySource.build_tooltip("not_available", prerequisites, triggers, 0, trigger_content)
+
+      assert.are.same({
+        "",
+        "\n",
+        { "", { "quidquid.technology-missing-prerequisites" }, ": ", { "", "[technology=steel-processing]" } },
+        "\n",
+        { "", { "quidquid.technology-blocked-by-triggers" }, ": ", { "", "[technology=oil-processing]" } },
+        "\n",
+        { "", { "gui-technology-preview.unit-research-trigger-requirements" }, ": ", trigger_content },
+      }, tooltip)
+    end)
+  end)
 end)

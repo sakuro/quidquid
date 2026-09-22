@@ -1,6 +1,7 @@
 local flib_dictionary = require("__flib__.dictionary")
 local build_candidates = require("lib.sources.prototype_candidate")
 local rich_text = require("lib.rich_text")
+local TechnologyPrerequisites = require("lib.technology_prerequisites")
 
 local TechnologySource = {}
 
@@ -83,6 +84,42 @@ function TechnologySource.build_trigger_content(research_trigger)
     return research_trigger.trigger_description
   end
   return nil
+end
+
+local function labelled_list_block(label_key, technologies)
+  return { "", { label_key }, ": ", TechnologyPrerequisites.technology_list_caption(technologies) }
+end
+
+function TechnologySource.build_tooltip(state, prerequisites, triggers, progress, trigger_content)
+  local tooltip = { "" }
+  local has_content = false
+  if #prerequisites > 0 then
+    table.insert(tooltip, "\n")
+    table.insert(tooltip, labelled_list_block("quidquid.technology-missing-prerequisites", prerequisites))
+    has_content = true
+  end
+  if #triggers > 0 then
+    table.insert(tooltip, "\n")
+    table.insert(tooltip, labelled_list_block("quidquid.technology-blocked-by-triggers", triggers))
+    has_content = true
+  end
+  if state == "available" and progress > 0 then
+    table.insert(tooltip, "\n")
+    table.insert(tooltip, { "quidquid.technology-progress", progress })
+    has_content = true
+  end
+  if trigger_content ~= nil then
+    table.insert(tooltip, "\n")
+    table.insert(
+      tooltip,
+      { "", { "gui-technology-preview.unit-research-trigger-requirements" }, ": ", trigger_content }
+    )
+    has_content = true
+  end
+  if not has_content then
+    return nil
+  end
+  return tooltip
 end
 
 local SOURCE_LABEL = { "quidquid.source-technologies" }
