@@ -154,4 +154,79 @@ describe("TechnologyPrerequisites", function()
       assert.are.same({ trigger }, triggers)
     end)
   end)
+
+  describe(".direct_prerequisites_researched", function()
+    it("returns true when every direct prerequisite is researched", function()
+      local iron = technology("iron", nil, { researched = true })
+      local steel = technology("steel", nil, { researched = true })
+      local target = technology("target", { iron = iron, steel = steel })
+
+      assert.is_true(TechnologyPrerequisites.direct_prerequisites_researched(target))
+    end)
+
+    it("returns false when any direct prerequisite is unresearched", function()
+      local iron = technology("iron", nil, { researched = true })
+      local steel = technology("steel")
+      local target = technology("target", { iron = iron, steel = steel })
+
+      assert.is_false(TechnologyPrerequisites.direct_prerequisites_researched(target))
+    end)
+
+    it("returns true for a technology with no prerequisites", function()
+      assert.is_true(TechnologyPrerequisites.direct_prerequisites_researched(technology("automation")))
+    end)
+  end)
+
+  describe(".direct_prerequisites_queued", function()
+    it("returns true when every unresearched direct prerequisite is queued", function()
+      local iron = technology("iron", nil, { researched = true })
+      local steel = technology("steel")
+      local target = technology("target", { iron = iron, steel = steel })
+
+      assert.is_true(TechnologyPrerequisites.direct_prerequisites_queued(target, { steel = true }))
+    end)
+
+    it("returns false when an unresearched direct prerequisite is not queued", function()
+      local steel = technology("steel")
+      local target = technology("target", { steel = steel })
+
+      assert.is_false(TechnologyPrerequisites.direct_prerequisites_queued(target, {}))
+    end)
+
+    it("returns false for a trigger prerequisite, which can never be queued", function()
+      local trigger = technology("trigger", nil, { research_trigger = { type = "craft-item" } })
+      local target = technology("target", { trigger = trigger })
+
+      assert.is_false(TechnologyPrerequisites.direct_prerequisites_queued(target, { trigger = true }))
+    end)
+  end)
+
+  describe(".classify_state", function()
+    it("returns researched for a researched technology", function()
+      local target = technology("target", nil, { researched = true })
+
+      assert.are.equal("researched", TechnologyPrerequisites.classify_state(target, {}))
+    end)
+
+    it("returns available when every direct prerequisite is researched", function()
+      local iron = technology("iron", nil, { researched = true })
+      local target = technology("target", { iron = iron })
+
+      assert.are.equal("available", TechnologyPrerequisites.classify_state(target, {}))
+    end)
+
+    it("returns conditionally_available when an unresearched direct prerequisite is queued", function()
+      local steel = technology("steel")
+      local target = technology("target", { steel = steel })
+
+      assert.are.equal("conditionally_available", TechnologyPrerequisites.classify_state(target, { steel = true }))
+    end)
+
+    it("returns not_available when an unresearched direct prerequisite is not queued", function()
+      local steel = technology("steel")
+      local target = technology("target", { steel = steel })
+
+      assert.are.equal("not_available", TechnologyPrerequisites.classify_state(target, {}))
+    end)
+  end)
 end)

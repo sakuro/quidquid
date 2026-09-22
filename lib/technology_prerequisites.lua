@@ -76,4 +76,56 @@ function TechnologyPrerequisites.collect_prerequisites(technology, queued)
   return prerequisites, triggers
 end
 
+-- Direct (not transitive) prerequisite check, mirroring UltimateResearchQueue's
+-- are_prereqs_satisfied (raiguard/UltimateResearchQueue, research-queue.lua).
+-- technology.prerequisites is direct-only -- collect_prerequisites above needs
+-- to recurse through it manually to reach indirect prerequisites, which
+-- wouldn't be necessary if it already returned the full transitive set.
+function TechnologyPrerequisites.direct_prerequisites_researched(technology)
+  for _, prerequisite in pairs(technology.prerequisites) do
+    if not prerequisite.researched then
+      return false
+    end
+  end
+  return true
+end
+
+-- queued_names is a {[technology_name]=true} set built by the caller from
+-- force.research_queue. A technology's prerequisites count as "on track" here
+-- if every unresearched one is already queued -- a trigger technology can
+-- never be queued (confirmed: ResearchQueueAction.resolve_enqueue refuses to
+-- queue one), so an unresearched trigger prerequisite always makes this false.
+function TechnologyPrerequisites.direct_prerequisites_queued(technology, queued_names)
+  for _, prerequisite in pairs(technology.prerequisites) do
+    if not prerequisite.researched then
+      if prerequisite.prototype.research_trigger ~= nil then
+        return false
+      end
+      if not queued_names[prerequisite.name] then
+        return false
+      end
+    end
+  end
+  return true
+end
+
+-- Confirmed over RCON against a real save (destroyer, blocked on the
+-- unresearched, unqueued military-4) that this -- not LuaTechnology.enabled,
+-- which does not track prerequisite completion -- is what distinguishes
+-- vanilla's own tech-tree states. Matches UltimateResearchQueue's
+-- get_research_state, minus its "disabled" state (not needed: quidquid's
+-- candidates are already filtered to visible technologies).
+function TechnologyPrerequisites.classify_state(technology, queued_names)
+  if technology.researched then
+    return "researched"
+  end
+  if TechnologyPrerequisites.direct_prerequisites_researched(technology) then
+    return "available"
+  end
+  if TechnologyPrerequisites.direct_prerequisites_queued(technology, queued_names) then
+    return "conditionally_available"
+  end
+  return "not_available"
+end
+
 return TechnologyPrerequisites
