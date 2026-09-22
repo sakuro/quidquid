@@ -36,9 +36,9 @@ describe("CraftAction", function()
     _G.game = nil
   end)
 
-  describe(".count_of", function()
+  describe(".fixed_count", function()
     it("returns a function that always yields the given count, ignoring player and recipe", function()
-      local count_for = CraftAction.count_of(5)
+      local count_for = CraftAction.fixed_count(5)
 
       assert.are.equal(5, count_for(nil, nil))
       assert.are.equal(5, count_for({}, "recipe-token"))

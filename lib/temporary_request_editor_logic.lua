@@ -44,7 +44,7 @@ end
 -- Derives a recipe's operation count from existing per-ingredient request quantities.
 -- The smallest complete count is used so every ingredient is available for that many
 -- operations. A nil result means none of the recipe's ingredient requests exist yet.
-function TemporaryRequestEditorLogic.recipe_quantity(existing_quantities, ingredients)
+function TemporaryRequestEditorLogic.recipe_craft_count(existing_quantities, ingredients)
   local craft_count = nil
   for _, ingredient in ipairs(ingredients or {}) do
     if ingredient.type == "item" then

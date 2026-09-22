@@ -76,29 +76,29 @@ describe("CalculatorSource", function()
     end)
   end)
 
-  describe(".classify", function()
+  describe(".valid_value", function()
     it("returns the value on success", function()
-      assert.are.equal(9, CalculatorSource.classify(true, 9))
+      assert.are.equal(9, CalculatorSource.valid_value(true, 9))
     end)
 
     it("returns nil when pcall failed", function()
-      assert.is_nil(CalculatorSource.classify(false, "parse error"))
+      assert.is_nil(CalculatorSource.valid_value(false, "parse error"))
     end)
 
     it("returns nil for a non-number result", function()
-      assert.is_nil(CalculatorSource.classify(true, "not a number"))
+      assert.is_nil(CalculatorSource.valid_value(true, "not a number"))
     end)
 
     it("returns nil for NaN", function()
-      assert.is_nil(CalculatorSource.classify(true, 0 / 0))
+      assert.is_nil(CalculatorSource.valid_value(true, 0 / 0))
     end)
 
     it("returns nil for positive infinity", function()
-      assert.is_nil(CalculatorSource.classify(true, 1 / 0))
+      assert.is_nil(CalculatorSource.valid_value(true, 1 / 0))
     end)
 
     it("returns nil for negative infinity", function()
-      assert.is_nil(CalculatorSource.classify(true, -1 / 0))
+      assert.is_nil(CalculatorSource.valid_value(true, -1 / 0))
     end)
   end)
 

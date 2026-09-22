@@ -33,7 +33,7 @@ function TemporaryRequestAction.find_section_index_by_group(existing_groups, gro
 end
 
 -- pure, testable: `existing` is a plain array already extracted from real slots by the caller
-function TemporaryRequestAction.find_slot_index(existing, item_name, quality)
+function TemporaryRequestAction.find_or_next_slot_index(existing, item_name, quality)
   for i, slot in ipairs(existing) do
     if slot.value ~= nil and slot.value.name == item_name and slot.value.quality == quality then
       return i
@@ -56,7 +56,7 @@ function TemporaryRequestAction.combined_target(filters, item_name, quality)
   return 0
 end
 
-function TemporaryRequestAction.logistic_point_for(player)
+function TemporaryRequestAction.requester_point_for(player)
   if player.character == nil then
     return nil
   end
@@ -118,7 +118,7 @@ function TemporaryRequestAction.is_available(player_index)
   if player == nil then
     return false
   end
-  return TemporaryRequestAction.logistic_point_for(player) ~= nil
+  return TemporaryRequestAction.requester_point_for(player) ~= nil
 end
 
 -- Adapts the boolean resolve_requestable to ActionDispatch's nil/payload
@@ -139,7 +139,7 @@ local function execute(selected_candidate, player_index)
 end
 
 local function check_and_clear(player)
-  local point = TemporaryRequestAction.logistic_point_for(player)
+  local point = TemporaryRequestAction.requester_point_for(player)
   if point == nil then
     return
   end

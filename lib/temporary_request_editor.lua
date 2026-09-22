@@ -94,7 +94,7 @@ local function ingredients_for(player, target)
 end
 
 local function existing_section_slots(player)
-  local point = TemporaryRequestAction.logistic_point_for(player)
+  local point = TemporaryRequestAction.requester_point_for(player)
   if point == nil then
     return nil
   end
@@ -109,7 +109,7 @@ local function existing_section_slots(player)
   return slots
 end
 
-local function existing_request(player, target, quality)
+local function existing_amount(player, target, quality)
   local slots = existing_section_slots(player)
   if slots == nil then
     return nil
@@ -117,21 +117,21 @@ local function existing_request(player, target, quality)
 
   local ingredients = ingredients_for(player, target)
   if target.type == "item" then
-    local index = TemporaryRequestAction.find_slot_index(slots, target.name, quality)
+    local index = TemporaryRequestAction.find_or_next_slot_index(slots, target.name, quality)
     return index <= #slots and slots[index].min or nil
   end
 
   local quantities = {}
   for _, ingredient in ipairs(ingredients) do
     if ingredient.type == "item" then
-      local index = TemporaryRequestAction.find_slot_index(slots, ingredient.name, quality)
+      local index = TemporaryRequestAction.find_or_next_slot_index(slots, ingredient.name, quality)
       if index > #slots then
         return nil
       end
       quantities[ingredient.name] = slots[index].min
     end
   end
-  return TemporaryRequestEditorLogic.recipe_quantity(quantities, ingredients)
+  return TemporaryRequestEditorLogic.recipe_craft_count(quantities, ingredients)
 end
 
 local QUANTITY_VARIABLES = { k = 1000, M = 1000000 }
@@ -182,7 +182,7 @@ local function ingredient_icon(ingredient)
 end
 
 local function ingredient_caption(ingredients)
-  return rich_text.joined_icon_list(
+  return rich_text.icon_list_caption(
     ingredients,
     ingredient_icon,
     MAX_LISTED_INGREDIENTS,
@@ -281,7 +281,7 @@ function TemporaryRequestEditor.open(player, selected_candidate)
     end
   end
 
-  local initial_quantity = existing_request(player, target, "normal")
+  local initial_quantity = existing_amount(player, target, "normal")
   if initial_quantity == nil then
     initial_quantity = target.type == "item" and prototypes.item[target.name].stack_size or 1
   end
@@ -368,7 +368,7 @@ local function select_quality(player, quality)
       radio.toggled = radio.tags.quidquid_quality == quality
     end
   end
-  local quantity = existing_request(player, target, quality)
+  local quantity = existing_amount(player, target, quality)
   if quantity == nil then
     quantity = target.type == "item" and prototypes.item[target.name].stack_size or 1
   end
@@ -378,7 +378,7 @@ end
 local function clear_ingredient_requests(section, existing, ingredients)
   local cleared = false
   for _, ingredient in ipairs(ingredients) do
-    local index = TemporaryRequestAction.find_slot_index(existing, ingredient.name, ingredient.quality)
+    local index = TemporaryRequestAction.find_or_next_slot_index(existing, ingredient.name, ingredient.quality)
     if index <= #existing then
       section.clear_slot(index)
       existing[index] = { value = nil }
@@ -417,7 +417,7 @@ function TemporaryRequestEditor.confirm(player)
   end
 
   TemporaryRequestEditor.close(player)
-  local point = TemporaryRequestAction.logistic_point_for(player)
+  local point = TemporaryRequestAction.requester_point_for(player)
   if point == nil then
     return
   end
@@ -437,7 +437,7 @@ function TemporaryRequestEditor.confirm(player)
       existing[i] = section.get_slot(i)
     end
     for _, ingredient in ipairs(ingredients) do
-      local index = TemporaryRequestAction.find_slot_index(existing, ingredient.name, ingredient.quality)
+      local index = TemporaryRequestAction.find_or_next_slot_index(existing, ingredient.name, ingredient.quality)
       section.set_slot(index, {
         value = { type = "item", name = ingredient.name, quality = ingredient.quality },
         min = ingredient.amount,
