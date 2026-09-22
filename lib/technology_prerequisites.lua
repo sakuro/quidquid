@@ -76,11 +76,10 @@ function TechnologyPrerequisites.collect_prerequisites(technology, queued)
   return prerequisites, triggers
 end
 
--- Direct (not transitive) prerequisite check, mirroring UltimateResearchQueue's
--- are_prereqs_satisfied (raiguard/UltimateResearchQueue, research-queue.lua).
--- technology.prerequisites is direct-only -- collect_prerequisites above needs
--- to recurse through it manually to reach indirect prerequisites, which
--- wouldn't be necessary if it already returned the full transitive set.
+-- Direct (not transitive) prerequisite check. technology.prerequisites is
+-- direct-only -- collect_prerequisites above needs to recurse through it
+-- manually to reach indirect prerequisites, which wouldn't be necessary if
+-- it already returned the full transitive set.
 function TechnologyPrerequisites.direct_prerequisites_researched(technology)
   for _, prerequisite in pairs(technology.prerequisites) do
     if not prerequisite.researched then
@@ -109,12 +108,9 @@ function TechnologyPrerequisites.direct_prerequisites_queued(technology, queued_
   return true
 end
 
--- Confirmed over RCON against a real save (destroyer, blocked on the
--- unresearched, unqueued military-4) that this -- not LuaTechnology.enabled,
--- which does not track prerequisite completion -- is what distinguishes
--- vanilla's own tech-tree states. Matches UltimateResearchQueue's
--- get_research_state, minus its "disabled" state (not needed: quidquid's
--- candidates are already filtered to visible technologies).
+-- Confirmed over RCON against a real save that this -- not
+-- LuaTechnology.enabled, which does not track prerequisite completion --
+-- is what distinguishes vanilla's own tech-tree states.
 function TechnologyPrerequisites.classify_state(technology, queued_names)
   if technology.researched then
     return "researched"
