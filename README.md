@@ -17,6 +17,8 @@ search available entries and perform actions on the selected result.
 - Temporary personal logistics requests for items and recipe ingredients, with
   quantity expressions, stack adjustment buttons, and quality selection
 - Automatic removal of temporary requests once they are fulfilled
+- Item results show the player's inventory count and, once connected to a
+  logistic network, its stock of that item
 - Position history for remote surface views
 
 ## Usage
@@ -56,6 +58,11 @@ Search for items by name.
 Item craft actions only use a recipe with the same name as the selected item.
 If no such recipe exists, Quidquid displays a message instead of attempting to
 craft the item.
+
+Each result shows the player's inventory count and, once personal logistics
+requests are unlocked and the player is within a logistic network's range,
+that network's stock. Hover a result for a per-quality breakdown and any
+items currently in transit to or from the player.
 
 ### Fluids
 

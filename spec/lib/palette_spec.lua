@@ -219,6 +219,111 @@ describe("Palette", function()
     end)
   end)
 
+  describe(".annotate_candidates", function()
+    it("attaches the annotation a source's annotate returns for its candidate", function()
+      _G.remote = {
+        interfaces = { ["quidquid.item-source"] = { annotate = true } },
+        call = function(_interface, _fn, _candidates, _player_index)
+          return { { caption = "12 | 340" } }
+        end,
+      }
+      local merged = {
+        { candidate = { id = "iron-plate" }, source_label = {}, source_interface = "quidquid.item-source" },
+      }
+
+      Palette.annotate_candidates(merged, 1)
+
+      assert.are.same({ caption = "12 | 340" }, merged[1].annotation)
+    end)
+
+    it("does not call remote at all when the source has no annotate function", function()
+      local called = false
+      _G.remote = {
+        interfaces = { ["quidquid.fluid-source"] = { search = true } },
+        call = function()
+          called = true
+        end,
+      }
+      local merged = {
+        { candidate = { id = "water" }, source_label = {}, source_interface = "quidquid.fluid-source" },
+      }
+
+      Palette.annotate_candidates(merged, 1)
+
+      assert.is_false(called)
+      assert.is_nil(merged[1].annotation)
+    end)
+
+    it("batches every candidate from the same source into a single annotate call", function()
+      local call_count = 0
+      local received_candidates
+      _G.remote = {
+        interfaces = { ["quidquid.item-source"] = { annotate = true } },
+        call = function(_interface, _fn, candidates, _player_index)
+          call_count = call_count + 1
+          received_candidates = candidates
+          return { { caption = "1" }, { caption = "2" } }
+        end,
+      }
+      local merged = {
+        { candidate = { id = "iron-plate" }, source_label = {}, source_interface = "quidquid.item-source" },
+        { candidate = { id = "copper-plate" }, source_label = {}, source_interface = "quidquid.item-source" },
+      }
+
+      Palette.annotate_candidates(merged, 1)
+
+      assert.are.equal(1, call_count)
+      assert.are.equal(2, #received_candidates)
+      assert.are.same({ caption = "1" }, merged[1].annotation)
+      assert.are.same({ caption = "2" }, merged[2].annotation)
+    end)
+
+    it("calls each source's annotate separately and never mixes up their results", function()
+      _G.remote = {
+        interfaces = {
+          ["quidquid.item-source"] = { annotate = true },
+          ["quidquid.recipe-source"] = { annotate = true },
+        },
+        call = function(interface, _fn, _candidates, _player_index)
+          if interface == "quidquid.item-source" then
+            return { { caption = "item" } }
+          end
+          return { { caption = "recipe" } }
+        end,
+      }
+      local merged = {
+        { candidate = { id = "iron-plate" }, source_label = {}, source_interface = "quidquid.item-source" },
+        { candidate = { id = "iron-plate" }, source_label = {}, source_interface = "quidquid.recipe-source" },
+      }
+
+      Palette.annotate_candidates(merged, 1)
+
+      assert.are.same({ caption = "item" }, merged[1].annotation)
+      assert.are.same({ caption = "recipe" }, merged[2].annotation)
+    end)
+
+    it("logs and leaves the annotation nil when a source's annotate call fails", function()
+      local logged = {}
+      _G.log = function(message)
+        table.insert(logged, message)
+      end
+      _G.remote = {
+        interfaces = { ["quidquid.item-source"] = { annotate = true } },
+        call = function(_interface, _fn, _candidates, _player_index)
+          error("boom")
+        end,
+      }
+      local merged = {
+        { candidate = { id = "iron-plate" }, source_label = {}, source_interface = "quidquid.item-source" },
+      }
+
+      Palette.annotate_candidates(merged, 1)
+
+      assert.is_nil(merged[1].annotation)
+      assert.are.equal(1, #logged)
+    end)
+  end)
+
   describe(".is_query_valid", function()
     it("returns true when no consulted source implements is_query_valid", function()
       Palette.init({
@@ -395,5 +500,52 @@ describe("Palette", function()
       -- one before the trailing marker) + 1 marker = 20 top-level entries, within budget.
       assert.are.equal(20, #tooltip)
     end)
+
+    it("prepends the annotation tooltip before the action hints, separated by a newline", function()
+      local tooltip = Palette.build_tooltip({ a = action("craft-1") }, { "quidquid.item-counts", 12, 340 })
+
+      assert.are.same({
+        "",
+        { "quidquid.item-counts", 12, 340 },
+        "\n",
+        { "", { "quidquid.action-craft-1" }, " (", { "quidquid.action-craft-1-hint" }, ")" },
+      }, tooltip)
+    end)
+
+    it("returns just the annotation tooltip when there are no applicable actions", function()
+      local tooltip = Palette.build_tooltip({}, { "quidquid.item-counts", 12, 340 })
+
+      assert.are.same({ "", { "quidquid.item-counts", 12, 340 } }, tooltip)
+    end)
+
+    it("shows every action untruncated at exactly the 9-action budget when an annotation is present", function()
+      local resolved = {}
+      for i = 1, 9 do
+        resolved[("k%02d"):format(i)] = action("action-" .. i)
+      end
+
+      local tooltip = Palette.build_tooltip(resolved, { "quidquid.item-counts", 12, 340 })
+
+      -- 1 header + 1 annotation + 9 hints + 9 separators (one before each, including
+      -- the first, since the annotation line precedes every hint) = 20, no marker.
+      assert.are.equal(20, #tooltip)
+    end)
+
+    it(
+      "truncates to 8 actions plus a trailing '...N more' entry past the 9-action budget when an annotation is present",
+      function()
+        local resolved = {}
+        for i = 1, 10 do
+          resolved[("k%02d"):format(i)] = action("action-" .. i)
+        end
+
+        local tooltip = Palette.build_tooltip(resolved, { "quidquid.item-counts", 12, 340 })
+
+        assert.are.same({ "quidquid.candidate-tooltip-more-actions", 2 }, tooltip[#tooltip])
+        -- 1 header + 1 annotation + 8 hints + 8 separators (before each hint) + 1
+        -- separator before the marker + 1 marker = 20, within budget.
+        assert.are.equal(20, #tooltip)
+      end
+    )
   end)
 end)

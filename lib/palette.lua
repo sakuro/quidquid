@@ -1,3 +1,4 @@
+local FontColors = require("lib.font_colors")
 local PaletteLogic = require("lib.palette_logic")
 local RemoteCaller = require("lib.remote_caller")
 local search_highlight = require("lib.search_highlight")
@@ -34,9 +35,9 @@ local VISIBLE_ROWS = 5
 local CONTENT_WIDTH = 400
 local NAME_COLUMN_WIDTH = 250
 
-local DEFAULT_FONT_COLOR = { r = 255, g = 255, b = 255 }
-local ACCENT_FONT_COLOR = { r = 255, g = 142, b = 42 }
-local MUTED_FONT_COLOR = { r = 160, g = 160, b = 160 }
+local DEFAULT_FONT_COLOR = FontColors.DEFAULT
+local ACCENT_FONT_COLOR = FontColors.ACCENT
+local MUTED_FONT_COLOR = FontColors.MUTED
 
 local function get_frame(player)
   return player.gui.screen[FRAME_NAME]
@@ -56,6 +57,14 @@ local function content_frame_of(player)
     return nil
   end
   return frame[CONTENT_NAME]
+end
+
+local function get_locked_source(player)
+  local content = content_frame_of(player)
+  if content == nil then
+    return nil
+  end
+  return content.tags.quidquid_locked_source
 end
 
 local function set_input_validity(player, valid)
@@ -130,7 +139,10 @@ function Palette.search_all_sources(query, player_index, locked_source)
     if ok then
       local wrapped = {}
       for _, candidate in ipairs(candidates) do
-        table.insert(wrapped, { candidate = candidate, source_label = source.label })
+        table.insert(
+          wrapped,
+          { candidate = candidate, source_label = source.label, source_interface = source.interface }
+        )
       end
       table.insert(results, wrapped)
     else
@@ -138,6 +150,43 @@ function Palette.search_all_sources(query, player_index, locked_source)
     end
   end
   return PaletteLogic.merge_candidates(results, DISPLAY_LIMIT)
+end
+
+-- Batches every displayed candidate from the same source into one annotate call
+-- (called after PaletteLogic.merge_candidates truncation, never per source's full
+-- match list -- see #121) and writes each returned annotation onto its wrapped
+-- entry's `annotation` field, mutating `merged` in place. Sources that don't
+-- implement annotate, or whose call fails, are simply left without one.
+function Palette.annotate_candidates(merged, player_index)
+  local groups = {}
+  local group_order = {}
+  for _, wrapped in ipairs(merged) do
+    local group = groups[wrapped.source_interface]
+    if group == nil then
+      group = { entries = {}, candidates = {} }
+      groups[wrapped.source_interface] = group
+      table.insert(group_order, wrapped.source_interface)
+    end
+    table.insert(group.entries, wrapped)
+    table.insert(group.candidates, wrapped.candidate)
+  end
+
+  for _, interface in ipairs(group_order) do
+    if RemoteCaller:has(interface, "annotate") then
+      local group = groups[interface]
+      local ok, annotations =
+        pcall(RemoteCaller.call, RemoteCaller, interface, "annotate", group.candidates, player_index)
+      if ok then
+        for index, wrapped in ipairs(group.entries) do
+          wrapped.annotation = annotations[index]
+        end
+      else
+        log(("quidquid: source '%s' annotate failed: %s"):format(interface, tostring(annotations)))
+      end
+    end
+  end
+
+  return merged
 end
 
 function Palette.is_query_valid(query, player_index, locked_source)
@@ -216,22 +265,33 @@ end
 -- reject the tooltip outright.
 local MAX_TOOLTIP_ACTIONS = 10
 
-function Palette.build_tooltip(resolved)
+-- annotation_tooltip, when given, is a source's own LocalisedString (e.g. #121's item
+-- counts) shown above the action hints, separated from them by the same newline
+-- convention as the hints use between each other. It costs 2 slots of its own (the
+-- line plus its leading separator) and, unlike a second-and-later hint, makes even
+-- the *first* hint pay for a separator too (see the loop below) -- so the safe
+-- budget for hints drops from MAX_TOOLTIP_ACTIONS to MAX_TOOLTIP_ACTIONS - 1 whenever
+-- one is present.
+function Palette.build_tooltip(resolved, annotation_tooltip)
   local input_names = {}
   for input_name, _ in pairs(resolved) do
     table.insert(input_names, input_name)
   end
-  if #input_names == 0 then
+  if #input_names == 0 and annotation_tooltip == nil then
     return nil
   end
   table.sort(input_names)
 
-  local truncated = #input_names > MAX_TOOLTIP_ACTIONS
-  local shown_count = truncated and (MAX_TOOLTIP_ACTIONS - 1) or #input_names
+  local max_actions = annotation_tooltip ~= nil and (MAX_TOOLTIP_ACTIONS - 1) or MAX_TOOLTIP_ACTIONS
+  local truncated = #input_names > max_actions
+  local shown_count = truncated and (max_actions - 1) or #input_names
 
   local tooltip = { "" }
+  if annotation_tooltip ~= nil then
+    table.insert(tooltip, annotation_tooltip)
+  end
   for index = 1, shown_count do
-    if index > 1 then
+    if index > 1 or annotation_tooltip ~= nil then
       table.insert(tooltip, "\n")
     end
     table.insert(tooltip, action_hint(resolved[input_names[index]]))
@@ -243,9 +303,10 @@ function Palette.build_tooltip(resolved)
   return tooltip
 end
 
-local function candidate_tooltip(candidate, player_index)
-  local resolved = registry:resolve_actions(candidate, player_index, RemoteCaller)
-  return Palette.build_tooltip(resolved)
+local function candidate_tooltip(wrapped, player_index)
+  local resolved = registry:resolve_actions(wrapped.candidate, player_index, RemoteCaller)
+  local annotation_tooltip = wrapped.annotation and wrapped.annotation.tooltip
+  return Palette.build_tooltip(resolved, annotation_tooltip)
 end
 
 local function build_candidate_row(pane, wrapped, index, player_index)
@@ -277,7 +338,7 @@ local function build_candidate_row(pane, wrapped, index, player_index)
     type = "button",
     style = "transparent_button",
     caption = Palette.row_caption(wrapped.candidate),
-    tooltip = candidate_tooltip(wrapped.candidate, player_index),
+    tooltip = candidate_tooltip(wrapped, player_index),
     tags = { quidquid_candidate = wrapped.candidate, quidquid_candidate_index = index },
     raise_hover_events = true,
   })
@@ -300,16 +361,34 @@ local function build_candidate_row(pane, wrapped, index, player_index)
 
   -- label doesn't support horizontally_stretchable (confirmed: setting it had no visible
   -- effect), so an empty-widget spacer absorbs the row's leftover width instead, pushing
-  -- source_label flush against the row's right edge.
+  -- the right end flush against the row's right edge.
   local spacer = row.add({ type = "empty-widget" })
   spacer.style.horizontally_stretchable = true
 
-  local source_label = row.add({
-    type = "label",
-    caption = wrapped.source_label,
-  })
-  source_label.style.vertical_align = "center"
-  source_label.style.font_color = MUTED_FONT_COLOR
+  -- #121: a source's annotation (e.g. an item's inventory/network counts) takes the
+  -- top line of the right end, with the source label demoted to a second, muted line
+  -- below it -- same column as the plain, single-line source label a candidate without
+  -- an annotation still gets.
+  local annotation_caption = wrapped.annotation and wrapped.annotation.caption
+  if annotation_caption ~= nil then
+    local side = row.add({ type = "flow", direction = "vertical" })
+    side.style.horizontal_align = "right"
+    side.style.vertical_spacing = 0
+
+    local annotation_label = side.add({ type = "label", caption = annotation_caption })
+    annotation_label.style.horizontal_align = "right"
+
+    local source_label = side.add({ type = "label", caption = wrapped.source_label })
+    source_label.style.horizontal_align = "right"
+    source_label.style.font_color = MUTED_FONT_COLOR
+  else
+    local source_label = row.add({
+      type = "label",
+      caption = wrapped.source_label,
+    })
+    source_label.style.vertical_align = "center"
+    source_label.style.font_color = MUTED_FONT_COLOR
+  end
 end
 
 local function clear_candidates(player)
@@ -339,6 +418,19 @@ local function render_candidates(player, candidates)
   if #candidates > 0 then
     set_active_index(player, 1)
   end
+end
+
+-- Shared by every place that (re-)runs a query against the palette's results: typing,
+-- unlocking a source, and (see #121) refreshing a pinned palette after an action.
+-- locked_source may be nil (no source lock).
+local function refresh_candidates(player, text, locked_source)
+  if text == "" then
+    clear_candidates(player)
+    return
+  end
+  local candidates = Palette.search_all_sources(text, player.index, locked_source)
+  Palette.annotate_candidates(candidates, player.index)
+  render_candidates(player, candidates)
 end
 
 function Palette.open(player)
@@ -499,7 +591,20 @@ local function dispatch(player, selected_candidate, input_name)
   end
   if not pinned then
     Palette.close(player)
+    return
   end
+
+  -- A pinned palette stays open after the action, so its counts (e.g. #121's
+  -- inventory/network annotation) would otherwise show stale data after e.g.
+  -- crafting or a temporary request -- refresh with the same query rather than
+  -- leave the old render up. content_frame_of returning nil here covers the rare
+  -- case where the action closed the frame some other way (e.g. quitting).
+  local content = content_frame_of(player)
+  if content == nil then
+    return
+  end
+  local text = content[INPUT_ROW_NAME][INPUT_NAME].text
+  refresh_candidates(player, text, get_locked_source(player))
 end
 
 function Palette.is_palette_input(element)
@@ -511,14 +616,6 @@ function Palette.trigger_prefix(text)
     return nil
   end
   return text:sub(1, -2)
-end
-
-local function get_locked_source(player)
-  local content = content_frame_of(player)
-  if content == nil then
-    return nil
-  end
-  return content.tags.quidquid_locked_source
 end
 
 local function lock_to_source(player, source)
@@ -568,14 +665,9 @@ function Palette.on_gui_text_changed(event)
     return
   end
 
-  if event.text == "" then
-    set_input_validity(player, true)
-    clear_candidates(player)
-  else
-    local candidates = Palette.search_all_sources(event.text, event.player_index, locked_source)
-    set_input_validity(player, Palette.is_query_valid(event.text, event.player_index, locked_source))
-    render_candidates(player, candidates)
-  end
+  local valid = event.text == "" or Palette.is_query_valid(event.text, event.player_index, locked_source)
+  set_input_validity(player, valid)
+  refresh_candidates(player, event.text, locked_source)
 end
 
 function Palette.on_action_key(event)
@@ -679,12 +771,7 @@ function Palette.on_unlock_button(event)
 
   local current_text = content[INPUT_ROW_NAME][INPUT_NAME].text
   unlock_source(player)
-
-  if current_text == "" then
-    clear_candidates(player)
-  else
-    render_candidates(player, Palette.search_all_sources(current_text, player.index))
-  end
+  refresh_candidates(player, current_text, nil)
 end
 
 function Palette.on_toggle_pin(event)
