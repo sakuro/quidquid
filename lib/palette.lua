@@ -59,6 +59,14 @@ local function content_frame_of(player)
   return frame[CONTENT_NAME]
 end
 
+local function get_locked_source(player)
+  local content = content_frame_of(player)
+  if content == nil then
+    return nil
+  end
+  return content.tags.quidquid_locked_source
+end
+
 local function set_input_validity(player, valid)
   local content = content_frame_of(player)
   if content == nil then
@@ -565,7 +573,27 @@ local function dispatch(player, selected_candidate, input_name)
   end
   if not pinned then
     Palette.close(player)
+    return
   end
+
+  -- A pinned palette stays open after the action, so its counts (e.g. #121's
+  -- inventory/network annotation) would otherwise show stale data after e.g.
+  -- crafting or a temporary request -- refresh with the same query rather than
+  -- leave the old render up. content_frame_of returning nil here covers the rare
+  -- case where the action closed the frame some other way (e.g. quitting).
+  local content = content_frame_of(player)
+  if content == nil then
+    return
+  end
+  local text = content[INPUT_ROW_NAME][INPUT_NAME].text
+  if text == "" then
+    clear_candidates(player)
+    return
+  end
+  local locked_source = get_locked_source(player)
+  local candidates = Palette.search_all_sources(text, player.index, locked_source)
+  Palette.annotate_candidates(candidates, player.index)
+  render_candidates(player, candidates)
 end
 
 function Palette.is_palette_input(element)
@@ -577,14 +605,6 @@ function Palette.trigger_prefix(text)
     return nil
   end
   return text:sub(1, -2)
-end
-
-local function get_locked_source(player)
-  local content = content_frame_of(player)
-  if content == nil then
-    return nil
-  end
-  return content.tags.quidquid_locked_source
 end
 
 local function lock_to_source(player, source)
