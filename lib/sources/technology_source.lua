@@ -122,6 +122,13 @@ function TechnologySource.build_tooltip(state, prerequisites, triggers, progress
   return tooltip
 end
 
+function TechnologySource.build_annotation(state, prerequisites, triggers, progress, trigger_content)
+  return {
+    caption = TechnologySource.build_caption(state),
+    tooltip = TechnologySource.build_tooltip(state, prerequisites, triggers, progress, trigger_content),
+  }
+end
+
 local SOURCE_LABEL = { "quidquid.source-technologies" }
 local NAMESPACE = "technologies"
 

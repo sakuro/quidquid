@@ -223,4 +223,21 @@ describe("TechnologySource", function()
       }, tooltip)
     end)
   end)
+
+  describe(".build_annotation", function()
+    it("combines the caption and tooltip", function()
+      local annotation = TechnologySource.build_annotation("researched", {}, {}, 0, nil)
+
+      assert.are.same(TechnologySource.build_caption("researched"), annotation.caption)
+      assert.is_nil(annotation.tooltip)
+    end)
+
+    it("includes a non-nil tooltip when there is content for it", function()
+      local prerequisites = { { name = "steel-processing" } }
+
+      local annotation = TechnologySource.build_annotation("available", prerequisites, {}, 0, nil)
+
+      assert.are.same(TechnologySource.build_tooltip("available", prerequisites, {}, 0, nil), annotation.tooltip)
+    end)
+  end)
 end)
