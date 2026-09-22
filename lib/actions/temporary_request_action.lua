@@ -1,4 +1,5 @@
 local ActionRunner = require("lib.action_runner")
+local LogisticsState = require("lib.logistics_state")
 
 local TemporaryRequestAction = {}
 
@@ -113,12 +114,16 @@ function TemporaryRequestAction.resolve_requestable(selected_candidate, force)
   return false, "quidquid.action-recipe-temporary-request-no-item-ingredients"
 end
 
+-- Requests can be set both out of range and connected -- only no_character and
+-- locked rule it out. See LogisticsState.classify for what distinguishes the four
+-- states.
 function TemporaryRequestAction.is_available(player_index)
   local player = game.get_player(player_index)
   if player == nil then
     return false
   end
-  return TemporaryRequestAction.requester_point_for(player) ~= nil
+  local state = LogisticsState.classify(player.character ~= nil, TemporaryRequestAction.requester_point_for(player))
+  return state == "out_of_range" or state == "connected"
 end
 
 -- Adapts the boolean resolve_requestable to ActionRunner's nil/payload
