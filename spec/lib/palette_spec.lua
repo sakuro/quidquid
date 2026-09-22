@@ -59,6 +59,18 @@ describe("Palette", function()
     end)
   end)
 
+  describe(".internal_caption", function()
+    it("falls back to plain secondary_text when there is no internal-name match", function()
+      local candidate = { secondary_text = "23k" }
+
+      assert.are.equal("[font=default]23k[/font]", Palette.internal_caption(candidate))
+    end)
+
+    it("returns nil when neither an internal-name match nor secondary_text exists", function()
+      assert.is_nil(Palette.internal_caption({}))
+    end)
+  end)
+
   describe(".is_palette_input", function()
     it("returns true for a valid element named after the palette input", function()
       assert.is_true(Palette.is_palette_input({ valid = true, name = "quidquid-palette-input" }))

@@ -47,7 +47,7 @@ describe("prototype_candidate", function()
     assert.is_nil(candidates[1].numeric)
   end)
 
-  it("matches non-consecutive characters and returns their positions", function()
+  it("matches non-consecutive characters and highlights each one", function()
     local prototype_list = {
       { name = "iron-plate", localised_name = { "item-name.iron-plate" }, hidden = false },
     }
@@ -55,7 +55,6 @@ describe("prototype_candidate", function()
     local candidates = build_candidates(candidate_type, icon_prefix, "ipl", prototype_list, "en", {}, false)
 
     assert.are.equal(1, #candidates)
-    assert.are.same({ 1, 6, 7 }, candidates[1].search_positions)
     assert.are.same({}, candidates[1].search_display_ranges)
     assert.are.same({
       { start_byte = 1, end_byte = 1 },
@@ -101,7 +100,6 @@ describe("prototype_candidate", function()
       build_candidates(candidate_type, icon_prefix, "ipl", prototype_list, "en", translated_names, false)
 
     assert.are.equal(1, #candidates)
-    assert.are.equal("localized_name", candidates[1].search_field)
     assert.are.equal("Iron Plate", candidates[1].search_display_name)
     assert.are.equal("iron-plate", candidates[1].search_internal_name)
     assert.are.same({

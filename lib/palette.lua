@@ -169,6 +169,12 @@ function Palette.icon_caption(candidate)
   return { "", "[img=", candidate.icon, "]" }
 end
 
+-- The muted secondary line under a candidate's label: a highlighted
+-- internal-name match when the candidate has one, or -- for a candidate with
+-- no internal name to search at all, e.g. the calculator's result -- plain
+-- secondary_text instead. highlight() with no ranges already renders a plain
+-- string in the same font, so secondary_text needs no highlighting logic of
+-- its own here.
 function Palette.internal_caption(candidate)
   if candidate.search_internal_name ~= nil then
     return search_highlight.highlight(
@@ -177,6 +183,9 @@ function Palette.internal_caption(candidate)
       "default",
       "default-bold"
     )
+  end
+  if candidate.secondary_text ~= nil then
+    return search_highlight.highlight(candidate.secondary_text, nil, "default", "default-bold")
   end
   return nil
 end

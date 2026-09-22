@@ -7,7 +7,7 @@ function SurfaceAccess.describe(surface, player)
   if platform ~= nil then
     local owner = platform.force
     return {
-      index = surface.index,
+      id = surface.name,
       name = surface.name,
       kind = "platform",
       label = platform.name,
@@ -22,7 +22,11 @@ function SurfaceAccess.describe(surface, player)
   local planet = surface.planet
   if planet ~= nil then
     local descriptor = SurfaceAccess.describe_planet(planet, player)
-    descriptor.index = surface.index
+    -- A planet's generated surface is always named after the planet
+    -- (confirmed empirically via RCON), so this is a no-op in value -- but
+    -- it comes from the actual LuaSurface in hand rather than relying on
+    -- that invariant.
+    descriptor.id = surface.name
     descriptor.name = surface.name
     descriptor.generated = true
     descriptor.hidden = planet.prototype.hidden or player.force.get_surface_hidden(surface)
@@ -33,7 +37,7 @@ end
 
 function SurfaceAccess.describe_planet(planet, player)
   return {
-    index = planet.name,
+    id = planet.name,
     name = planet.name,
     kind = "planet",
     label = planet.prototype.localised_name,

@@ -4,7 +4,7 @@ describe("SurfaceLogic", function()
   local function planet(overrides)
     local value = {
       kind = "planet",
-      index = 1,
+      id = "nauvis",
       name = "nauvis",
       label = { "space-location-name.nauvis" },
       icon = "space-location/nauvis",
@@ -29,7 +29,7 @@ describe("SurfaceLogic", function()
   local function platform(overrides)
     local value = {
       kind = "platform",
-      index = 2,
+      id = "platform-1",
       name = "platform-1",
       label = "Cargo Express",
       search_name = "Cargo Express",
@@ -128,7 +128,7 @@ describe("SurfaceLogic", function()
 
   it("includes an ungenerated planet but does not allow remote view", function()
     local ungenerated = planet({
-      index = "vulcanus",
+      id = "vulcanus",
       name = "vulcanus",
       planet_name = "vulcanus",
       search_name = "Vulcanus",
@@ -199,18 +199,19 @@ describe("SurfaceLogic", function()
   end)
 
   it("returns no candidates for an empty query", function()
-    local candidates = SurfaceLogic.build_candidates("", { platform({ index = 9 }), planet(), platform() }, false)
+    local candidates =
+      SurfaceLogic.build_candidates("", { platform({ id = "platform-9" }), planet(), platform() }, false)
     assert.are.same({}, candidates)
   end)
 
-  it("keeps same-name platforms distinct and orders by surface index", function()
+  it("keeps same-name platforms distinct and orders by id", function()
     local candidates = SurfaceLogic.build_candidates("a", {
-      platform({ index = 9 }),
+      platform({ id = "platform-9" }),
       planet({ name = "a", search_name = "a" }),
       platform(),
     }, false)
     assert.are.equal(3, #candidates)
-    assert.are.same({ 1, 2, 9 }, { candidates[1].id, candidates[2].id, candidates[3].id })
+    assert.are.same({ "nauvis", "platform-1", "platform-9" }, { candidates[1].id, candidates[2].id, candidates[3].id })
     assert.are.equal("surface", candidates[1].type)
     assert.are.equal("space-location/nauvis", candidates[1].icon)
     assert.are.equal("surface/space-platform", candidates[2].icon)

@@ -4,7 +4,7 @@ local search_key_cache = require("lib.search_key_cache")
 local search_highlight = require("lib.search_highlight")
 local rich_text = require("lib.rich_text")
 
-local LOCALIZED_NAME_BONUS = 0.5
+local DISPLAY_NAME_BONUS = 0.5
 
 local SurfaceLogic = {}
 
@@ -46,12 +46,12 @@ function SurfaceLogic.build_candidates(query, surfaces, include_hidden, locale)
         search_name = rich_text.mask_tags(search_name)
       end
       local display_target, display_position_map =
-        search_key_cache.get("surface", surface.index, "display", locale, search_name)
+        search_key_cache.get("surface", surface.id, "display", locale, search_name)
       local display_score, display_positions = fuzzy_match(display_query, display_target)
       if display_score ~= nil then
         best = {
-          score = display_score + LOCALIZED_NAME_BONUS,
-          field = "localized_name",
+          score = display_score + DISPLAY_NAME_BONUS,
+          field = "display",
           positions = display_positions,
           ranges = search_highlight.positions_to_ranges(display_position_map, display_positions),
         }
@@ -59,12 +59,12 @@ function SurfaceLogic.build_candidates(query, surfaces, include_hidden, locale)
     end
     if surface.kind ~= "platform" then
       local internal_target, internal_position_map =
-        search_key_cache.get("surface", surface.index, "internal", nil, surface.name)
+        search_key_cache.get("surface", surface.id, "internal", nil, surface.name)
       local internal_score, internal_positions = fuzzy_match(internal_query, internal_target)
       if internal_score ~= nil and (best == nil or internal_score > best.score) then
         best = {
           score = internal_score,
-          field = "internal_name",
+          field = "internal",
           positions = internal_positions,
           ranges = search_highlight.positions_to_ranges(internal_position_map, internal_positions),
         }
@@ -77,24 +77,24 @@ function SurfaceLogic.build_candidates(query, surfaces, include_hidden, locale)
       end
       table.insert(candidates, {
         type = "surface",
-        id = surface.index,
+        id = surface.id,
         planet_name = surface.planet_name,
         label = label,
         icon = surface.icon,
         search_display_name = type(surface.search_name) == "string" and surface.search_name or nil,
         search_internal_name = surface.kind ~= "platform" and surface.name or nil,
-        search_display_ranges = best.field == "localized_name" and best.ranges or {},
-        search_internal_ranges = best.field == "internal_name" and best.ranges or {},
+        search_display_ranges = best.field == "display" and best.ranges or {},
+        search_internal_ranges = best.field == "internal" and best.ranges or {},
         search_score = best.score,
-        search_field = best.field,
-        search_positions = best.positions,
       })
     end
   end
+  -- This order only ever surfaces as a tiebreak: Palette.search_all_sources
+  -- feeds every source's candidates through PaletteLogic.merge_candidates,
+  -- which re-sorts everything by search_score. id is always a unique string
+  -- now, so a plain comparison suffices -- no more mixing a generated
+  -- surface's numeric index against an ungenerated planet's name.
   table.sort(candidates, function(a, b)
-    if type(a.id) ~= type(b.id) then
-      return tostring(a.id) < tostring(b.id)
-    end
     return a.id < b.id
   end)
   return candidates

@@ -81,7 +81,7 @@ function CalculatorSource.build_candidate(value)
     type = "calculation",
     id = "result",
     label = CalculatorSource.format_result(value),
-    search_internal_name = CalculatorSource.format_suffixed(value), -- shown as the muted secondary line
+    secondary_text = CalculatorSource.format_suffixed(value),
     icon = "quidquid-calculator",
     search_score = 1, -- required by PaletteLogic.merge_candidates; arbitrary, only one candidate ever exists
     numeric = true, -- tells the palette this candidate's label is a value, not a name, so it renders right-aligned
