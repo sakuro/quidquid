@@ -125,6 +125,21 @@ function ItemSource.build_annotation(
   }
 end
 
+-- Pure over plain values: ctx holds everything per-player (state and the merged
+-- count indexes), gathered once per search, so this stays a function of the
+-- candidate alone and can be spec'd without a Factorio runtime.
+function ItemSource.annotate(candidate, ctx)
+  return ItemSource.build_annotation(
+    ctx.state,
+    ItemCounts.total(ctx.inventory_index, candidate.id),
+    ItemCounts.breakdown(ctx.inventory_index, candidate.id, ctx.quality_order),
+    ItemCounts.total(ctx.network_index, candidate.id),
+    ItemCounts.breakdown(ctx.network_index, candidate.id, ctx.quality_order),
+    ItemCounts.total(ctx.deliver_index, candidate.id),
+    ItemCounts.total(ctx.pickup_index, candidate.id)
+  )
+end
+
 local SOURCE_LABEL = { "quidquid.source-items" }
 local NAMESPACE = "items"
 
@@ -195,43 +210,46 @@ local function quality_levels()
   return levels
 end
 
+-- Every per-player fact the annotation needs, read once per search rather than
+-- per candidate. Returns nil when there is no character to report on at all.
+local function gather_annotation_context(player)
+  local character = player.character
+  if character == nil then
+    return nil
+  end
+  local requester_point = character.get_logistic_point(defines.logistic_member_index.character_requester)
+  local ctx = {
+    state = LogisticsState.classify(true, requester_point),
+    inventory_index = personal_inventory_index(character),
+    quality_order = quality_levels(),
+    network_index = ItemCounts.merge({}),
+    deliver_index = ItemCounts.merge({}),
+    pickup_index = ItemCounts.merge({}),
+  }
+  if ctx.state == "connected" then
+    ctx.network_index = ItemCounts.merge(requester_point.logistic_network.get_contents())
+    ctx.deliver_index = ItemCounts.merge(requester_point.targeted_items_deliver)
+    ctx.pickup_index = ItemCounts.merge(requester_point.targeted_items_pickup)
+  end
+  return ctx
+end
+
 -- Called once per render with only the displayed item candidates (see
--- Palette.annotate_candidates), so every per-player fact below (state, the
--- inventory/network/delivery indexes) is gathered once here rather than per
--- candidate.
+-- Palette.annotate_candidates), so the context is gathered once here rather than
+-- per candidate.
 local function annotate(candidates, player_index)
   local player = game.get_player(player_index)
-  if player == nil or player.character == nil then
+  if player == nil then
     return {}
   end
-  local character = player.character
-  local requester_point = character.get_logistic_point(defines.logistic_member_index.character_requester)
-  local state = LogisticsState.classify(true, requester_point)
-
-  local inventory_index = personal_inventory_index(character)
-  local quality_order = quality_levels()
-
-  local network_index = ItemCounts.merge({})
-  local deliver_index = ItemCounts.merge({})
-  local pickup_index = ItemCounts.merge({})
-  if state == "connected" then
-    network_index = ItemCounts.merge(requester_point.logistic_network.get_contents())
-    deliver_index = ItemCounts.merge(requester_point.targeted_items_deliver)
-    pickup_index = ItemCounts.merge(requester_point.targeted_items_pickup)
+  local ctx = gather_annotation_context(player)
+  if ctx == nil then
+    return {}
   end
-
   local probe = Bench.probe()
   local annotations = {}
   for index, candidate in ipairs(candidates) do
-    annotations[index] = ItemSource.build_annotation(
-      state,
-      ItemCounts.total(inventory_index, candidate.id),
-      ItemCounts.breakdown(inventory_index, candidate.id, quality_order),
-      ItemCounts.total(network_index, candidate.id),
-      ItemCounts.breakdown(network_index, candidate.id, quality_order),
-      ItemCounts.total(deliver_index, candidate.id),
-      ItemCounts.total(pickup_index, candidate.id)
-    )
+    annotations[index] = ItemSource.annotate(candidate, ctx)
   end
   Bench.record("bench.annotate.items", probe)
   Bench.count("bench.count.items", #candidates)
