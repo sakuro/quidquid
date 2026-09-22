@@ -32,32 +32,20 @@ local DISPLAY_LIMIT = 30
 
 local ROW_HEIGHT = 44
 local VISIBLE_ROWS = 5
--- #136: 400/100 clipped Japanese annotation/source-label text mid-character
--- in-game (e.g. "研究済み" down to "研究", "テクノロジー" down to "テクノロ") --
--- CJK glyphs need more width per character than the original estimate
--- assumed. Widened pending further in-game confirmation, not a measured fit.
+-- Wide enough for CJK annotation/source-label text (e.g. "研究済み",
+-- "テクノロジー"), which needs more width per character than Latin text.
 local CONTENT_WIDTH = 500
--- #136: the results table is fixed at CONTENT_WIDTH inside a scroll-pane, so
--- once there are more results than VISIBLE_ROWS and a vertical scrollbar
--- appears, it overlaps the row's rightmost content instead of the pane
--- shrinking the row area for it. Rows (and the table itself) use
--- ROW_WIDTH -- CONTENT_WIDTH minus the scrollbar's own width -- so there's
--- room left for the scrollbar without covering anything.
+-- The results table sits in a scroll-pane; once there are more results than
+-- VISIBLE_ROWS, a vertical scrollbar appears inside it and would otherwise
+-- overlap the row's rightmost content. Rows (and the table itself) use
+-- ROW_WIDTH -- CONTENT_WIDTH minus the scrollbar's own width -- to leave
+-- room for it.
 local SCROLLBAR_WIDTH = 36
 local ROW_WIDTH = CONTENT_WIDTH - SCROLLBAR_WIDTH
--- #138: tried making `names` horizontally_stretchable so it would absorb
--- whatever `side` wasn't using, instead of a fixed width wasting that as
--- visible gap -- but a stretchable element apparently claims its own
--- maximal_width unconditionally rather than only the space left over after
--- other siblings, so it just starved `side` instead (reintroducing #136's
--- clipping no matter how wide SIDE_COLUMN_WIDTH was set). Back to a fixed
--- width, just wider than the original 250 -- an estimate pending in-game
--- confirmation, not a measured fit.
 local NAME_COLUMN_WIDTH = 300
--- #136: a ceiling on the annotation column's width, so a long caption (e.g.
--- the technology source's "Not researched") can't grow unbounded. Not
--- squashable (see `side` below) -- an estimate pending in-game
--- confirmation, not a measured fit.
+-- A ceiling on the annotation column's width, so a long caption (e.g. the
+-- technology source's "Not researched") can't grow unbounded. Not
+-- squashable (see `side` below).
 local SIDE_COLUMN_WIDTH = 200
 
 local DEFAULT_FONT_COLOR = FontColors.DEFAULT
@@ -396,9 +384,9 @@ local function build_candidate_row(pane, wrapped, index, player_index)
   -- an annotation still gets.
   local annotation_caption = wrapped.annotation and wrapped.annotation.caption
   if annotation_caption ~= nil then
-    -- #136: not squashable, unlike `names` -- `side` keeps its actual
-    -- content's natural size (up to SIDE_COLUMN_WIDTH) so the row squashes
-    -- `names` under pressure instead of clipping the annotation.
+    -- Not squashable, unlike `names` -- `side` keeps its actual content's
+    -- natural size (up to SIDE_COLUMN_WIDTH) so the row squashes `names`
+    -- under pressure instead of clipping the annotation.
     local side = row.add({ type = "flow", direction = "vertical" })
     side.style.maximal_width = SIDE_COLUMN_WIDTH
     side.style.horizontal_align = "right"
