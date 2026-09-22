@@ -43,7 +43,7 @@ local CONTENT_WIDTH = 500
 -- shrinking the row area for it. Rows (and the table itself) use
 -- ROW_WIDTH -- CONTENT_WIDTH minus the scrollbar's own width -- so there's
 -- room left for the scrollbar without covering anything.
-local SCROLLBAR_WIDTH = 24
+local SCROLLBAR_WIDTH = 36
 local ROW_WIDTH = CONTENT_WIDTH - SCROLLBAR_WIDTH
 -- #138: tried making `names` horizontally_stretchable so it would absorb
 -- whatever `side` wasn't using, instead of a fixed width wasting that as
