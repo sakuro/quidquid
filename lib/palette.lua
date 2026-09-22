@@ -9,8 +9,8 @@ local registry = nil
 -- Not persisted to storage: the frame is destroyed and rebuilt on every open/close, so
 -- this remembers the player's pin choice only across that within the current session --
 -- resetting on save load is fine here, unlike e.g. surface navigation history.
-local pinned_players = {}
-local navigation_states = {}
+local pin_choices = {}
+local selection_states = {}
 
 function Palette.init(registry_instance)
   registry = registry_instance
@@ -86,7 +86,7 @@ local function results_table(player)
 end
 
 local function update_active_button_styles(player)
-  local state = navigation_states[player.index]
+  local state = selection_states[player.index]
   local table_element = results_table(player)
   if state == nil or table_element == nil then
     return
@@ -104,7 +104,7 @@ local function update_active_button_styles(player)
 end
 
 local function set_active_index(player, index)
-  local state = navigation_states[player.index]
+  local state = selection_states[player.index]
   local pane = results_pane(player)
   local table_element = results_table(player)
   if state == nil or pane == nil or table_element == nil then
@@ -205,12 +205,12 @@ end
 -- per nesting level, and a candidate with enough applicable actions blew past that
 -- flattened (each action contributing 4 slots plus a separator). Nesting resets the
 -- budget at each level, so the top level only spends one slot per action.
-local function candidate_hint(definition)
+local function action_hint(definition)
   return { "", definition.label, " (", { "quidquid.action-" .. definition.id .. "-hint" }, ")" }
 end
 
 -- A LocalisedString allows at most 20 parameters per nesting level (see the comment
--- above candidate_hint); each action past the first costs 2 slots (separator + nested
+-- above action_hint); each action past the first costs 2 slots (separator + nested
 -- hint), so 10 actions exactly fill the budget. Past that, show the first 9 and fold
 -- the rest into a trailing "...N more" entry (2 more slots), rather than let Factorio
 -- reject the tooltip outright.
@@ -234,7 +234,7 @@ function Palette.build_tooltip(resolved)
     if index > 1 then
       table.insert(tooltip, "\n")
     end
-    table.insert(tooltip, candidate_hint(resolved[input_names[index]]))
+    table.insert(tooltip, action_hint(resolved[input_names[index]]))
   end
   if truncated then
     table.insert(tooltip, "\n")
@@ -318,7 +318,7 @@ local function clear_candidates(player)
   if pane == nil or table_element == nil then
     return
   end
-  navigation_states[player.index] = nil
+  selection_states[player.index] = nil
   table_element.clear()
 end
 
@@ -328,7 +328,7 @@ local function render_candidates(player, candidates)
   if pane == nil or table_element == nil then
     return
   end
-  navigation_states[player.index] = { candidates = candidates }
+  selection_states[player.index] = { candidates = candidates }
   table_element.clear()
   for index, wrapped in ipairs(candidates) do
     build_candidate_row(table_element, wrapped, index, player.index)
@@ -382,7 +382,7 @@ function Palette.open(player)
     sprite = "utility/track_button_white",
     tooltip = { "quidquid.palette-pin-tooltip" },
     tags = { quidquid_pin = true },
-    toggled = pinned_players[player.index] == true,
+    toggled = pin_choices[player.index] == true,
   })
 
   titlebar.add({
@@ -464,7 +464,7 @@ function Palette.close(player)
   if frame == nil then
     return
   end
-  navigation_states[player.index] = nil
+  selection_states[player.index] = nil
   frame.destroy()
 end
 
@@ -601,7 +601,7 @@ local function move_active_index(event, direction)
   if frame == nil or player.opened ~= frame then
     return
   end
-  local state = navigation_states[player.index]
+  local state = selection_states[player.index]
   if state == nil then
     return
   end
@@ -627,7 +627,7 @@ function Palette.on_gui_confirmed(event)
   if player == nil then
     return
   end
-  local state = navigation_states[player.index]
+  local state = selection_states[player.index]
   if state == nil or #state.candidates == 0 then
     return
   end
@@ -693,12 +693,12 @@ function Palette.on_toggle_pin(event)
     return
   end
   element.toggled = not element.toggled
-  pinned_players[event.player_index] = element.toggled
+  pin_choices[event.player_index] = element.toggled
 end
 
 function Palette.on_player_removed(event)
-  pinned_players[event.player_index] = nil
-  navigation_states[event.player_index] = nil
+  pin_choices[event.player_index] = nil
+  selection_states[event.player_index] = nil
 end
 
 function Palette.on_cancel_button(event)
