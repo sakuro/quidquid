@@ -43,7 +43,7 @@ local CONTENT_WIDTH = 500
 -- shrinking the row area for it. Rows (and the table itself) use
 -- ROW_WIDTH -- CONTENT_WIDTH minus the scrollbar's own width -- so there's
 -- room left for the scrollbar without covering anything.
-local SCROLLBAR_WIDTH = 24
+local SCROLLBAR_WIDTH = 32
 local ROW_WIDTH = CONTENT_WIDTH - SCROLLBAR_WIDTH
 -- #138: a ceiling on how far the candidate-name column can stretch, not a
 -- fixed width -- previously it was fixed (NAME_COLUMN_WIDTH), so `names`
