@@ -112,7 +112,7 @@ describe("CalculatorSource", function()
     end)
 
     it("shows the suffixed value on the secondary line", function()
-      assert.are.equal("23k", CalculatorSource.build_candidate(23456).search_internal_name)
+      assert.are.equal("23k", CalculatorSource.build_candidate(23456).secondary_text)
     end)
 
     it("has a fixed type and id, since only one candidate ever exists", function()
