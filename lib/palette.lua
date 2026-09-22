@@ -1,3 +1,4 @@
+local FontColors = require("lib.font_colors")
 local PaletteLogic = require("lib.palette_logic")
 local RemoteCaller = require("lib.remote_caller")
 local search_highlight = require("lib.search_highlight")
@@ -34,9 +35,9 @@ local VISIBLE_ROWS = 5
 local CONTENT_WIDTH = 400
 local NAME_COLUMN_WIDTH = 250
 
-local DEFAULT_FONT_COLOR = { r = 255, g = 255, b = 255 }
-local ACCENT_FONT_COLOR = { r = 255, g = 142, b = 42 }
-local MUTED_FONT_COLOR = { r = 160, g = 160, b = 160 }
+local DEFAULT_FONT_COLOR = FontColors.DEFAULT
+local ACCENT_FONT_COLOR = FontColors.ACCENT
+local MUTED_FONT_COLOR = FontColors.MUTED
 
 local function get_frame(player)
   return player.gui.screen[FRAME_NAME]
