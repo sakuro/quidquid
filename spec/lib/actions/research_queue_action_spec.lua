@@ -48,10 +48,14 @@ describe("ResearchQueueAction", function()
       assert.are.equal(2, ResearchQueueAction.queue_index({ technology("steel"), finite }, finite))
     end)
 
-    it("does not treat a finite multi-level technology already in the queue as a duplicate", function()
-      local finite = technology("worker-robots-speed", nil, { max_level = 6 })
+    it("finds an already-queued finite leveled-family technology (level equals max_level)", function()
+      -- Confirmed via RCON against a real save: braking-force-4 (part of an
+      -- upgrade = true numbered family) reports level = 4, max_level = 4 --
+      -- unlike a genuine infinite technology, this is a regular, findable
+      -- queue entry, not "the next level."
+      local leveled = technology("braking-force-4", nil, { level = 4, max_level = 4 })
 
-      assert.is_nil(ResearchQueueAction.queue_index({ finite }, finite))
+      assert.are.equal(1, ResearchQueueAction.queue_index({ leveled }, leveled))
     end)
   end)
 

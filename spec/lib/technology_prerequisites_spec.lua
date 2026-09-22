@@ -30,10 +30,14 @@ describe("TechnologyPrerequisites", function()
       assert.is_true(TechnologyPrerequisites.is_multi_level(infinite))
     end)
 
-    it("returns true for a finite technology with more than one level", function()
-      local finite = technology("worker-robots-speed", nil, { max_level = 6 })
+    it("returns false for a finite leveled-family technology, where max_level equals its own level", function()
+      -- Confirmed via RCON against a real save: braking-force-4 (part of an
+      -- upgrade = true numbered family) reports level = 4, max_level = 4 --
+      -- unlike a genuine infinite technology, this isn't "level N of a
+      -- repeatable prototype."
+      local leveled = technology("braking-force-4", nil, { level = 4, max_level = 4 })
 
-      assert.is_true(TechnologyPrerequisites.is_multi_level(finite))
+      assert.is_false(TechnologyPrerequisites.is_multi_level(leveled))
     end)
 
     it("returns false for a single-level technology", function()
@@ -84,16 +88,17 @@ describe("TechnologyPrerequisites", function()
       }, TechnologyPrerequisites.technology_name(infinite))
     end)
 
-    it("appends the level for finite technologies with multiple levels", function()
-      local finite = technology("worker-robots-speed", nil, { level = 3, max_level = 6 })
+    it(
+      "does not append a level for a finite leveled-family technology (already baked into its localised_name)",
+      function()
+        local leveled = technology("braking-force-4", nil, { level = 4, max_level = 4 })
 
-      assert.are.same({
-        "",
-        { "technology-name.worker-robots-speed" },
-        " ",
-        3,
-      }, TechnologyPrerequisites.technology_name(finite))
-    end)
+        assert.are.same({
+          "",
+          { "technology-name.braking-force-4" },
+        }, TechnologyPrerequisites.technology_name(leveled))
+      end
+    )
   end)
 
   describe(".technology_list_caption", function()
