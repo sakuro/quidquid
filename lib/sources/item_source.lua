@@ -38,8 +38,12 @@ function ItemSource.build_caption(state, inventory_total, network_total)
   return inventory_text .. " " .. SEPARATOR .. " " .. network_text
 end
 
--- Vanilla plus the Quality mod tops out at 5 qualities; a mod could add more, so this
--- still bounds the pathological case rather than assuming it never happens.
+-- Without the Quality mod, prototypes.quality has only "normal" (visible) and
+-- "quality-unknown" (hidden, internal, confirmed over RCON to never appear on a real
+-- item stack outside of an explicit scripted quality="quality-unknown" insert) -- so
+-- an item's breakdown is always length 1 and this limit never applies. The Quality
+-- mod alone brings it to 5 tiers; another mod could add more, so this still bounds
+-- that case rather than assuming 5 is the ceiling.
 local MAX_LISTED_QUALITIES = 5
 
 local function quality_icon(entry)
