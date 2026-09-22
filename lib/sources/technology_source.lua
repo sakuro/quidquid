@@ -3,6 +3,24 @@ local build_candidates = require("lib.sources.prototype_candidate")
 
 local TechnologySource = {}
 
+local STATE_CAPTIONS = {
+  not_available = { text_key = "quidquid.technology-state-not-available", color = { r = 255, g = 214, b = 213 } },
+  conditionally_available = { text_key = "quidquid.technology-state-available", color = { r = 255, g = 234, b = 206 } },
+  available = { text_key = "quidquid.technology-state-available", color = { r = 255, g = 241, b = 183 } },
+  researched = { text_key = "quidquid.technology-state-researched", color = { r = 165, g = 255, b = 171 } },
+}
+
+-- Colors are flib's technology-slot-style.lua level_range_color values, the
+-- same ones UltimateResearchQueue uses for the same four research states --
+-- see docs/superpowers/specs/2026-09-22-technology-research-state-design.md.
+-- available and conditionally_available share their text (研究可); only the
+-- color tells them apart.
+function TechnologySource.build_caption(state)
+  local spec = STATE_CAPTIONS[state]
+  local color = spec.color
+  return { "", ("[color=%d,%d,%d]"):format(color.r, color.g, color.b), { spec.text_key }, "[/color]" }
+end
+
 local SOURCE_LABEL = { "quidquid.source-technologies" }
 local NAMESPACE = "technologies"
 
