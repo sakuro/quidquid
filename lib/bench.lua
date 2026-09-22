@@ -21,7 +21,7 @@ function Bench.probe()
   if not Bench.enabled then
     return nil
   end
-  return game.create_profiler()
+  return helpers.create_profiler()
 end
 
 function Bench.record(label, profiler)
