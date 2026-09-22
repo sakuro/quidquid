@@ -45,15 +45,19 @@ local CONTENT_WIDTH = 500
 -- room left for the scrollbar without covering anything.
 local SCROLLBAR_WIDTH = 24
 local ROW_WIDTH = CONTENT_WIDTH - SCROLLBAR_WIDTH
--- #138: a ceiling on how far the candidate-name column can stretch, not a
--- fixed width -- previously it was fixed (NAME_COLUMN_WIDTH), so `names`
--- never grew to use space `side` wasn't using, wasting it as visible gap
--- instead. An estimate pending in-game confirmation, not a measured fit.
-local NAME_COLUMN_MAX_WIDTH = 350
+-- #138: tried making `names` horizontally_stretchable so it would absorb
+-- whatever `side` wasn't using, instead of a fixed width wasting that as
+-- visible gap -- but a stretchable element apparently claims its own
+-- maximal_width unconditionally rather than only the space left over after
+-- other siblings, so it just starved `side` instead (reintroducing #136's
+-- clipping no matter how wide SIDE_COLUMN_WIDTH was set). Back to a fixed
+-- width, just wider than the original 250 -- an estimate pending in-game
+-- confirmation, not a measured fit.
+local NAME_COLUMN_WIDTH = 300
 -- #136: a ceiling on the annotation column's width, so a long caption (e.g.
--- the technology source's "Not researched") can't grow without bound and
--- starve `names` of the space it stretches into. An estimate pending
--- in-game confirmation, not a measured fit.
+-- the technology source's "Not researched") can't grow unbounded. Not
+-- squashable (see `side` below) -- an estimate pending in-game
+-- confirmation, not a measured fit.
 local SIDE_COLUMN_WIDTH = 200
 
 local DEFAULT_FONT_COLOR = FontColors.DEFAULT
@@ -346,8 +350,8 @@ local function build_candidate_row(pane, wrapped, index, player_index)
   icon.style.vertical_align = "center"
 
   local names = row.add({ type = "flow", direction = "vertical" })
-  names.style.horizontally_stretchable = true
-  names.style.maximal_width = NAME_COLUMN_MAX_WIDTH
+  names.style.width = NAME_COLUMN_WIDTH
+  names.style.maximal_width = NAME_COLUMN_WIDTH
   names.style.horizontally_squashable = true
   names.style.vertical_spacing = 0
   local align = wrapped.candidate.numeric and "right" or "left"
@@ -363,7 +367,7 @@ local function build_candidate_row(pane, wrapped, index, player_index)
     tags = { quidquid_candidate = wrapped.candidate, quidquid_candidate_index = index },
     raise_hover_events = true,
   })
-  button.style.maximal_width = NAME_COLUMN_MAX_WIDTH
+  button.style.maximal_width = NAME_COLUMN_WIDTH
   button.style.horizontally_squashable = true
   -- Without this, the button auto-sizes to its caption's width, leaving no slack for
   -- horizontal_align to shift text within -- left and right would look identical.
@@ -375,16 +379,16 @@ local function build_candidate_row(pane, wrapped, index, player_index)
   local internal_caption = Palette.internal_caption(wrapped.candidate)
   if internal_caption ~= nil then
     local internal_label = names.add({ type = "label", caption = internal_caption })
-    internal_label.style.maximal_width = NAME_COLUMN_MAX_WIDTH
+    internal_label.style.maximal_width = NAME_COLUMN_WIDTH
     internal_label.style.horizontally_squashable = true
     internal_label.style.font_color = MUTED_FONT_COLOR
   end
 
-  -- #138: `names` is the row's only stretchable element (labels don't support
-  -- horizontally_stretchable -- confirmed: setting it had no visible effect),
-  -- so it absorbs all the row's leftover width itself, pushing whatever
-  -- comes after it flush against the row's right edge without needing a
-  -- separate spacer widget.
+  -- label doesn't support horizontally_stretchable (confirmed: setting it had no visible
+  -- effect), so an empty-widget spacer absorbs the row's leftover width instead, pushing
+  -- the right end flush against the row's right edge.
+  local spacer = row.add({ type = "empty-widget" })
+  spacer.style.horizontally_stretchable = true
 
   -- #121: a source's annotation (e.g. an item's inventory/network counts) takes the
   -- top line of the right end, with the source label demoted to a second, muted line
@@ -392,12 +396,9 @@ local function build_candidate_row(pane, wrapped, index, player_index)
   -- an annotation still gets.
   local annotation_caption = wrapped.annotation and wrapped.annotation.caption
   if annotation_caption ~= nil then
-    -- #138: not squashable -- `names` is the column meant to flex both ways
-    -- (stretching into free space, squashing under pressure); `side` should
-    -- keep its actual content's natural size (up to SIDE_COLUMN_WIDTH) so
-    -- `names`'s stretch pressure can't squeeze it below what it needs,
-    -- which is what reintroduced #136's clipping when both columns were
-    -- squashable at once.
+    -- #136: not squashable, unlike `names` -- `side` keeps its actual
+    -- content's natural size (up to SIDE_COLUMN_WIDTH) so the row squashes
+    -- `names` under pressure instead of clipping the annotation.
     local side = row.add({ type = "flow", direction = "vertical" })
     side.style.maximal_width = SIDE_COLUMN_WIDTH
     side.style.horizontal_align = "right"
