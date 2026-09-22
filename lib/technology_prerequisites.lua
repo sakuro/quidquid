@@ -14,9 +14,16 @@ local INFINITE_LEVEL = 4294967295
 -- the other.)
 local MAX_LISTED_TECHNOLOGIES = 6
 
+-- Confirmed via RCON against a real save: a finite technology's max_level
+-- always equals its own level, whether it's single-level (e.g. automation)
+-- or one prototype in an upgrade = true numbered family (e.g.
+-- braking-force-4: level = 4, max_level = 4). Only a genuine infinite
+-- technology reports a max_level independent of (and always greater than)
+-- its current level -- that's what actually makes re-adding the same
+-- prototype to the queue mean "the next level."
 function TechnologyPrerequisites.is_multi_level(technology)
   local max_level = technology.prototype.max_level
-  return max_level == INFINITE_LEVEL or max_level == "infinite" or type(max_level) == "number" and max_level > 1
+  return max_level == INFINITE_LEVEL or max_level == "infinite"
 end
 
 function TechnologyPrerequisites.technology_icon(technology)
