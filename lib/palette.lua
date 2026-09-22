@@ -420,6 +420,19 @@ local function render_candidates(player, candidates)
   end
 end
 
+-- Shared by every place that (re-)runs a query against the palette's results: typing,
+-- unlocking a source, and (see #121) refreshing a pinned palette after an action.
+-- locked_source may be nil (no source lock).
+local function refresh_candidates(player, text, locked_source)
+  if text == "" then
+    clear_candidates(player)
+    return
+  end
+  local candidates = Palette.search_all_sources(text, player.index, locked_source)
+  Palette.annotate_candidates(candidates, player.index)
+  render_candidates(player, candidates)
+end
+
 function Palette.open(player)
   if get_frame(player) ~= nil then
     return
@@ -591,14 +604,7 @@ local function dispatch(player, selected_candidate, input_name)
     return
   end
   local text = content[INPUT_ROW_NAME][INPUT_NAME].text
-  if text == "" then
-    clear_candidates(player)
-    return
-  end
-  local locked_source = get_locked_source(player)
-  local candidates = Palette.search_all_sources(text, player.index, locked_source)
-  Palette.annotate_candidates(candidates, player.index)
-  render_candidates(player, candidates)
+  refresh_candidates(player, text, get_locked_source(player))
 end
 
 function Palette.is_palette_input(element)
@@ -659,15 +665,9 @@ function Palette.on_gui_text_changed(event)
     return
   end
 
-  if event.text == "" then
-    set_input_validity(player, true)
-    clear_candidates(player)
-  else
-    local candidates = Palette.search_all_sources(event.text, event.player_index, locked_source)
-    Palette.annotate_candidates(candidates, event.player_index)
-    set_input_validity(player, Palette.is_query_valid(event.text, event.player_index, locked_source))
-    render_candidates(player, candidates)
-  end
+  local valid = event.text == "" or Palette.is_query_valid(event.text, event.player_index, locked_source)
+  set_input_validity(player, valid)
+  refresh_candidates(player, event.text, locked_source)
 end
 
 function Palette.on_action_key(event)
@@ -771,14 +771,7 @@ function Palette.on_unlock_button(event)
 
   local current_text = content[INPUT_ROW_NAME][INPUT_NAME].text
   unlock_source(player)
-
-  if current_text == "" then
-    clear_candidates(player)
-  else
-    local candidates = Palette.search_all_sources(current_text, player.index)
-    Palette.annotate_candidates(candidates, player.index)
-    render_candidates(player, candidates)
-  end
+  refresh_candidates(player, current_text, nil)
 end
 
 function Palette.on_toggle_pin(event)
