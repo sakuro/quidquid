@@ -190,10 +190,11 @@ describe("ResearchQueueAction", function()
       local automation = technology("automation")
       local f = force({ automation = automation }, { automation }, 0.5)
 
-      local result_technology, key, args, new_queue = ResearchQueueAction.resolve_enqueue(f, { id = "automation" })
+      local result_technology, locale_key, args, new_queue =
+        ResearchQueueAction.resolve_enqueue(f, { id = "automation" })
 
       assert.are.equal(automation, result_technology)
-      assert.are.equal("quidquid.action-research-queue-current", key)
+      assert.are.equal("quidquid.action-research-queue-current", locale_key)
       assert.are.same({ 50 }, args)
       assert.is_nil(new_queue)
     end)
@@ -203,10 +204,11 @@ describe("ResearchQueueAction", function()
       local steel = technology("steel")
       local f = force({ automation = automation }, { steel, automation })
 
-      local result_technology, key, args, new_queue = ResearchQueueAction.resolve_enqueue(f, { id = "automation" })
+      local result_technology, locale_key, args, new_queue =
+        ResearchQueueAction.resolve_enqueue(f, { id = "automation" })
 
       assert.are.equal(automation, result_technology)
-      assert.are.equal("quidquid.action-research-queue-already-queued", key)
+      assert.are.equal("quidquid.action-research-queue-already-queued", locale_key)
       assert.are.same({ 25 }, args)
       assert.is_nil(new_queue)
     end)
@@ -215,10 +217,11 @@ describe("ResearchQueueAction", function()
       local automation = technology("automation", nil, { researched = true })
       local f = force({ automation = automation })
 
-      local result_technology, key, args, new_queue = ResearchQueueAction.resolve_enqueue(f, { id = "automation" })
+      local result_technology, locale_key, args, new_queue =
+        ResearchQueueAction.resolve_enqueue(f, { id = "automation" })
 
       assert.are.equal(automation, result_technology)
-      assert.are.equal("quidquid.action-research-queue-already-researched", key)
+      assert.are.equal("quidquid.action-research-queue-already-researched", locale_key)
       assert.are.same({}, args)
       assert.is_nil(new_queue)
     end)
@@ -231,10 +234,11 @@ describe("ResearchQueueAction", function()
       end
       local f = force({ automation = automation }, full_queue)
 
-      local result_technology, key, args, new_queue = ResearchQueueAction.resolve_enqueue(f, { id = "automation" })
+      local result_technology, locale_key, args, new_queue =
+        ResearchQueueAction.resolve_enqueue(f, { id = "automation" })
 
       assert.are.equal(automation, result_technology)
-      assert.are.equal("quidquid.action-research-queue-full", key)
+      assert.are.equal("quidquid.action-research-queue-full", locale_key)
       assert.are.same({}, args)
       assert.is_nil(new_queue)
     end)
@@ -243,10 +247,10 @@ describe("ResearchQueueAction", function()
       local trigger = technology("trigger", nil, { research_trigger = { type = "craft-item" } })
       local f = force({ trigger = trigger })
 
-      local result_technology, key, args, new_queue = ResearchQueueAction.resolve_enqueue(f, { id = "trigger" })
+      local result_technology, locale_key, args, new_queue = ResearchQueueAction.resolve_enqueue(f, { id = "trigger" })
 
       assert.are.equal(trigger, result_technology)
-      assert.are.equal("quidquid.action-research-queue-trigger", key)
+      assert.are.equal("quidquid.action-research-queue-trigger", locale_key)
       assert.are.same({}, args)
       assert.is_nil(new_queue)
     end)
@@ -256,10 +260,10 @@ describe("ResearchQueueAction", function()
       local target = technology("target", { trigger = trigger })
       local f = force({ target = target })
 
-      local result_technology, key, args, new_queue = ResearchQueueAction.resolve_enqueue(f, { id = "target" })
+      local result_technology, locale_key, args, new_queue = ResearchQueueAction.resolve_enqueue(f, { id = "target" })
 
       assert.are.equal(target, result_technology)
-      assert.are.equal("quidquid.action-research-queue-trigger-prerequisite", key)
+      assert.are.equal("quidquid.action-research-queue-trigger-prerequisite", locale_key)
       assert.are.same({ "", "[technology=trigger]" }, args[1])
       assert.is_nil(new_queue)
     end)
@@ -274,10 +278,10 @@ describe("ResearchQueueAction", function()
       end
       local f = force({ target = target }, full_queue)
 
-      local result_technology, key, args, new_queue = ResearchQueueAction.resolve_enqueue(f, { id = "target" })
+      local result_technology, locale_key, args, new_queue = ResearchQueueAction.resolve_enqueue(f, { id = "target" })
 
       assert.are.equal(target, result_technology)
-      assert.are.equal("quidquid.action-research-queue-prerequisite-slots", key)
+      assert.are.equal("quidquid.action-research-queue-prerequisite-slots", locale_key)
       assert.are.same({ "", "[technology=iron], [technology=steel]" }, args[1])
       assert.is_nil(new_queue)
     end)
@@ -287,10 +291,11 @@ describe("ResearchQueueAction", function()
       local steel = technology("steel")
       local f = force({ automation = automation }, { steel })
 
-      local result_technology, key, args, new_queue = ResearchQueueAction.resolve_enqueue(f, { id = "automation" })
+      local result_technology, locale_key, args, new_queue =
+        ResearchQueueAction.resolve_enqueue(f, { id = "automation" })
 
       assert.are.equal(automation, result_technology)
-      assert.are.equal("quidquid.action-research-queue-added", key)
+      assert.are.equal("quidquid.action-research-queue-added", locale_key)
       assert.are.same({}, args)
       assert.are.same({ "steel", "automation" }, new_queue)
     end)
@@ -301,10 +306,10 @@ describe("ResearchQueueAction", function()
       local target = technology("target", { steel = steel })
       local f = force({ target = target })
 
-      local result_technology, key, args, new_queue = ResearchQueueAction.resolve_enqueue(f, { id = "target" })
+      local result_technology, locale_key, args, new_queue = ResearchQueueAction.resolve_enqueue(f, { id = "target" })
 
       assert.are.equal(target, result_technology)
-      assert.are.equal("quidquid.action-research-queue-added-with-prerequisites", key)
+      assert.are.equal("quidquid.action-research-queue-added-with-prerequisites", locale_key)
       assert.are.same({ "", "[technology=iron], [technology=steel]" }, args[1])
       assert.are.same({ "iron", "steel", "target" }, new_queue)
     end)

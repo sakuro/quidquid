@@ -58,7 +58,7 @@ describe("ActionDispatch", function()
       assert.are.same({}, flying_texts)
     end)
 
-    it("shows the resolved key and does not apply when the payload is nil", function()
+    it("shows the resolved locale key and does not apply when the payload is nil", function()
       local applied = false
 
       ActionDispatch.run(candidate, 1, function(_candidate, _player)
@@ -76,7 +76,7 @@ describe("ActionDispatch", function()
       }, flying_texts)
     end)
 
-    it("shows nothing when the payload and key are both nil and there is no fallback", function()
+    it("shows nothing when the payload and locale key are both nil and there is no fallback", function()
       ActionDispatch.run(candidate, 1, function(_candidate, _player)
         return nil, nil
       end, function(_payload, _candidate, _player) end)
@@ -84,7 +84,7 @@ describe("ActionDispatch", function()
       assert.are.same({}, flying_texts)
     end)
 
-    it("falls back to fallback_key when the payload and key are both nil", function()
+    it("falls back to the fallback locale key when the payload and locale key are both nil", function()
       ActionDispatch.run(candidate, 1, function(_candidate, _player)
         return nil, nil
       end, function(_payload, _candidate, _player) end, "quidquid.action-open-remote-view-unavailable")
@@ -97,7 +97,7 @@ describe("ActionDispatch", function()
       }, flying_texts)
     end)
 
-    it("prefers the resolved key over fallback_key", function()
+    it("prefers the resolved locale key over the fallback locale key", function()
       ActionDispatch.run(candidate, 1, function(_candidate, _player)
         return nil, "quidquid.action-open-remote-view-not-visited"
       end, function(_payload, _candidate, _player) end, "quidquid.action-open-remote-view-unavailable")

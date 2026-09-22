@@ -45,9 +45,9 @@ function SurfaceLogic.build_candidates(query, surfaces, include_hidden, locale)
       if surface.kind == "platform" then
         search_name = rich_text.mask_tags(search_name)
       end
-      local display_key, display_position_map =
+      local display_target, display_position_map =
         search_key_cache.get("surface", surface.index, "display", locale, search_name)
-      local display_score, display_positions = fuzzy_match(display_query, display_key)
+      local display_score, display_positions = fuzzy_match(display_query, display_target)
       if display_score ~= nil then
         best = {
           score = display_score + LOCALIZED_NAME_BONUS,
@@ -58,9 +58,9 @@ function SurfaceLogic.build_candidates(query, surfaces, include_hidden, locale)
       end
     end
     if surface.kind ~= "platform" then
-      local internal_key, internal_position_map =
+      local internal_target, internal_position_map =
         search_key_cache.get("surface", surface.index, "internal", nil, surface.name)
-      local internal_score, internal_positions = fuzzy_match(internal_query, internal_key)
+      local internal_score, internal_positions = fuzzy_match(internal_query, internal_target)
       if internal_score ~= nil and (best == nil or internal_score > best.score) then
         best = {
           score = internal_score,

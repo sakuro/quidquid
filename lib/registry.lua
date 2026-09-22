@@ -18,11 +18,11 @@ function Registry.new(logger)
 end
 
 function Registry:register_source(definition)
-  if definition.version ~= SOURCE_CONTRACT_VERSION then
+  if definition.contract_version ~= SOURCE_CONTRACT_VERSION then
     self.logger(
-      ("quidquid: source '%s' rejected: unsupported version %s (expected %d)"):format(
+      ("quidquid: source '%s' rejected: unsupported contract_version %s (expected %d)"):format(
         tostring(definition.id),
-        tostring(definition.version),
+        tostring(definition.contract_version),
         SOURCE_CONTRACT_VERSION
       )
     )
@@ -68,14 +68,14 @@ function Registry:register_source(definition)
   return true
 end
 
-function Registry:default_active_sources()
-  local active = {}
+function Registry:default_search_sources()
+  local selected = {}
   for _, source in ipairs(self.sources) do
-    if source.default_active then
-      table.insert(active, source)
+    if source.in_default_search then
+      table.insert(selected, source)
     end
   end
-  return active
+  return selected
 end
 
 function Registry:source_for_prefix(prefix)
@@ -83,34 +83,34 @@ function Registry:source_for_prefix(prefix)
 end
 
 function Registry:register_action(definition)
-  if definition.version ~= ACTION_CONTRACT_VERSION then
+  if definition.contract_version ~= ACTION_CONTRACT_VERSION then
     self.logger(
-      ("quidquid: action '%s' rejected: unsupported version %s (expected %d)"):format(
+      ("quidquid: action '%s' rejected: unsupported contract_version %s (expected %d)"):format(
         tostring(definition.id),
-        tostring(definition.version),
+        tostring(definition.contract_version),
         ACTION_CONTRACT_VERSION
       )
     )
     return false
   end
 
-  if definition.key == nil or definition.types == nil or #definition.types == 0 then
-    self.logger(("quidquid: action '%s' rejected: missing key or types"):format(tostring(definition.id)))
+  if definition.input_name == nil or definition.types == nil or #definition.types == 0 then
+    self.logger(("quidquid: action '%s' rejected: missing input_name or types"):format(tostring(definition.id)))
     return false
   end
 
   for _, candidate_type in ipairs(definition.types) do
     self.action_slots[candidate_type] = self.action_slots[candidate_type] or {}
     local slots = self.action_slots[candidate_type]
-    if slots[definition.key] == nil then
-      slots[definition.key] = definition
+    if slots[definition.input_name] == nil then
+      slots[definition.input_name] = definition
     else
       self.logger(
-        ("quidquid: action '%s' key '%s' for type '%s' ignored: already registered by '%s'"):format(
+        ("quidquid: action '%s' input_name '%s' for type '%s' ignored: already registered by '%s'"):format(
           tostring(definition.id),
-          definition.key,
+          definition.input_name,
           candidate_type,
-          tostring(slots[definition.key].id)
+          tostring(slots[definition.input_name].id)
         )
       )
     end
@@ -127,7 +127,7 @@ function Registry:resolve_actions(selected_candidate, player_index, caller)
     return resolved
   end
 
-  for key, definition in pairs(slots) do
+  for input_name, definition in pairs(slots) do
     local applicable = true
     -- is_available only gates on state uniform across every candidate of a type
     -- (player/network state, say); a fact specific to one candidate belongs in
@@ -144,7 +144,7 @@ function Registry:resolve_actions(selected_candidate, player_index, caller)
       end
     end
     if applicable then
-      resolved[key] = definition
+      resolved[input_name] = definition
     end
   end
 

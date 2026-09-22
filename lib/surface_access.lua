@@ -87,12 +87,12 @@ function SurfaceAccess.resolve_remote_view(candidate, player)
   if descriptor == nil then
     return nil, nil
   end
-  local ok, reason_key =
+  local ok, reason_locale_key =
     SurfaceLogic.remote_view_availability(descriptor, player.mod_settings["quidquid-include-hidden"].value)
   if ok then
     return surface, nil
   end
-  return nil, reason_key
+  return nil, reason_locale_key
 end
 
 return SurfaceAccess

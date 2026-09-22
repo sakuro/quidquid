@@ -44,12 +44,12 @@ end
 function TechnologySource.register()
   remote.add_interface("quidquid.technology-source", { search = search })
   remote.call("quidquid", "register_source", {
-    version = 1,
+    contract_version = 1,
     id = "technologies",
     type = "technology",
     label = SOURCE_LABEL,
     prefixes = { "t", "technology" },
-    default_active = true,
+    in_default_search = true,
     interface = "quidquid.technology-source",
   })
 end

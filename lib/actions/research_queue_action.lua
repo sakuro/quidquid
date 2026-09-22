@@ -70,8 +70,8 @@ end
 
 ResearchQueueAction.queued_level = queued_level
 
-local function queue_message(queue, target, key, ...)
-  return { key, technology_icon(target), technology_name(target, queued_level(queue, target)), ... }
+local function queue_message(queue, target, locale_key, ...)
+  return { locale_key, technology_icon(target), technology_name(target, queued_level(queue, target)), ... }
 end
 
 local function queued_names(queue)
@@ -157,9 +157,9 @@ function ResearchQueueAction.resolve_enqueue(force, candidate)
   local queue = force.research_queue
   local existing_index = queue_index(queue, technology)
   if existing_index ~= nil then
-    local key = existing_index == 1 and "quidquid.action-research-queue-current"
+    local locale_key = existing_index == 1 and "quidquid.action-research-queue-current"
       or "quidquid.action-research-queue-already-queued"
-    return technology, key, { ResearchQueueAction.progress_for(force, technology, existing_index) }, nil
+    return technology, locale_key, { ResearchQueueAction.progress_for(force, technology, existing_index) }, nil
   end
 
   if technology.researched then
@@ -193,10 +193,10 @@ function ResearchQueueAction.resolve_enqueue(force, candidate)
   end
   table.insert(new_queue, technology.name)
 
-  local key = #prerequisites == 0 and "quidquid.action-research-queue-added"
+  local locale_key = #prerequisites == 0 and "quidquid.action-research-queue-added"
     or "quidquid.action-research-queue-added-with-prerequisites"
   local args = #prerequisites == 0 and {} or { technology_list(prerequisites) }
-  return technology, key, args, new_queue
+  return technology, locale_key, args, new_queue
 end
 
 local function execute(candidate, player_index)
@@ -207,7 +207,7 @@ local function execute(candidate, player_index)
 
   local force = player.force
   local queue = force.research_queue
-  local technology, key, args, new_queue = ResearchQueueAction.resolve_enqueue(force, candidate)
+  local technology, locale_key, args, new_queue = ResearchQueueAction.resolve_enqueue(force, candidate)
   if technology == nil then
     return
   end
@@ -217,7 +217,7 @@ local function execute(candidate, player_index)
   end
 
   player.create_local_flying_text({
-    text = queue_message(queue, technology, key, table.unpack(args)),
+    text = queue_message(queue, technology, locale_key, table.unpack(args)),
     create_at_cursor = true,
   })
 end
@@ -225,11 +225,11 @@ end
 function ResearchQueueAction.register()
   remote.add_interface("quidquid.research-queue-action", { execute = execute })
   remote.call("quidquid", "register_action", {
-    version = 1,
+    contract_version = 1,
     id = "add-to-research-queue",
     types = { "technology" },
     label = { "quidquid.action-add-to-research-queue" },
-    key = "quidquid-add-to-research-queue",
+    input_name = "quidquid-add-to-research-queue",
     interface = "quidquid.research-queue-action",
   })
 end

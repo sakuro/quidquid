@@ -130,13 +130,18 @@ local function compute(needle, haystack)
   return scores, best
 end
 
-local function fuzzy_match(query_key, target_key)
-  if type(query_key) ~= "string" or type(target_key) ~= "string" or query_key == "" or target_key == "" then
+local function fuzzy_match(normalized_query, normalized_target)
+  if
+    type(normalized_query) ~= "string"
+    or type(normalized_target) ~= "string"
+    or normalized_query == ""
+    or normalized_target == ""
+  then
     return nil
   end
 
-  local needle = decode(query_key)
-  local haystack = decode(target_key)
+  local needle = decode(normalized_query)
+  local haystack = decode(normalized_target)
   if needle == nil or haystack == nil then
     return nil
   end

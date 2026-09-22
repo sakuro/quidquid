@@ -46,11 +46,11 @@ end
 function OpenRemoteViewAction.register()
   remote.add_interface("quidquid.open-remote-view-action", { execute = execute })
   remote.call("quidquid", "register_action", {
-    version = 1,
+    contract_version = 1,
     id = "open-remote-view",
     types = { "surface" },
     label = { "quidquid.action-open-remote-view" },
-    key = "quidquid-open-remote-view",
+    input_name = "quidquid-open-remote-view",
     interface = "quidquid.open-remote-view-action",
   })
 end

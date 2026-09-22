@@ -90,14 +90,17 @@ describe("TemporaryRequestAction", function()
 
   describe(".resolve_requestable", function()
     it("is always requestable for an item candidate", function()
-      local requestable, error_key = TemporaryRequestAction.resolve_requestable({ type = "item" }, { recipes = {} })
+      local requestable, reason_locale_key = TemporaryRequestAction.resolve_requestable(
+        { type = "item" },
+        { recipes = {} }
+      )
 
       assert.is_true(requestable)
-      assert.is_nil(error_key)
+      assert.is_nil(reason_locale_key)
     end)
 
     it("returns no error for a recipe candidate with no matching force recipe", function()
-      local requestable, error_key = TemporaryRequestAction.resolve_requestable(
+      local requestable, reason_locale_key = TemporaryRequestAction.resolve_requestable(
         { type = "recipe", id = "advanced-oil-processing" },
         {
           recipes = {},
@@ -105,7 +108,7 @@ describe("TemporaryRequestAction", function()
       )
 
       assert.is_false(requestable)
-      assert.is_nil(error_key)
+      assert.is_nil(reason_locale_key)
     end)
 
     it("returns the no-item-ingredients error for a recipe with only fluid ingredients", function()
@@ -120,11 +123,11 @@ describe("TemporaryRequestAction", function()
         },
       }
 
-      local requestable, error_key =
+      local requestable, reason_locale_key =
         TemporaryRequestAction.resolve_requestable({ type = "recipe", id = "advanced-oil-processing" }, force)
 
       assert.is_false(requestable)
-      assert.are.equal("quidquid.action-temporary-request-no-item-ingredients", error_key)
+      assert.are.equal("quidquid.action-temporary-request-no-item-ingredients", reason_locale_key)
     end)
 
     it("is requestable for a recipe with at least one item ingredient", function()
@@ -136,11 +139,11 @@ describe("TemporaryRequestAction", function()
         },
       }
 
-      local requestable, error_key =
+      local requestable, reason_locale_key =
         TemporaryRequestAction.resolve_requestable({ type = "recipe", id = "iron-plate" }, force)
 
       assert.is_true(requestable)
-      assert.is_nil(error_key)
+      assert.is_nil(reason_locale_key)
     end)
   end)
 

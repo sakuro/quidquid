@@ -124,7 +124,7 @@ end
 function Palette.search_all_sources(query, player_index, locked_source)
   local trimmed_query = query:match("^%s*(.-)%s*$")
   local results = {}
-  local sources = locked_source and { locked_source } or registry:default_active_sources()
+  local sources = locked_source and { locked_source } or registry:default_search_sources()
   for _, source in ipairs(sources) do
     local ok, candidates = pcall(remote.call, source.interface, "search", trimmed_query, player_index)
     if ok then
@@ -142,7 +142,7 @@ end
 
 function Palette.is_query_valid(query, player_index, locked_source)
   local trimmed_query = query:match("^%s*(.-)%s*$")
-  local sources = locked_source and { locked_source } or registry:default_active_sources()
+  local sources = locked_source and { locked_source } or registry:default_search_sources()
   for _, source in ipairs(sources) do
     if RemoteCaller:has(source.interface, "is_query_valid") then
       local ok, result =
@@ -208,28 +208,28 @@ end
 local MAX_TOOLTIP_ACTIONS = 10
 
 function Palette.build_tooltip(resolved)
-  local keys = {}
-  for key, _ in pairs(resolved) do
-    table.insert(keys, key)
+  local input_names = {}
+  for input_name, _ in pairs(resolved) do
+    table.insert(input_names, input_name)
   end
-  if #keys == 0 then
+  if #input_names == 0 then
     return nil
   end
-  table.sort(keys)
+  table.sort(input_names)
 
-  local truncated = #keys > MAX_TOOLTIP_ACTIONS
-  local shown_count = truncated and (MAX_TOOLTIP_ACTIONS - 1) or #keys
+  local truncated = #input_names > MAX_TOOLTIP_ACTIONS
+  local shown_count = truncated and (MAX_TOOLTIP_ACTIONS - 1) or #input_names
 
   local tooltip = { "" }
   for index = 1, shown_count do
     if index > 1 then
       table.insert(tooltip, "\n")
     end
-    table.insert(tooltip, candidate_hint(resolved[keys[index]]))
+    table.insert(tooltip, candidate_hint(resolved[input_names[index]]))
   end
   if truncated then
     table.insert(tooltip, "\n")
-    table.insert(tooltip, { "quidquid.candidate-tooltip-more-actions", #keys - shown_count })
+    table.insert(tooltip, { "quidquid.candidate-tooltip-more-actions", #input_names - shown_count })
   end
   return tooltip
 end
@@ -459,12 +459,12 @@ function Palette.close(player)
   frame.destroy()
 end
 
-local function dispatch(player, selected_candidate, key)
+local function dispatch(player, selected_candidate, input_name)
   if selected_candidate == nil then
     return
   end
   local resolved = registry:resolve_actions(selected_candidate, player.index, RemoteCaller)
-  local action = resolved[key]
+  local action = resolved[input_name]
   if action == nil then
     return
   end

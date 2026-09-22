@@ -33,7 +33,7 @@ function OpenFactoriopediaAction.resolve_prototype(candidate, player)
   return nil
 end
 
--- Adapts the single-value resolve_prototype to ActionDispatch's (payload, key)
+-- Adapts the single-value resolve_prototype to ActionDispatch's (payload, locale_key)
 -- convention: every failure shows the same generic message, unlike other actions'
 -- resolve functions, since Factoriopedia has no distinct reasons to report.
 local function resolve(candidate, player)
@@ -57,11 +57,11 @@ end
 function OpenFactoriopediaAction.register()
   remote.add_interface("quidquid.open-factoriopedia-action", { execute = execute })
   remote.call("quidquid", "register_action", {
-    version = 1,
+    contract_version = 1,
     id = "open-factoriopedia",
     types = { "item", "fluid", "recipe", "surface" },
     label = { "quidquid.action-open-factoriopedia" },
-    key = "quidquid-open-factoriopedia",
+    input_name = "quidquid-open-factoriopedia",
     interface = "quidquid.open-factoriopedia-action",
   })
 end

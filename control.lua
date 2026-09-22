@@ -22,7 +22,7 @@ local registry = Registry.new(log)
 Palette.init(registry)
 TemporaryRequestAction.init(TemporaryRequestEditor)
 
-local RESERVED_ACTION_KEYS = {
+local RESERVED_INPUT_NAMES = {
   ["quidquid-open-palette"] = true,
   ["quidquid-palette-up"] = true,
   ["quidquid-palette-down"] = true,
@@ -33,11 +33,11 @@ remote.add_interface("quidquid", {
     return registry:register_source(definition)
   end,
   register_action = function(definition)
-    if RESERVED_ACTION_KEYS[definition.key] then
+    if RESERVED_INPUT_NAMES[definition.input_name] then
       log(
-        ("quidquid: action '%s' rejected: key '%s' is reserved for quidquid's own hotkeys"):format(
+        ("quidquid: action '%s' rejected: input_name '%s' is reserved for quidquid's own hotkeys"):format(
           tostring(definition.id),
-          tostring(definition.key)
+          tostring(definition.input_name)
         )
       )
       return false
@@ -45,7 +45,7 @@ remote.add_interface("quidquid", {
 
     local ok = registry:register_action(definition)
     if ok then
-      script.on_event(definition.key, Palette.on_action_key)
+      script.on_event(definition.input_name, Palette.on_action_key)
     end
     return ok
   end,

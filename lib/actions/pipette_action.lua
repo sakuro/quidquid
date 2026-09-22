@@ -49,11 +49,11 @@ end
 function PipetteAction.register()
   remote.add_interface("quidquid.pipette-action", { execute = execute })
   remote.call("quidquid", "register_action", {
-    version = 1,
+    contract_version = 1,
     id = "pipette",
     types = { "item", "recipe" },
     label = { "controls.pipette" },
-    key = "quidquid-pipette",
+    input_name = "quidquid-pipette",
     interface = "quidquid.pipette-action",
   })
 end

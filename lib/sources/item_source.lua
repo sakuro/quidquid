@@ -38,12 +38,12 @@ end
 function ItemSource.register()
   remote.add_interface("quidquid.item-source", { search = search })
   remote.call("quidquid", "register_source", {
-    version = 1,
+    contract_version = 1,
     id = "items",
     type = "item",
     label = SOURCE_LABEL,
     prefixes = { "i", "item" },
-    default_active = true,
+    in_default_search = true,
     interface = "quidquid.item-source",
   })
 end
