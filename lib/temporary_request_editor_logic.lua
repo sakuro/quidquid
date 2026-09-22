@@ -88,7 +88,7 @@ end
 -- temporary-request quantity -- a non-negative whole number. Doesn't know about GUI,
 -- helpers.evaluate_expression, or textfield styles at all -- the caller maps this to the
 -- error-background/Confirm-enabled state.
-function TemporaryRequestEditorLogic.valid_quantity(value)
+function TemporaryRequestEditorLogic.is_valid_quantity(value)
   if value == nil then
     return false
   end

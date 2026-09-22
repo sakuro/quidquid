@@ -24,7 +24,7 @@ local CONTENT_NAME = "quidquid-palette-content"
 local INPUT_ROW_NAME = "quidquid-palette-input-row"
 local INPUT_NAME = "quidquid-palette-input"
 local LOCK_LABEL_NAME = "quidquid-palette-lock-label"
-local LOCK_CLOSE_NAME = "quidquid-palette-lock-close"
+local UNLOCK_BUTTON_NAME = "quidquid-palette-unlock"
 local RESULTS_NAME = "quidquid-palette-results"
 local RESULTS_TABLE_NAME = "quidquid-palette-results-table"
 local DISPLAY_LIMIT = 30
@@ -391,7 +391,7 @@ function Palette.open(player)
     style = "frame_action_button",
     sprite = "utility/close",
     tooltip = { "quidquid.cancel-tooltip" },
-    tags = { quidquid_palette_cancel = true },
+    tags = { quidquid_cancel = true },
   })
 
   local content_frame = frame.add({
@@ -418,11 +418,11 @@ function Palette.open(player)
 
   input_row.add({
     type = "sprite-button",
-    name = LOCK_CLOSE_NAME,
+    name = UNLOCK_BUTTON_NAME,
     style = "frame_action_button",
     sprite = "utility/close",
     visible = false,
-    tags = { quidquid_close_lock = true },
+    tags = { quidquid_unlock = true },
   })
 
   local input = input_row.add({
@@ -530,7 +530,7 @@ local function lock_to_source(player, source)
   content[INPUT_ROW_NAME][INPUT_NAME].text = ""
   content[INPUT_ROW_NAME][LOCK_LABEL_NAME].caption = source.label
   content[INPUT_ROW_NAME][LOCK_LABEL_NAME].visible = true
-  content[INPUT_ROW_NAME][LOCK_CLOSE_NAME].visible = true
+  content[INPUT_ROW_NAME][UNLOCK_BUTTON_NAME].visible = true
   set_input_validity(player, true)
   clear_candidates(player)
 end
@@ -542,7 +542,7 @@ local function unlock_source(player)
   end
   content.tags = {}
   content[INPUT_ROW_NAME][LOCK_LABEL_NAME].visible = false
-  content[INPUT_ROW_NAME][LOCK_CLOSE_NAME].visible = false
+  content[INPUT_ROW_NAME][UNLOCK_BUTTON_NAME].visible = false
   set_input_validity(player, true)
 end
 
@@ -662,9 +662,9 @@ function Palette.on_gui_hover(event)
   end
 end
 
-function Palette.on_clear_source_lock(event)
+function Palette.on_unlock_button(event)
   local element = event.element
-  if element == nil or not element.valid or element.tags.quidquid_close_lock == nil then
+  if element == nil or not element.valid or element.tags.quidquid_unlock == nil then
     return
   end
   local player = game.get_player(event.player_index)
@@ -703,7 +703,7 @@ end
 
 function Palette.on_cancel_button(event)
   local element = event.element
-  if element == nil or not element.valid or element.tags.quidquid_palette_cancel == nil then
+  if element == nil or not element.valid or element.tags.quidquid_cancel == nil then
     return
   end
   local player = game.get_player(event.player_index)
@@ -714,7 +714,7 @@ function Palette.on_cancel_button(event)
 end
 
 function Palette.on_gui_click(event)
-  Palette.on_clear_source_lock(event)
+  Palette.on_unlock_button(event)
   Palette.on_toggle_pin(event)
   Palette.on_cancel_button(event)
 end

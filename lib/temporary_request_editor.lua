@@ -157,7 +157,7 @@ end
 local function refresh_quantity_validity(content)
   local textfield = quantity_row_of(content)[TEXTFIELD_NAME]
   local value = parse_quantity(textfield.text)
-  local valid = TemporaryRequestEditorLogic.valid_quantity(value)
+  local valid = TemporaryRequestEditorLogic.is_valid_quantity(value)
   textfield.style = valid and "textbox" or "invalid_value_textfield"
   textfield.style.font_color = DEFAULT_FONT_COLOR
   textfield.style.horizontal_align = "center"
@@ -401,7 +401,7 @@ function TemporaryRequestEditor.confirm(player)
   local target = target_from_content(content)
   local quality = content.tags.quidquid_quality
   local quantity = parse_quantity(quantity_row_of(content)[TEXTFIELD_NAME].text)
-  if not TemporaryRequestEditorLogic.valid_quantity(quantity) then
+  if not TemporaryRequestEditorLogic.is_valid_quantity(quantity) then
     return
   end
 
