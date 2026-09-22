@@ -153,11 +153,12 @@ local function search(query, player_index)
 end
 
 -- Inventories counted toward the "inventory" total: main inventory, cursor stack,
--- ammo and guns -- the same scope QuickItemSearch used (confirmed over RCON that
--- character.get_item_count covers exactly this set, but only for a single quality
--- at a time, hence merging get_contents() here instead). Deliberately excludes the
--- trash slots: those hold items already released back to the network, not items
--- the player still has.
+-- ammo and guns (confirmed over RCON that character.get_item_count covers exactly
+-- this set, but only for a single quality at a time, hence merging get_contents()
+-- here instead). Deliberately excludes the trash slots: an item sitting there is
+-- physically still on the character (not yet actually returned to the network), so
+-- this is a known undercount for a player who's trashed something -- accepted
+-- rather than also tracked via the character's separate trash logistic point.
 local function personal_inventory_index(character)
   local contents_lists = { character.get_main_inventory().get_contents() }
   local cursor_stack = character.cursor_stack
