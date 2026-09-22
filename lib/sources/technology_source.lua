@@ -1,4 +1,5 @@
 local flib_dictionary = require("__flib__.dictionary")
+local Bench = require("lib.bench")
 local build_candidates = require("lib.sources.prototype_candidate")
 local rich_text = require("lib.rich_text")
 local TechnologyPrerequisites = require("lib.technology_prerequisites")
@@ -202,6 +203,7 @@ local function annotate(candidates, player_index)
   local force = player.force
   local queued = queued_names(force.research_queue)
 
+  local probe = Bench.probe()
   local annotations = {}
   for index, candidate in ipairs(candidates) do
     local technology = force.technologies[candidate.id]
@@ -216,6 +218,8 @@ local function annotate(candidates, player_index)
       annotations[index] = TechnologySource.build_annotation(state, prerequisites, triggers, progress, trigger_content)
     end
   end
+  Bench.record("bench.annotate.technologies", probe)
+  Bench.count("bench.count.technologies", #candidates)
   return annotations
 end
 

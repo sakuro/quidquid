@@ -1,4 +1,5 @@
 local flib_dictionary = require("__flib__.dictionary")
+local Bench = require("lib.bench")
 local FontColors = require("lib.font_colors")
 local ItemCounts = require("lib.item_counts")
 local LogisticsState = require("lib.logistics_state")
@@ -219,6 +220,7 @@ local function annotate(candidates, player_index)
     pickup_index = ItemCounts.merge(requester_point.targeted_items_pickup)
   end
 
+  local probe = Bench.probe()
   local annotations = {}
   for index, candidate in ipairs(candidates) do
     annotations[index] = ItemSource.build_annotation(
@@ -231,6 +233,8 @@ local function annotate(candidates, player_index)
       ItemCounts.total(pickup_index, candidate.id)
     )
   end
+  Bench.record("bench.annotate.items", probe)
+  Bench.count("bench.count.items", #candidates)
   return annotations
 end
 
