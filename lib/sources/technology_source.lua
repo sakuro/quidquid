@@ -20,8 +20,7 @@ function TechnologySource.build_caption(state)
 end
 
 -- Defensive bound: no real mine-entity trigger lists more than 2 alternatives
--- today (lithium-processing), but nothing guarantees a mod won't add more --
--- see the design doc's LocalisedString parameter budget section.
+-- today (lithium-processing), but nothing guarantees a mod won't add more.
 local MAX_LISTED_ENTITIES = 10
 
 local function item_icon(item_id_filter)
@@ -33,10 +32,9 @@ local function entity_icon(entity_name)
 end
 
 -- Maps a research_trigger to core's own [technology-trigger] locale wording
--- (core.cfg) instead of inventing new text -- see the design doc's Tooltip
--- section. Returns nil for craft-fluid (no vanilla/Space Age technology uses
--- it and there is no core.cfg key for it yet -- deferred) and for any
--- unrecognized type.
+-- (core.cfg) instead of inventing new text. Returns nil for craft-fluid (no
+-- vanilla/Space Age technology uses it and there is no core.cfg key for it
+-- yet -- deferred) and for any unrecognized type.
 function TechnologySource.build_trigger_content(research_trigger)
   local trigger_type = research_trigger.type
   if trigger_type == "craft-item" then
