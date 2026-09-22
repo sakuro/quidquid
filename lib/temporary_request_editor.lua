@@ -198,7 +198,7 @@ local function ingredient_caption(ingredients)
     ingredients,
     ingredient_icon,
     MAX_LISTED_INGREDIENTS,
-    "quidquid.action-temporary-request-ingredient-list-more"
+    "quidquid.action-recipe-temporary-request-ingredient-list-more"
   )
 end
 
@@ -452,7 +452,7 @@ function TemporaryRequestEditor.confirm(player)
     local message
     if target.type == "item" then
       message = {
-        "quidquid.action-temporary-request-created",
+        "quidquid.action-item-temporary-request-created",
         item_caption(target, quality),
         target_prototype(target).localised_name,
         quantity,
@@ -478,12 +478,12 @@ function TemporaryRequestEditor.confirm(player)
   if target.type == "item" then
     message = action == "remove_zero"
         and {
-          "quidquid.action-temporary-request-removed",
+          "quidquid.action-item-temporary-request-removed",
           item_caption(target, quality),
           target_prototype(target).localised_name,
         }
       or {
-        "quidquid.action-temporary-request-already-satisfied",
+        "quidquid.action-item-temporary-request-already-satisfied",
         item_caption(target, quality),
         target_prototype(target).localised_name,
       }
