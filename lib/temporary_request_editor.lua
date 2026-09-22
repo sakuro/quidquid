@@ -58,7 +58,7 @@ end
 -- omitting the quality segment entirely when the quality system isn't active --
 -- matching the base game's own convention, since there are no player-visible
 -- qualities to name in that case.
-local function quality_tag(type_name, name, quality)
+local function tag_with_quality(type_name, name, quality)
   local suffix = quality_system_active() and ",quality=" .. quality or ""
   return "[" .. type_name .. "=" .. name .. suffix .. "]"
 end
@@ -68,7 +68,7 @@ local function title_caption(target, quality)
   return {
     "",
     "[virtual-signal=signal-Q] ",
-    quality_tag(prefix, target.name, quality),
+    tag_with_quality(prefix, target.name, quality),
     " ",
     target_prototype(target).localised_name,
   }
@@ -190,7 +190,7 @@ end
 local MAX_LISTED_INGREDIENTS = 6
 
 local function ingredient_icon(ingredient)
-  return quality_tag("item", ingredient.name, ingredient.quality)
+  return tag_with_quality("item", ingredient.name, ingredient.quality)
 end
 
 local function ingredient_caption(ingredients)
@@ -203,11 +203,11 @@ local function ingredient_caption(ingredients)
 end
 
 local function item_caption(target, quality)
-  return quality_tag("item", target.name, quality)
+  return tag_with_quality("item", target.name, quality)
 end
 
 local function recipe_caption(target, quality)
-  return quality_tag("recipe", target.name, quality)
+  return tag_with_quality("recipe", target.name, quality)
 end
 
 function TemporaryRequestEditor.open(player, selected_candidate)
