@@ -89,29 +89,37 @@ function TechnologySource.build_trigger_content(research_trigger)
 end
 
 local function labelled_list_block(label_key, technologies)
-  return { "", { label_key }, ": ", TechnologyPrerequisites.technology_list_caption(technologies) }
+  return { label_key, TechnologyPrerequisites.technology_list_caption(technologies) }
 end
 
 function TechnologySource.build_tooltip(state, prerequisites, triggers, progress, trigger_content)
   local tooltip = { "" }
   local has_content = false
   if #prerequisites > 0 then
-    table.insert(tooltip, "\n")
+    if has_content then
+      table.insert(tooltip, "\n")
+    end
     table.insert(tooltip, labelled_list_block("quidquid.technology-missing-prerequisites", prerequisites))
     has_content = true
   end
   if #triggers > 0 then
-    table.insert(tooltip, "\n")
+    if has_content then
+      table.insert(tooltip, "\n")
+    end
     table.insert(tooltip, labelled_list_block("quidquid.technology-blocked-by-triggers", triggers))
     has_content = true
   end
   if state == "available" and progress > 0 then
-    table.insert(tooltip, "\n")
+    if has_content then
+      table.insert(tooltip, "\n")
+    end
     table.insert(tooltip, { "quidquid.technology-progress", progress })
     has_content = true
   end
   if trigger_content ~= nil then
-    table.insert(tooltip, "\n")
+    if has_content then
+      table.insert(tooltip, "\n")
+    end
     table.insert(
       tooltip,
       { "", { "gui-technology-preview.unit-research-trigger-requirements" }, ": ", trigger_content }

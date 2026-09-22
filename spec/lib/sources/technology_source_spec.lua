@@ -155,8 +155,7 @@ describe("TechnologySource", function()
 
       assert.are.same({
         "",
-        "\n",
-        { "", { "quidquid.technology-missing-prerequisites" }, ": ", { "", "[technology=steel-processing]" } },
+        { "quidquid.technology-missing-prerequisites", { "", "[technology=steel-processing]" } },
       }, tooltip)
     end)
 
@@ -168,10 +167,9 @@ describe("TechnologySource", function()
 
       assert.are.same({
         "",
+        { "quidquid.technology-missing-prerequisites", { "", "[technology=steel-processing]" } },
         "\n",
-        { "", { "quidquid.technology-missing-prerequisites" }, ": ", { "", "[technology=steel-processing]" } },
-        "\n",
-        { "", { "quidquid.technology-blocked-by-triggers" }, ": ", { "", "[technology=oil-processing]" } },
+        { "quidquid.technology-blocked-by-triggers", { "", "[technology=oil-processing]" } },
       }, tooltip)
     end)
 
@@ -180,7 +178,6 @@ describe("TechnologySource", function()
 
       assert.are.same({
         "",
-        "\n",
         { "quidquid.technology-progress", 37 },
       }, tooltip)
     end)
@@ -200,7 +197,6 @@ describe("TechnologySource", function()
 
       assert.are.same({
         "",
-        "\n",
         { "", { "gui-technology-preview.unit-research-trigger-requirements" }, ": ", trigger_content },
       }, tooltip)
     end)
@@ -214,10 +210,9 @@ describe("TechnologySource", function()
 
       assert.are.same({
         "",
+        { "quidquid.technology-missing-prerequisites", { "", "[technology=steel-processing]" } },
         "\n",
-        { "", { "quidquid.technology-missing-prerequisites" }, ": ", { "", "[technology=steel-processing]" } },
-        "\n",
-        { "", { "quidquid.technology-blocked-by-triggers" }, ": ", { "", "[technology=oil-processing]" } },
+        { "quidquid.technology-blocked-by-triggers", { "", "[technology=oil-processing]" } },
         "\n",
         { "", { "gui-technology-preview.unit-research-trigger-requirements" }, ": ", trigger_content },
       }, tooltip)
