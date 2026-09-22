@@ -12,14 +12,9 @@ local STATE_CAPTIONS = {
   researched = { text_key = "quidquid.technology-state-researched", color = "green" },
 }
 
--- Uses Factorio's standard named rich-text colors (see
--- https://wiki.factorio.com/Rich_text) rather than custom RGB values --
--- two earlier RGB-based attempts (flib's pale level_range_color, then a mix
--- of it and the darker level_color) both failed real in-game legibility
--- testing against the Aug 22 save's braking-force-4/5 pair -- see
--- docs/superpowers/specs/2026-09-22-technology-research-state-design.md.
--- available and conditionally_available share their text (研究可); only the
--- color tells them apart.
+-- Named colors, not RGB: custom RGB tuples proved too hard to tell apart
+-- in-game. available and conditionally_available share their text (研究可);
+-- only the color tells them apart.
 function TechnologySource.build_caption(state)
   local spec = STATE_CAPTIONS[state]
   return { "", "[color=" .. spec.color .. "]", { spec.text_key }, "[/color]" }
