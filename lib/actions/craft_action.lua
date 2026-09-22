@@ -2,7 +2,7 @@ local ActionRunner = require("lib.action_runner")
 
 local CraftAction = {}
 
-local function resolve_recipe(player, selected_candidate)
+local function resolve_recipe(selected_candidate, player)
   -- Both candidate types use the candidate id as the recipe name. Recipe
   -- candidates are backed by prototypes.recipe for searching, but crafting
   -- requires the force's runtime recipe.
@@ -14,7 +14,7 @@ end
 -- smelting) can never be hand-crafted, regardless of the force-level
 -- get_hand_crafting_disabled_for_recipe flag -- that flag toggles a recipe that
 -- otherwise CAN be hand-crafted, it doesn't cover this case.
-function CraftAction.hand_craftable(recipe, character)
+function CraftAction.is_hand_craftable(recipe, character)
   if character == nil then
     return false
   end
@@ -39,7 +39,7 @@ end
 -- item/recipe, so it's resolved here and reported by execute, not hidden from the
 -- tooltip.
 function CraftAction.resolve_craftable(selected_candidate, player)
-  local recipe = resolve_recipe(player, selected_candidate)
+  local recipe = resolve_recipe(selected_candidate, player)
   if recipe == nil then
     if selected_candidate.type == "item" then
       return nil, "quidquid.action-craft-no-recipe"
@@ -54,7 +54,7 @@ function CraftAction.resolve_craftable(selected_candidate, player)
   -- hand-craftable in the first place, so quidquid's message doesn't either.
   if
     player.force.get_hand_crafting_disabled_for_recipe(recipe)
-    or not CraftAction.hand_craftable(recipe, player.character)
+    or not CraftAction.is_hand_craftable(recipe, player.character)
   then
     return nil, "quidquid.action-craft-hand-crafting-disabled"
   end

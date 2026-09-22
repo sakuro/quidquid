@@ -59,25 +59,25 @@ describe("CraftAction", function()
     end)
   end)
 
-  describe(".hand_craftable", function()
+  describe(".is_hand_craftable", function()
     it("is true when the character can craft at least one of the recipe's categories", function()
       local recipe = fake_recipe({ categories = { "smelting", "crafting" } })
       local character = fake_character({ crafting = true })
 
-      assert.is_true(CraftAction.hand_craftable(recipe, character))
+      assert.is_true(CraftAction.is_hand_craftable(recipe, character))
     end)
 
     it("is false when none of the recipe's categories are hand-craftable", function()
       local recipe = fake_recipe({ categories = { "smelting" } })
       local character = fake_character({ crafting = true })
 
-      assert.is_false(CraftAction.hand_craftable(recipe, character))
+      assert.is_false(CraftAction.is_hand_craftable(recipe, character))
     end)
 
     it("is false when there is no character", function()
       local recipe = fake_recipe()
 
-      assert.is_false(CraftAction.hand_craftable(recipe, nil))
+      assert.is_false(CraftAction.is_hand_craftable(recipe, nil))
     end)
   end)
 
