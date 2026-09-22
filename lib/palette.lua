@@ -130,7 +130,10 @@ function Palette.search_all_sources(query, player_index, locked_source)
     if ok then
       local wrapped = {}
       for _, candidate in ipairs(candidates) do
-        table.insert(wrapped, { candidate = candidate, source_label = source.label })
+        table.insert(
+          wrapped,
+          { candidate = candidate, source_label = source.label, source_interface = source.interface }
+        )
       end
       table.insert(results, wrapped)
     else
@@ -138,6 +141,43 @@ function Palette.search_all_sources(query, player_index, locked_source)
     end
   end
   return PaletteLogic.merge_candidates(results, DISPLAY_LIMIT)
+end
+
+-- Batches every displayed candidate from the same source into one annotate call
+-- (called after PaletteLogic.merge_candidates truncation, never per source's full
+-- match list -- see #121) and writes each returned annotation onto its wrapped
+-- entry's `annotation` field, mutating `merged` in place. Sources that don't
+-- implement annotate, or whose call fails, are simply left without one.
+function Palette.annotate_candidates(merged, player_index)
+  local groups = {}
+  local group_order = {}
+  for _, wrapped in ipairs(merged) do
+    local group = groups[wrapped.source_interface]
+    if group == nil then
+      group = { entries = {}, candidates = {} }
+      groups[wrapped.source_interface] = group
+      table.insert(group_order, wrapped.source_interface)
+    end
+    table.insert(group.entries, wrapped)
+    table.insert(group.candidates, wrapped.candidate)
+  end
+
+  for _, interface in ipairs(group_order) do
+    if RemoteCaller:has(interface, "annotate") then
+      local group = groups[interface]
+      local ok, annotations =
+        pcall(RemoteCaller.call, RemoteCaller, interface, "annotate", group.candidates, player_index)
+      if ok then
+        for index, wrapped in ipairs(group.entries) do
+          wrapped.annotation = annotations[index]
+        end
+      else
+        log(("quidquid: source '%s' annotate failed: %s"):format(interface, tostring(annotations)))
+      end
+    end
+  end
+
+  return merged
 end
 
 function Palette.is_query_valid(query, player_index, locked_source)
@@ -216,12 +256,15 @@ end
 -- reject the tooltip outright.
 local MAX_TOOLTIP_ACTIONS = 10
 
-function Palette.build_tooltip(resolved)
+-- annotation_tooltip, when given, is a source's own LocalisedString (e.g. #121's item
+-- counts) shown above the action hints, separated from them by the same newline
+-- convention as the hints use between each other.
+function Palette.build_tooltip(resolved, annotation_tooltip)
   local input_names = {}
   for input_name, _ in pairs(resolved) do
     table.insert(input_names, input_name)
   end
-  if #input_names == 0 then
+  if #input_names == 0 and annotation_tooltip == nil then
     return nil
   end
   table.sort(input_names)
@@ -230,8 +273,11 @@ function Palette.build_tooltip(resolved)
   local shown_count = truncated and (MAX_TOOLTIP_ACTIONS - 1) or #input_names
 
   local tooltip = { "" }
+  if annotation_tooltip ~= nil then
+    table.insert(tooltip, annotation_tooltip)
+  end
   for index = 1, shown_count do
-    if index > 1 then
+    if index > 1 or annotation_tooltip ~= nil then
       table.insert(tooltip, "\n")
     end
     table.insert(tooltip, action_hint(resolved[input_names[index]]))
@@ -243,9 +289,10 @@ function Palette.build_tooltip(resolved)
   return tooltip
 end
 
-local function candidate_tooltip(candidate, player_index)
-  local resolved = registry:resolve_actions(candidate, player_index, RemoteCaller)
-  return Palette.build_tooltip(resolved)
+local function candidate_tooltip(wrapped, player_index)
+  local resolved = registry:resolve_actions(wrapped.candidate, player_index, RemoteCaller)
+  local annotation_tooltip = wrapped.annotation and wrapped.annotation.tooltip
+  return Palette.build_tooltip(resolved, annotation_tooltip)
 end
 
 local function build_candidate_row(pane, wrapped, index, player_index)
@@ -277,7 +324,7 @@ local function build_candidate_row(pane, wrapped, index, player_index)
     type = "button",
     style = "transparent_button",
     caption = Palette.row_caption(wrapped.candidate),
-    tooltip = candidate_tooltip(wrapped.candidate, player_index),
+    tooltip = candidate_tooltip(wrapped, player_index),
     tags = { quidquid_candidate = wrapped.candidate, quidquid_candidate_index = index },
     raise_hover_events = true,
   })
@@ -300,16 +347,34 @@ local function build_candidate_row(pane, wrapped, index, player_index)
 
   -- label doesn't support horizontally_stretchable (confirmed: setting it had no visible
   -- effect), so an empty-widget spacer absorbs the row's leftover width instead, pushing
-  -- source_label flush against the row's right edge.
+  -- the right end flush against the row's right edge.
   local spacer = row.add({ type = "empty-widget" })
   spacer.style.horizontally_stretchable = true
 
-  local source_label = row.add({
-    type = "label",
-    caption = wrapped.source_label,
-  })
-  source_label.style.vertical_align = "center"
-  source_label.style.font_color = MUTED_FONT_COLOR
+  -- #121: a source's annotation (e.g. an item's inventory/network counts) takes the
+  -- top line of the right end, with the source label demoted to a second, muted line
+  -- below it -- same column as the plain, single-line source label a candidate without
+  -- an annotation still gets.
+  local annotation_caption = wrapped.annotation and wrapped.annotation.caption
+  if annotation_caption ~= nil then
+    local side = row.add({ type = "flow", direction = "vertical" })
+    side.style.horizontal_align = "right"
+    side.style.vertical_spacing = 0
+
+    local annotation_label = side.add({ type = "label", caption = annotation_caption })
+    annotation_label.style.horizontal_align = "right"
+
+    local source_label = side.add({ type = "label", caption = wrapped.source_label })
+    source_label.style.horizontal_align = "right"
+    source_label.style.font_color = MUTED_FONT_COLOR
+  else
+    local source_label = row.add({
+      type = "label",
+      caption = wrapped.source_label,
+    })
+    source_label.style.vertical_align = "center"
+    source_label.style.font_color = MUTED_FONT_COLOR
+  end
 end
 
 local function clear_candidates(player)
@@ -573,6 +638,7 @@ function Palette.on_gui_text_changed(event)
     clear_candidates(player)
   else
     local candidates = Palette.search_all_sources(event.text, event.player_index, locked_source)
+    Palette.annotate_candidates(candidates, event.player_index)
     set_input_validity(player, Palette.is_query_valid(event.text, event.player_index, locked_source))
     render_candidates(player, candidates)
   end
@@ -683,7 +749,9 @@ function Palette.on_unlock_button(event)
   if current_text == "" then
     clear_candidates(player)
   else
-    render_candidates(player, Palette.search_all_sources(current_text, player.index))
+    local candidates = Palette.search_all_sources(current_text, player.index)
+    Palette.annotate_candidates(candidates, player.index)
+    render_candidates(player, candidates)
   end
 end
 
