@@ -25,7 +25,7 @@ local function force(technologies, research_queue, research_progress)
 end
 
 describe("ResearchQueueAction", function()
-  describe(".technology_list", function()
+  describe(".technology_list_caption", function()
     it("lists prerequisite technologies as a single concatenated string", function()
       local prerequisites = {
         technology("automation"),
@@ -34,7 +34,7 @@ describe("ResearchQueueAction", function()
 
       assert.are.same(
         { "", "[technology=automation], [technology=steel-processing]" },
-        ResearchQueueAction.technology_list(prerequisites)
+        ResearchQueueAction.technology_list_caption(prerequisites)
       )
     end)
 
@@ -44,7 +44,7 @@ describe("ResearchQueueAction", function()
         technologies[i] = technology("tech-" .. i)
       end
 
-      local result = ResearchQueueAction.technology_list(technologies)
+      local result = ResearchQueueAction.technology_list_caption(technologies)
 
       assert.are.same({
         "",

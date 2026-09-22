@@ -66,7 +66,7 @@ end
 -- result, or a non-finite one (NaN, +-inf -- e.g. "1/0") -- there is no meaningful
 -- "result" to show for any of these, so they're all folded into the same "no
 -- candidate" outcome from the caller's perspective.
-function CalculatorSource.classify(ok, result)
+function CalculatorSource.valid_value(ok, result)
   if not ok or type(result) ~= "number" then
     return nil
   end
@@ -92,7 +92,7 @@ local function search(query, _player_index)
   if query == "" then
     return {}
   end
-  local value = CalculatorSource.classify(pcall(helpers.evaluate_expression, query, SUFFIX_VARIABLES))
+  local value = CalculatorSource.valid_value(pcall(helpers.evaluate_expression, query, SUFFIX_VARIABLES))
   if value == nil then
     return {}
   end
@@ -106,7 +106,7 @@ local function is_query_valid(query, _player_index)
   if query == "" then
     return true
   end
-  return CalculatorSource.classify(pcall(helpers.evaluate_expression, query, SUFFIX_VARIABLES)) ~= nil
+  return CalculatorSource.valid_value(pcall(helpers.evaluate_expression, query, SUFFIX_VARIABLES)) ~= nil
 end
 
 function CalculatorSource.register()

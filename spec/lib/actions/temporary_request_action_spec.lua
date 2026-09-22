@@ -24,14 +24,14 @@ describe("TemporaryRequestAction", function()
     end)
   end)
 
-  describe(".find_slot_index", function()
+  describe(".find_or_next_slot_index", function()
     it("returns the index of an existing slot matching item and quality", function()
       local existing = {
         { value = { name = "copper-plate", quality = "normal" } },
         { value = { name = "iron-plate", quality = "normal" } },
       }
 
-      assert.are.equal(2, TemporaryRequestAction.find_slot_index(existing, "iron-plate", "normal"))
+      assert.are.equal(2, TemporaryRequestAction.find_or_next_slot_index(existing, "iron-plate", "normal"))
     end)
 
     it("does not match a slot with the same name but a different quality", function()
@@ -39,7 +39,7 @@ describe("TemporaryRequestAction", function()
         { value = { name = "iron-plate", quality = "legendary" } },
       }
 
-      assert.are.equal(2, TemporaryRequestAction.find_slot_index(existing, "iron-plate", "normal"))
+      assert.are.equal(2, TemporaryRequestAction.find_or_next_slot_index(existing, "iron-plate", "normal"))
     end)
 
     it("returns the next free index when nothing matches", function()
@@ -47,11 +47,11 @@ describe("TemporaryRequestAction", function()
         { value = { name = "copper-plate", quality = "normal" } },
       }
 
-      assert.are.equal(2, TemporaryRequestAction.find_slot_index(existing, "iron-plate", "normal"))
+      assert.are.equal(2, TemporaryRequestAction.find_or_next_slot_index(existing, "iron-plate", "normal"))
     end)
 
     it("returns the next free index for an empty list", function()
-      assert.are.equal(1, TemporaryRequestAction.find_slot_index({}, "iron-plate", "normal"))
+      assert.are.equal(1, TemporaryRequestAction.find_or_next_slot_index({}, "iron-plate", "normal"))
     end)
 
     it("skips slots with a nil value", function()
@@ -60,7 +60,7 @@ describe("TemporaryRequestAction", function()
         { value = { name = "iron-plate", quality = "normal" } },
       }
 
-      assert.are.equal(2, TemporaryRequestAction.find_slot_index(existing, "iron-plate", "normal"))
+      assert.are.equal(2, TemporaryRequestAction.find_or_next_slot_index(existing, "iron-plate", "normal"))
     end)
   end)
 

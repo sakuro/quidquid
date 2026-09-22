@@ -11,7 +11,7 @@ local INFINITE_LEVEL = 4294967295
 
 -- The most prerequisites that could ever actually fit in the queue alongside
 -- the target technology itself (queue + prerequisites + target <=
--- MAX_QUEUE_SIZE), reused here as technology_list's display cap so the
+-- MAX_QUEUE_SIZE), reused here as technology_list_caption's display cap so the
 -- number means something concrete rather than being an arbitrary
 -- readability guess. (Coincidentally also 6 in
 -- lib/temporary_request_editor.lua's MAX_LISTED_INGREDIENTS -- that's an
@@ -44,8 +44,8 @@ end
 
 ResearchQueueAction.technology_name = technology_name
 
-local function technology_list(technologies)
-  return rich_text.joined_icon_list(
+local function technology_list_caption(technologies)
+  return rich_text.icon_list_caption(
     technologies,
     technology_icon,
     MAX_LISTED_TECHNOLOGIES,
@@ -53,7 +53,7 @@ local function technology_list(technologies)
   )
 end
 
-ResearchQueueAction.technology_list = technology_list
+ResearchQueueAction.technology_list_caption = technology_list_caption
 
 local function queued_level(queue, technology)
   local level = technology.level
@@ -177,11 +177,14 @@ function ResearchQueueAction.resolve_enqueue(force, candidate)
   local queued = queued_names(queue)
   local prerequisites, triggers = ResearchQueueAction.collect_prerequisites(technology, queued)
   if #triggers > 0 then
-    return technology, "quidquid.action-research-queue-trigger-prerequisite", { technology_list(triggers) }, nil
+    return technology, "quidquid.action-research-queue-trigger-prerequisite", { technology_list_caption(triggers) }, nil
   end
 
   if #queue + #prerequisites + 1 > MAX_QUEUE_SIZE then
-    return technology, "quidquid.action-research-queue-prerequisite-slots", { technology_list(prerequisites) }, nil
+    return technology,
+      "quidquid.action-research-queue-prerequisite-slots",
+      { technology_list_caption(prerequisites) },
+      nil
   end
 
   local new_queue = {}
@@ -195,7 +198,7 @@ function ResearchQueueAction.resolve_enqueue(force, candidate)
 
   local locale_key = #prerequisites == 0 and "quidquid.action-research-queue-added"
     or "quidquid.action-research-queue-added-with-prerequisites"
-  local args = #prerequisites == 0 and {} or { technology_list(prerequisites) }
+  local args = #prerequisites == 0 and {} or { technology_list_caption(prerequisites) }
   return technology, locale_key, args, new_queue
 end
 

@@ -15,7 +15,7 @@ describe("rich_text", function()
     end)
   end)
 
-  describe(".joined_icon_list", function()
+  describe(".icon_list_caption", function()
     local function icon(item)
       return "[x=" .. item.name .. "]"
     end
@@ -23,7 +23,7 @@ describe("rich_text", function()
     it("concatenates every item when under the limit", function()
       local items = { { name = "a" }, { name = "b" } }
 
-      local result = rich_text.joined_icon_list(items, icon, 5, "mod.more-key")
+      local result = rich_text.icon_list_caption(items, icon, 5, "mod.more-key")
 
       assert.are.same({ "", "[x=a], [x=b]" }, result)
     end)
@@ -31,7 +31,7 @@ describe("rich_text", function()
     it("concatenates every item with no trailing entry when exactly at the limit", function()
       local items = { { name = "a" }, { name = "b" }, { name = "c" } }
 
-      local result = rich_text.joined_icon_list(items, icon, 3, "mod.more-key")
+      local result = rich_text.icon_list_caption(items, icon, 3, "mod.more-key")
 
       assert.are.same({ "", "[x=a], [x=b], [x=c]" }, result)
     end)
@@ -39,7 +39,7 @@ describe("rich_text", function()
     it("truncates to the limit and names the correct remainder past it", function()
       local items = { { name = "a" }, { name = "b" }, { name = "c" }, { name = "d" } }
 
-      local result = rich_text.joined_icon_list(items, icon, 3, "mod.more-key")
+      local result = rich_text.icon_list_caption(items, icon, 3, "mod.more-key")
 
       assert.are.same({ "", "[x=a], [x=b], [x=c], ", { "mod.more-key", 1 } }, result)
     end)

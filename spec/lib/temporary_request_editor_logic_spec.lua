@@ -62,11 +62,11 @@ describe("TemporaryRequestEditorLogic", function()
     end)
   end)
 
-  describe(".recipe_quantity", function()
+  describe(".recipe_craft_count", function()
     it("uses the smallest complete ingredient count", function()
       assert.are.equal(
         2,
-        TemporaryRequestEditorLogic.recipe_quantity({ ["iron-plate"] = 6, ["copper-plate"] = 2 }, {
+        TemporaryRequestEditorLogic.recipe_craft_count({ ["iron-plate"] = 6, ["copper-plate"] = 2 }, {
           { type = "item", name = "iron-plate", amount = 3 },
           { type = "item", name = "copper-plate", amount = 1 },
         })
@@ -74,7 +74,7 @@ describe("TemporaryRequestEditorLogic", function()
     end)
 
     it("returns nil when an ingredient request does not exist", function()
-      assert.is_nil(TemporaryRequestEditorLogic.recipe_quantity({ ["iron-plate"] = 6 }, {
+      assert.is_nil(TemporaryRequestEditorLogic.recipe_craft_count({ ["iron-plate"] = 6 }, {
         { type = "item", name = "iron-plate", amount = 3 },
         { type = "item", name = "copper-plate", amount = 1 },
       }))

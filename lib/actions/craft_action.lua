@@ -64,7 +64,7 @@ function CraftAction.resolve_craftable(selected_candidate, player)
   return recipe, nil
 end
 
-function CraftAction.count_of(n)
+function CraftAction.fixed_count(n)
   return function(_player, _recipe)
     return n
   end
@@ -107,14 +107,14 @@ function CraftAction.register()
     "quidquid-craft-1",
     "quidquid.craft-1-action",
     { "quidquid.action-craft-1" },
-    CraftAction.count_of(1)
+    CraftAction.fixed_count(1)
   )
   register(
     "craft-5",
     "quidquid-craft-5",
     "quidquid.craft-5-action",
     { "quidquid.action-craft-5" },
-    CraftAction.count_of(5)
+    CraftAction.fixed_count(5)
   )
   register(
     "craft-all",
