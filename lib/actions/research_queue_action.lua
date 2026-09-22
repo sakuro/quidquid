@@ -19,7 +19,7 @@ local INFINITE_LEVEL = 4294967295
 -- other.)
 local MAX_LISTED_TECHNOLOGIES = MAX_QUEUE_SIZE - 1
 
-local function is_level_based(technology)
+local function is_multi_level(technology)
   local max_level = technology.prototype.max_level
   return max_level == INFINITE_LEVEL or max_level == "infinite" or type(max_level) == "number" and max_level > 1
 end
@@ -35,7 +35,7 @@ ResearchQueueAction.technology_icon = technology_icon
 
 local function technology_name(technology, level)
   local name = { "", technology.localised_name }
-  if is_level_based(technology) then
+  if is_multi_level(technology) then
     table.insert(name, " ")
     table.insert(name, level or technology.level)
   end
@@ -57,7 +57,7 @@ ResearchQueueAction.technology_list_caption = technology_list_caption
 
 local function queued_level(queue, technology)
   local level = technology.level
-  if not is_level_based(technology) then
+  if not is_multi_level(technology) then
     return level
   end
   for _, queued_technology in ipairs(queue) do
@@ -117,15 +117,15 @@ function ResearchQueueAction.collect_prerequisites(technology, queued)
   return prerequisites, triggers
 end
 
-function ResearchQueueAction.progress_for(force, technology, queue_index)
-  if queue_index == 1 then
+function ResearchQueueAction.progress_for(force, technology, queue_position)
+  if queue_position == 1 then
     return math.floor(force.research_progress * 100 + 0.5)
   end
   return math.floor(technology.saved_progress * 100 + 0.5)
 end
 
 local function queue_index(queue, technology)
-  if is_level_based(technology) then
+  if is_multi_level(technology) then
     -- Each occurrence represents the next level of an infinite technology.
     return nil
   end
