@@ -54,11 +54,24 @@ local function quality_system_active()
   return false
 end
 
+-- A rich-text tag like [item=iron-plate] or [item=iron-plate,quality=legendary],
+-- omitting the quality segment entirely when the quality system isn't active --
+-- matching the base game's own convention, since there are no player-visible
+-- qualities to name in that case.
+local function quality_tag(type_name, name, quality)
+  local suffix = quality_system_active() and ",quality=" .. quality or ""
+  return "[" .. type_name .. "=" .. name .. suffix .. "]"
+end
+
 local function title_caption(target, quality)
   local prefix = target.type == "item" and "item" or "recipe"
-  local tag = quality_system_active() and ("[" .. prefix .. "=" .. target.name .. ",quality=" .. quality .. "] ")
-    or ("[" .. prefix .. "=" .. target.name .. "] ")
-  return { "", "[virtual-signal=signal-Q] ", tag, target_prototype(target).localised_name }
+  return {
+    "",
+    "[virtual-signal=signal-Q] ",
+    quality_tag(prefix, target.name, quality),
+    " ",
+    target_prototype(target).localised_name,
+  }
 end
 
 local function available_qualities(force)
@@ -177,8 +190,7 @@ end
 local MAX_LISTED_INGREDIENTS = 6
 
 local function ingredient_icon(ingredient)
-  local quality = quality_system_active() and ",quality=" .. ingredient.quality or ""
-  return "[item=" .. ingredient.name .. quality .. "]"
+  return quality_tag("item", ingredient.name, ingredient.quality)
 end
 
 local function ingredient_caption(ingredients)
@@ -191,13 +203,11 @@ local function ingredient_caption(ingredients)
 end
 
 local function item_caption(target, quality)
-  local quality_suffix = quality_system_active() and ",quality=" .. quality or ""
-  return "[item=" .. target.name .. quality_suffix .. "]"
+  return quality_tag("item", target.name, quality)
 end
 
 local function recipe_caption(target, quality)
-  local quality_suffix = quality_system_active() and ",quality=" .. quality or ""
-  return "[recipe=" .. target.name .. quality_suffix .. "]"
+  return quality_tag("recipe", target.name, quality)
 end
 
 function TemporaryRequestEditor.open(player, selected_candidate)
