@@ -5,6 +5,8 @@ local TechnologyPrerequisites = require("lib.technology_prerequisites")
 
 local TechnologySource = {}
 
+-- available and conditionally_available share their text (研究可); only the
+-- color tells them apart.
 local STATE_CAPTIONS = {
   not_available = { text_key = "quidquid.technology-state-not-available", color = "red" },
   conditionally_available = { text_key = "quidquid.technology-state-available", color = "orange" },
@@ -12,8 +14,6 @@ local STATE_CAPTIONS = {
   researched = { text_key = "quidquid.technology-state-researched", color = "green" },
 }
 
--- available and conditionally_available share their text (研究可); only the
--- color tells them apart.
 function TechnologySource.build_caption(state)
   local spec = STATE_CAPTIONS[state]
   return { "", "[color=" .. spec.color .. "]", { spec.text_key }, "[/color]" }
