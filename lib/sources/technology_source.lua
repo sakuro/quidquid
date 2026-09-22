@@ -167,8 +167,58 @@ local function search(query, player_index)
   )
 end
 
+local function queued_names(research_queue)
+  local names = {}
+  for _, technology in ipairs(research_queue) do
+    names[technology.name] = true
+  end
+  return names
+end
+
+-- force.research_progress is only meaningful for the technology actually
+-- being researched right now (force.current_research); every other
+-- technology's own progress is its saved_progress, which is 0 unless it was
+-- previously researched partway and then interrupted.
+local function current_progress(force, technology)
+  if force.current_research ~= nil and force.current_research.name == technology.name then
+    return math.floor(force.research_progress * 100 + 0.5)
+  end
+  return math.floor(technology.saved_progress * 100 + 0.5)
+end
+
+-- Called once per render with only the displayed technology candidates (see
+-- Palette.annotate_candidates), so force.research_queue is read and
+-- converted to a name set once here rather than per candidate. Unlike the
+-- item source's annotate, every candidate always gets an annotation: a
+-- technology's research state applies regardless of controller type
+-- (research is force-wide, not tied to a character).
+local function annotate(candidates, player_index)
+  local player = game.get_player(player_index)
+  if player == nil then
+    return {}
+  end
+  local force = player.force
+  local queued = queued_names(force.research_queue)
+
+  local annotations = {}
+  for index, candidate in ipairs(candidates) do
+    local technology = force.technologies[candidate.id]
+    if technology ~= nil then
+      local state = TechnologyPrerequisites.classify_state(technology, queued)
+      local prerequisites, triggers = TechnologyPrerequisites.collect_prerequisites(technology, queued)
+      local progress = current_progress(force, technology)
+      local trigger_content = nil
+      if not technology.researched and technology.prototype.research_trigger ~= nil then
+        trigger_content = TechnologySource.build_trigger_content(technology.prototype.research_trigger)
+      end
+      annotations[index] = TechnologySource.build_annotation(state, prerequisites, triggers, progress, trigger_content)
+    end
+  end
+  return annotations
+end
+
 function TechnologySource.register()
-  remote.add_interface("quidquid.technology-source", { search = search })
+  remote.add_interface("quidquid.technology-source", { search = search, annotate = annotate })
   remote.call("quidquid", "register_source", {
     contract_version = 1,
     id = "technologies",
