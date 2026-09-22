@@ -19,7 +19,7 @@ local PLUS_BUTTON_NAME = "quidquid-temporary-request-editor-plus-button"
 local BUTTON_ROW_NAME = "quidquid-temporary-request-editor-button-row"
 local CONFIRM_BUTTON_NAME = "quidquid-temporary-request-editor-confirm-button"
 
-local RESERVED_QUALITY_NAME = "quality-unknown"
+local UNKNOWN_QUALITY_NAME = "quality-unknown"
 local DEFAULT_FONT_COLOR = { r = 0, g = 0, b = 0 }
 
 local function get_frame(player)
@@ -47,7 +47,7 @@ end
 
 local function quality_system_active()
   for name, _ in pairs(prototypes.quality) do
-    if name ~= "normal" and name ~= RESERVED_QUALITY_NAME then
+    if name ~= "normal" and name ~= UNKNOWN_QUALITY_NAME then
       return true
     end
   end
@@ -80,7 +80,7 @@ local function available_qualities(force)
   end
   local qualities = {}
   for name, _ in pairs(prototypes.quality) do
-    if name ~= RESERVED_QUALITY_NAME and force.is_quality_unlocked(name) then
+    if name ~= UNKNOWN_QUALITY_NAME and force.is_quality_unlocked(name) then
       table.insert(qualities, name)
     end
   end
