@@ -1,4 +1,4 @@
-local rich_text = require("lib.rich_text")
+local TechnologyPrerequisites = require("lib.technology_prerequisites")
 
 local ResearchQueueAction = {}
 
@@ -7,57 +7,10 @@ local ResearchQueueAction = {}
 -- engine refuses to queue a research past the 7th queue slot. Re-verify
 -- in-game if this ever needs to change.
 local MAX_QUEUE_SIZE = 7
-local INFINITE_LEVEL = 4294967295
-
--- The most prerequisites that could ever actually fit in the queue alongside
--- the target technology itself (queue + prerequisites + target <=
--- MAX_QUEUE_SIZE), reused here as technology_list_caption's display cap so the
--- number means something concrete rather than being an arbitrary
--- readability guess. (Coincidentally also 6 in
--- lib/temporary_request_editor.lua's MAX_LISTED_INGREDIENTS -- that's an
--- unrelated number from an unrelated domain; don't derive one from the
--- other.)
-local MAX_LISTED_TECHNOLOGIES = MAX_QUEUE_SIZE - 1
-
-local function is_multi_level(technology)
-  local max_level = technology.prototype.max_level
-  return max_level == INFINITE_LEVEL or max_level == "infinite" or type(max_level) == "number" and max_level > 1
-end
-
--- The icon and name are reported as separate flying-text arguments (__1__, __2__)
--- rather than one fused caption, matching how the temporary-request editor's own
--- confirm messages cite an item/recipe -- see ActionRunner.run's flying text.
-local function technology_icon(technology)
-  return "[technology=" .. technology.name .. "]"
-end
-
-ResearchQueueAction.technology_icon = technology_icon
-
-local function technology_name(technology, level)
-  local name = { "", technology.localised_name }
-  if is_multi_level(technology) then
-    table.insert(name, " ")
-    table.insert(name, level or technology.level)
-  end
-  return name
-end
-
-ResearchQueueAction.technology_name = technology_name
-
-local function technology_list_caption(technologies)
-  return rich_text.icon_list_caption(
-    technologies,
-    technology_icon,
-    MAX_LISTED_TECHNOLOGIES,
-    "quidquid.action-research-queue-technology-list-more"
-  )
-end
-
-ResearchQueueAction.technology_list_caption = technology_list_caption
 
 local function queued_level(queue, technology)
   local level = technology.level
-  if not is_multi_level(technology) then
+  if not TechnologyPrerequisites.is_multi_level(technology) then
     return level
   end
   for _, queued_technology in ipairs(queue) do
@@ -70,8 +23,17 @@ end
 
 ResearchQueueAction.queued_level = queued_level
 
+-- Icon and name are passed as separate message arguments rather than
+-- pre-combined into one string: technology_name's level suffix means it
+-- returns a nested LocalisedString table, not a plain string, so it can't be
+-- concatenated with the icon string via "..".
 local function queue_message(queue, target, locale_key, ...)
-  return { locale_key, technology_icon(target), technology_name(target, queued_level(queue, target)), ... }
+  return {
+    locale_key,
+    TechnologyPrerequisites.technology_icon(target),
+    TechnologyPrerequisites.technology_name(target, queued_level(queue, target)),
+    ...,
+  }
 end
 
 local function queued_names(queue)
@@ -82,41 +44,6 @@ local function queued_names(queue)
   return names
 end
 
--- Returns unresearched, unqueued prerequisites in dependency order and all trigger
--- technologies found in the prerequisite graph.
-function ResearchQueueAction.collect_prerequisites(technology, queued)
-  local prerequisites = {}
-  local triggers = {}
-  local visited = {}
-
-  local function visit(current)
-    if current.researched or queued[current.name] or visited[current.name] then
-      return
-    end
-    visited[current.name] = true
-
-    local names = {}
-    for name in pairs(current.prerequisites) do
-      table.insert(names, name)
-    end
-    table.sort(names)
-    for _, name in ipairs(names) do
-      visit(current.prerequisites[name])
-    end
-
-    if current ~= technology then
-      if current.prototype.research_trigger ~= nil then
-        table.insert(triggers, current)
-      else
-        table.insert(prerequisites, current)
-      end
-    end
-  end
-
-  visit(technology)
-  return prerequisites, triggers
-end
-
 function ResearchQueueAction.progress_for(force, technology, queue_position)
   if queue_position == 1 then
     return math.floor(force.research_progress * 100 + 0.5)
@@ -125,7 +52,7 @@ function ResearchQueueAction.progress_for(force, technology, queue_position)
 end
 
 local function queue_index(queue, technology)
-  if is_multi_level(technology) then
+  if TechnologyPrerequisites.is_multi_level(technology) then
     -- Each occurrence represents the next level of an infinite technology.
     return nil
   end
@@ -175,15 +102,18 @@ function ResearchQueueAction.resolve_enqueue(force, candidate)
   end
 
   local queued = queued_names(queue)
-  local prerequisites, triggers = ResearchQueueAction.collect_prerequisites(technology, queued)
+  local prerequisites, triggers = TechnologyPrerequisites.collect_prerequisites(technology, queued)
   if #triggers > 0 then
-    return technology, "quidquid.action-research-queue-trigger-prerequisite", { technology_list_caption(triggers) }, nil
+    return technology,
+      "quidquid.action-research-queue-trigger-prerequisite",
+      { TechnologyPrerequisites.technology_list_caption(triggers) },
+      nil
   end
 
   if #queue + #prerequisites + 1 > MAX_QUEUE_SIZE then
     return technology,
       "quidquid.action-research-queue-prerequisite-slots",
-      { technology_list_caption(prerequisites) },
+      { TechnologyPrerequisites.technology_list_caption(prerequisites) },
       nil
   end
 
@@ -198,7 +128,7 @@ function ResearchQueueAction.resolve_enqueue(force, candidate)
 
   local locale_key = #prerequisites == 0 and "quidquid.action-research-queue-added"
     or "quidquid.action-research-queue-added-with-prerequisites"
-  local args = #prerequisites == 0 and {} or { technology_list_caption(prerequisites) }
+  local args = #prerequisites == 0 and {} or { TechnologyPrerequisites.technology_list_caption(prerequisites) }
   return technology, locale_key, args, new_queue
 end
 
