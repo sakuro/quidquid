@@ -32,27 +32,21 @@ local DISPLAY_LIMIT = 30
 
 local ROW_HEIGHT = 44
 local VISIBLE_ROWS = 5
--- #136: 400/100 clipped Japanese annotation/source-label text mid-character
--- in-game (e.g. "研究済み" down to "研究", "テクノロジー" down to "テクノロ") --
--- CJK glyphs need more width per character than the original estimate
--- assumed. Widened pending further in-game confirmation, not a measured fit.
+-- Wide enough for CJK annotation/source-label text (e.g. "研究済み",
+-- "テクノロジー"), which needs more width per character than Latin text.
 local CONTENT_WIDTH = 500
--- #136: the results table is fixed at CONTENT_WIDTH inside a scroll-pane, so
--- once there are more results than VISIBLE_ROWS and a vertical scrollbar
--- appears, it overlaps the row's rightmost content instead of the pane
--- shrinking the row area for it. Rows (and the table itself) use
--- ROW_WIDTH -- CONTENT_WIDTH minus the scrollbar's own width -- so there's
--- room left for the scrollbar without covering anything.
-local SCROLLBAR_WIDTH = 24
+-- The results table sits in a scroll-pane; once there are more results than
+-- VISIBLE_ROWS, a vertical scrollbar appears inside it and would otherwise
+-- overlap the row's rightmost content. Rows (and the table itself) use
+-- ROW_WIDTH -- CONTENT_WIDTH minus the scrollbar's own width -- to leave
+-- room for it.
+local SCROLLBAR_WIDTH = 36
 local ROW_WIDTH = CONTENT_WIDTH - SCROLLBAR_WIDTH
-local NAME_COLUMN_WIDTH = 250
--- #136: what's left of CONTENT_WIDTH after NAME_COLUMN_WIDTH, the icon, and
--- horizontal_spacing -- an estimate pending in-game confirmation, not a
--- measured value. Without a width/squash constraint here, a long annotation
--- caption (e.g. the technology source's "Not researched") has nothing
--- stopping it from claiming space the row would otherwise give `names`,
--- since `names` -- unlike this column, previously -- is squashable.
-local SIDE_COLUMN_WIDTH = 160
+local NAME_COLUMN_WIDTH = 300
+-- A ceiling on the annotation column's width, so a long caption (e.g. the
+-- technology source's "Not researched") can't grow unbounded. Not
+-- squashable (see `side` below).
+local SIDE_COLUMN_WIDTH = 200
 
 local DEFAULT_FONT_COLOR = FontColors.DEFAULT
 local ACCENT_FONT_COLOR = FontColors.ACCENT
@@ -390,21 +384,21 @@ local function build_candidate_row(pane, wrapped, index, player_index)
   -- an annotation still gets.
   local annotation_caption = wrapped.annotation and wrapped.annotation.caption
   if annotation_caption ~= nil then
+    -- Not squashable, unlike `names` -- `side` keeps its actual content's
+    -- natural size (up to SIDE_COLUMN_WIDTH) so the row squashes `names`
+    -- under pressure instead of clipping the annotation.
     local side = row.add({ type = "flow", direction = "vertical" })
     side.style.maximal_width = SIDE_COLUMN_WIDTH
-    side.style.horizontally_squashable = true
     side.style.horizontal_align = "right"
     side.style.vertical_spacing = 0
 
     local annotation_label = side.add({ type = "label", caption = annotation_caption })
     annotation_label.style.maximal_width = SIDE_COLUMN_WIDTH
-    annotation_label.style.horizontally_squashable = true
     annotation_label.style.single_line = false
     annotation_label.style.horizontal_align = "right"
 
     local source_label = side.add({ type = "label", caption = wrapped.source_label })
     source_label.style.maximal_width = SIDE_COLUMN_WIDTH
-    source_label.style.horizontally_squashable = true
     source_label.style.horizontal_align = "right"
     source_label.style.font_color = MUTED_FONT_COLOR
   else
