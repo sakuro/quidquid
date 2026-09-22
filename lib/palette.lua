@@ -267,7 +267,11 @@ local MAX_TOOLTIP_ACTIONS = 10
 
 -- annotation_tooltip, when given, is a source's own LocalisedString (e.g. #121's item
 -- counts) shown above the action hints, separated from them by the same newline
--- convention as the hints use between each other.
+-- convention as the hints use between each other. It costs 2 slots of its own (the
+-- line plus its leading separator) and, unlike a second-and-later hint, makes even
+-- the *first* hint pay for a separator too (see the loop below) -- so the safe
+-- budget for hints drops from MAX_TOOLTIP_ACTIONS to MAX_TOOLTIP_ACTIONS - 1 whenever
+-- one is present.
 function Palette.build_tooltip(resolved, annotation_tooltip)
   local input_names = {}
   for input_name, _ in pairs(resolved) do
@@ -278,8 +282,9 @@ function Palette.build_tooltip(resolved, annotation_tooltip)
   end
   table.sort(input_names)
 
-  local truncated = #input_names > MAX_TOOLTIP_ACTIONS
-  local shown_count = truncated and (MAX_TOOLTIP_ACTIONS - 1) or #input_names
+  local max_actions = annotation_tooltip ~= nil and (MAX_TOOLTIP_ACTIONS - 1) or MAX_TOOLTIP_ACTIONS
+  local truncated = #input_names > max_actions
+  local shown_count = truncated and (max_actions - 1) or #input_names
 
   local tooltip = { "" }
   if annotation_tooltip ~= nil then

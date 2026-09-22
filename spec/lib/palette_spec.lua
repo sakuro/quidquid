@@ -517,5 +517,35 @@ describe("Palette", function()
 
       assert.are.same({ "", { "quidquid.item-counts", 12, 340 } }, tooltip)
     end)
+
+    it("shows every action untruncated at exactly the 9-action budget when an annotation is present", function()
+      local resolved = {}
+      for i = 1, 9 do
+        resolved[("k%02d"):format(i)] = action("action-" .. i)
+      end
+
+      local tooltip = Palette.build_tooltip(resolved, { "quidquid.item-counts", 12, 340 })
+
+      -- 1 header + 1 annotation + 9 hints + 9 separators (one before each, including
+      -- the first, since the annotation line precedes every hint) = 20, no marker.
+      assert.are.equal(20, #tooltip)
+    end)
+
+    it(
+      "truncates to 8 actions plus a trailing '...N more' entry past the 9-action budget when an annotation is present",
+      function()
+        local resolved = {}
+        for i = 1, 10 do
+          resolved[("k%02d"):format(i)] = action("action-" .. i)
+        end
+
+        local tooltip = Palette.build_tooltip(resolved, { "quidquid.item-counts", 12, 340 })
+
+        assert.are.same({ "quidquid.candidate-tooltip-more-actions", 2 }, tooltip[#tooltip])
+        -- 1 header + 1 annotation + 8 hints + 8 separators (before each hint) + 1
+        -- separator before the marker + 1 marker = 20, within budget.
+        assert.are.equal(20, #tooltip)
+      end
+    )
   end)
 end)
