@@ -12,9 +12,8 @@ local STATE_CAPTIONS = {
   researched = { text_key = "quidquid.technology-state-researched", color = "green" },
 }
 
--- Named colors, not RGB: custom RGB tuples proved too hard to tell apart
--- in-game. available and conditionally_available share their text (研究可);
--- only the color tells them apart.
+-- available and conditionally_available share their text (研究可); only the
+-- color tells them apart.
 function TechnologySource.build_caption(state)
   local spec = STATE_CAPTIONS[state]
   return { "", "[color=" .. spec.color .. "]", { spec.text_key }, "[/color]" }
