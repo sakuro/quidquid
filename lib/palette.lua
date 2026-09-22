@@ -37,6 +37,14 @@ local VISIBLE_ROWS = 5
 -- CJK glyphs need more width per character than the original estimate
 -- assumed. Widened pending further in-game confirmation, not a measured fit.
 local CONTENT_WIDTH = 500
+-- #136: the results table is fixed at CONTENT_WIDTH inside a scroll-pane, so
+-- once there are more results than VISIBLE_ROWS and a vertical scrollbar
+-- appears, it overlaps the row's rightmost content instead of the pane
+-- shrinking the row area for it. Rows (and the table itself) use
+-- ROW_WIDTH -- CONTENT_WIDTH minus the scrollbar's own width -- so there's
+-- room left for the scrollbar without covering anything.
+local SCROLLBAR_WIDTH = 24
+local ROW_WIDTH = CONTENT_WIDTH - SCROLLBAR_WIDTH
 local NAME_COLUMN_WIDTH = 250
 -- #136: what's left of CONTENT_WIDTH after NAME_COLUMN_WIDTH, the icon, and
 -- horizontal_spacing -- an estimate pending in-game confirmation, not a
@@ -327,7 +335,7 @@ local function build_candidate_row(pane, wrapped, index, player_index)
     tags = { quidquid_candidate_index = index },
   })
   row.style.horizontally_stretchable = true
-  row.style.maximal_width = CONTENT_WIDTH
+  row.style.maximal_width = ROW_WIDTH
   row.style.horizontally_squashable = true
   row.style.horizontal_spacing = 4
   row.style.vertical_align = "center"
@@ -561,8 +569,8 @@ function Palette.open(player)
     column_count = 1,
   })
   results_table_element.style.horizontally_stretchable = true
-  results_table_element.style.width = CONTENT_WIDTH
-  results_table_element.style.maximal_width = CONTENT_WIDTH
+  results_table_element.style.width = ROW_WIDTH
+  results_table_element.style.maximal_width = ROW_WIDTH
   results_table_element.style.horizontally_squashable = true
 
   player.opened = frame
