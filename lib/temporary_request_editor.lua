@@ -184,7 +184,7 @@ end
 -- a real per-machine cap). Chosen so this cap essentially never truncates a
 -- real recipe's list today, while still bounding the pathological case the
 -- same way MAX_LISTED_TECHNOLOGIES bounds research's dependency graphs.
--- (Coincidentally also 6 in lib/actions/research_queue_action.lua's
+-- (Coincidentally also 6 in lib/technology_prerequisites.lua's
 -- MAX_LISTED_TECHNOLOGIES -- that's an unrelated number from an unrelated
 -- domain; don't derive one from the other.)
 local MAX_LISTED_INGREDIENTS = 6

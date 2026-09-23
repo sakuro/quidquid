@@ -62,9 +62,9 @@ end)
 -- in-game: "Attempt to remote call outside of an event"). Neither on_init (only fires for a
 -- brand-new save) nor on_configuration_changed (only fires when something actually changed)
 -- nor on_load (no game/remote API access at all) covers an ordinary continued load, so
--- each source/action's remote.call runs on the first tick after any load instead. Unlike that
--- one-shot need, flib_dictionary.on_tick must keep running every tick to progress translation
--- batching, so this handler no longer unregisters itself -- a flag gates the one-shot part.
+-- each source/action's remote.call runs on the first tick after any load instead. The handler
+-- itself stays registered, because flib_dictionary.on_tick has to run every tick to progress
+-- translation batching; a flag gates the one-shot part.
 local remote_interfaces_registered = false
 
 script.on_event(defines.events.on_tick, function()

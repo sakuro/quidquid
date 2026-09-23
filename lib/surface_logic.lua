@@ -66,9 +66,9 @@ function SurfaceLogic.build_candidates(query, descriptors, include_hidden, local
   end
   -- This order only ever surfaces as a tiebreak: Palette.search_all_sources
   -- feeds every source's candidates through PaletteLogic.merge_candidates,
-  -- which re-sorts everything by search_score. id is always a unique string
-  -- now, so a plain comparison suffices -- no more mixing a generated
-  -- surface's numeric index against an ungenerated planet's name.
+  -- which re-sorts everything by search_score. Every id is a unique string --
+  -- a surface's name, or an ungenerated planet's -- so a plain comparison
+  -- suffices.
   table.sort(candidates, function(a, b)
     return a.id < b.id
   end)
