@@ -7,9 +7,12 @@ local Bench = {}
 -- ordinary play costs one boolean test each.
 Bench.enabled = false
 
--- Three widths of query: `a` matches nearly every prototype (largest N), `iron`
--- is typical, `logistic-science-pack` is already narrowed down.
-local BENCH_QUERIES = { "a", "iron", "logistic-science-pack" }
+-- Widths of query, narrowing left to right. `a` matches nearly every prototype
+-- (largest N) and `logistic-science-pack` is already narrowed down; `ir` and
+-- `lo` are prefixes of the two longer queries, so each pair shows what two more
+-- typed characters do to N. Fuzzy matching is subsequence-based, so a
+-- two-character query is far wider than its length suggests.
+local BENCH_QUERIES = { "a", "ir", "iron", "lo", "logistic-science-pack" }
 local BENCH_REPS = 20
 
 local sums = {}
