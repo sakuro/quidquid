@@ -85,16 +85,18 @@ A source answers search queries with candidates of one type.
 | `type` | yes | The candidate type this source produces. Unique across all sources — a duplicate is rejected. Actions are matched to candidates by this string. |
 | `id` | yes | Identifies your source in Quidquid's log messages. |
 | `label` | yes | LocalisedString shown as the source label on each result row. |
-| `prefixes` | no | Prefix words that lock the palette to this source — with `{ "w", "widget" }`, typing `widget ` locks to it. A prefix already taken by another source is ignored with a log line, as is an empty string. |
-| `in_default_search` | no | When true, the source takes part in the unlocked search. When false it is reachable only through a prefix. |
+| `prefixes` | no | Prefix words that lock the palette to this source — with `{ "w", "widget" }`, typing `widget ` locks to it. A prefix already taken by another source is ignored with a log line, as is an empty string. Defaults to none. |
+| `in_default_search` | no | When true, the source takes part in the unlocked search. Defaults to `false`, which leaves it reachable only through a prefix. |
 | `interface` | yes | Name of your remote interface implementing the functions below. |
+
+A source with neither `prefixes` nor `in_default_search` cannot be reached at all.
 
 ### Interface functions
 
 | Function | Required | Contract |
 | --- | --- | --- |
 | `search(query, player_index)` | yes | Returns an array of candidates. `query` is already whitespace-trimmed and may be empty. |
-| `is_query_valid(query, player_index)` | no | Return `false` to mark the palette input as invalid for this query. Every searched source is asked; one `false` is enough. |
+| `is_query_valid(query, player_index)` | no | Return `false` to mark the palette input as invalid for this query. Every searched source is asked; one `false` is enough. Omitted, every query is valid. |
 
 Results from all searched sources are merged by `search_score` (higher first,
 ties broken by source registration order) and the top 30 rows are shown.
@@ -108,12 +110,12 @@ ties broken by source registration order) and the top 30 rows are shown.
 | `label` | yes | String or LocalisedString naming the entry. |
 | `icon` | yes | SpritePath, rendered as `[img=...]`. |
 | `search_score` | yes | Ranking score, higher first. A candidate without a numeric one raises an error that aborts the entire search, not just that candidate. |
-| `search_display_name` | no | Plain string shown instead of `label` as the name. Only a plain string can carry match highlighting. |
-| `search_internal_name` | no | Plain string shown as the muted second line (Quidquid's own sources put the prototype name here). |
-| `search_display_ranges`, `search_internal_ranges` | no | Arrays of tables with `start_byte` and `end_byte`, marking the matched part of the corresponding name in bold. |
-| `secondary_text` | no | Muted second line for a candidate with no `search_internal_name`. |
-| `numeric` | no | Right-align the name, for a candidate whose label is a value rather than a name. |
-| `annotation` | no | A table with `caption` and `tooltip` LocalisedStrings. The caption is shown at the right end of the row, the tooltip above the action hints. |
+| `search_display_name` | no | Plain string shown instead of `label` as the name — only a plain string can carry match highlighting. Omitted, `label` is shown. |
+| `search_internal_name` | no | Plain string shown as the muted second line (Quidquid's own sources put the prototype name here). Omitted, `secondary_text` takes that line. |
+| `search_display_ranges`, `search_internal_ranges` | no | Arrays of tables with `start_byte` and `end_byte`, marking the matched part of the corresponding name in bold. Omitted, that name is shown without highlighting. |
+| `secondary_text` | no | Muted second line for a candidate with no `search_internal_name`. Omitted, such a candidate has no second line. |
+| `numeric` | no | Right-align the name column, for a candidate whose label is a value rather than a name. Defaults to `false`. |
+| `annotation` | no | A table with `caption` and `tooltip` LocalisedStrings. The caption is shown at the right end of the row, the tooltip above the action hints. Omitted, the right end carries only the source label. |
 
 ### Minimal example
 
@@ -167,7 +169,7 @@ Quidquid's own (`item`, `fluid`, `recipe`, `technology`, `surface`).
 | Function | Required | Contract |
 | --- | --- | --- |
 | `execute(candidate, player_index)` | yes | Performs the action on the selected candidate. |
-| `is_available(player_index)` | no | Return `false` to hide the action. |
+| `is_available(player_index)` | no | Return `false` to hide the action. Omitted, the action is always offered for its types. |
 
 `is_available` may only gate on state that is uniform across every candidate of a
 type, such as the player's own state. Whether one particular candidate can be
