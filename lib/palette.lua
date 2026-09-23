@@ -162,8 +162,7 @@ function Palette.search_all_sources(query, player_index, locked_source)
       log(("quidquid: source '%s' search failed: %s"):format(tostring(source.id), tostring(candidates)))
     end
   end
-  local merged = PaletteLogic.merge_candidates(results, DISPLAY_LIMIT)
-  return merged
+  return PaletteLogic.merge_candidates(results, DISPLAY_LIMIT)
 end
 
 function Palette.is_query_valid(query, player_index, locked_source)

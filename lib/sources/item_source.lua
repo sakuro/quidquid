@@ -95,9 +95,9 @@ function ItemSource.build_tooltip(
   return tooltip
 end
 
--- The per-candidate result an `annotate` call returns (see #121): nil for
--- no_character, since nothing about personal logistics is shown at all in that
--- state; otherwise the row caption and tooltip built from the same figures.
+-- The per-candidate result an `ItemSource.annotate` call returns (see #121): nil
+-- for no_character, since nothing about personal logistics is shown at all in
+-- that state; otherwise the row caption and tooltip built from the same figures.
 function ItemSource.build_annotation(
   state,
   inventory_total,
@@ -228,7 +228,9 @@ end
 -- is no later hook that could narrow the set first. The pcall keeps an
 -- annotation failure from taking the result list down with it -- without it,
 -- Palette.search_all_sources' own pcall would discard every candidate this
--- source found, where the old annotate hook only lost the annotations.
+-- source found. But because this loop mutates candidates in place, a failure
+-- partway leaves the earlier candidates annotated and the rest bare -- a mixed
+-- render, not the old hook's all-or-nothing loss of annotations.
 local function apply_annotations(candidates, player)
   local ctx = gather_annotation_context(player)
   if ctx == nil then

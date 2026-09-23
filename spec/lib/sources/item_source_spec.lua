@@ -217,7 +217,7 @@ describe("ItemSource", function()
       assert.are.same({ "", { "quidquid.item-counts-inventory", "12" } }, annotation.tooltip)
     end)
 
-    it("returns nil when the player has no character", function()
+    it("returns nil for the no_character state", function()
       assert.is_nil(ItemSource.annotate({ id = "iron-plate" }, context("no_character")))
     end)
 

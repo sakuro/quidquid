@@ -161,8 +161,10 @@ local function queued_names(research_queue)
   return names
 end
 
--- Takes the flattened context rather than a LuaForce, so this and everything
--- above it stay functions of plain values.
+-- force.research_progress is meaningful only for the technology currently being
+-- researched; every other technology's progress is its own saved_progress, which
+-- is 0 unless it was researched partway and then interrupted. ctx carries the
+-- current research's name rather than the force itself.
 local function current_progress(ctx, technology)
   if ctx.current_research_name == technology.name then
     return math.floor(ctx.research_progress * 100 + 0.5)
@@ -170,9 +172,12 @@ local function current_progress(ctx, technology)
   return math.floor(technology.saved_progress * 100 + 0.5)
 end
 
--- The force is flattened into plain values here so TechnologySource.annotate
--- never navigates a LuaForce, which is what lets it be spec'd. Research state is
--- force-wide, so unlike the item source there is no character to check for.
+-- The research queue is flattened to a name set, and the current research to its
+-- name and a plain progress number -- but ctx.technologies stays a live
+-- LuaCustomTable, not flattened, so ctx is only valid for the duration of one
+-- search and must not be held across a tick or sent over a remote boundary.
+-- Research state is force-wide, so unlike the item source there is no character
+-- to check for.
 local function gather_annotation_context(player)
   local force = player.force
   return {
