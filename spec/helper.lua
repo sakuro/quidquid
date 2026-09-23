@@ -17,3 +17,21 @@ package.loaded["__flib__.dictionary"] = package.loaded["__flib__.dictionary"]
     add = function() end,
     get = function() end,
   }
+
+-- lib/api.lua is meant to be required from other mods, so it names its own siblings
+-- the way Factorio needs for that -- require("__quidquid__.lib.x"), see the comment
+-- at the top of that file. Plain Lua has no such prefix, so resolve it back onto the
+-- repo-relative path. Guarded through package.loaded rather than a flag global, both
+-- to stay idempotent and to keep luacheck's allowed globals for this file as they are.
+if package.loaded["__quidquid__.spec.path"] == nil then
+  package.loaded["__quidquid__.spec.path"] = true
+  table.insert(package.searchers, function(name)
+    local relative = name:match("^__quidquid__%.(.+)$")
+    if relative == nil then
+      return nil
+    end
+    return function()
+      return require(relative)
+    end
+  end)
+end
