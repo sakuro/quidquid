@@ -153,22 +153,6 @@ function TechnologySource.build_candidates(query, technologies, locale, translat
   return build_candidates("technology", "technology", query, technologies, locale, translated_names, include_hidden)
 end
 
-local function search(query, player_index)
-  local player = game.get_player(player_index)
-  if player == nil then
-    return {}
-  end
-  local include_hidden = player.mod_settings["quidquid-include-hidden"].value
-  local translated_names = flib_dictionary.get(player_index, NAMESPACE) or {}
-  return TechnologySource.build_candidates(
-    query,
-    collect_technologies(),
-    player.locale,
-    translated_names,
-    include_hidden
-  )
-end
-
 local function queued_names(research_queue)
   local names = {}
   for _, technology in ipairs(research_queue) do
@@ -177,50 +161,82 @@ local function queued_names(research_queue)
   return names
 end
 
--- force.research_progress is only meaningful for the technology actually
--- being researched right now (force.current_research); every other
--- technology's own progress is its saved_progress, which is 0 unless it was
--- previously researched partway and then interrupted.
-local function current_progress(force, technology)
-  if force.current_research ~= nil and force.current_research.name == technology.name then
-    return math.floor(force.research_progress * 100 + 0.5)
+-- force.research_progress is meaningful only for the technology currently being
+-- researched; every other technology's progress is its own saved_progress, which
+-- is 0 unless it was researched partway and then interrupted. ctx carries the
+-- current research's name rather than the force itself.
+local function current_progress(ctx, technology)
+  if ctx.current_research_name == technology.name then
+    return math.floor(ctx.research_progress * 100 + 0.5)
   end
   return math.floor(technology.saved_progress * 100 + 0.5)
 end
 
--- Called once per render with only the displayed technology candidates (see
--- Palette.annotate_candidates), so force.research_queue is read and
--- converted to a name set once here rather than per candidate. Unlike the
--- item source's annotate, the skip here isn't gated on controller type --
--- research is force-wide, not tied to a character -- a candidate is only
--- skipped if force.technologies has no entry for it at all.
-local function annotate(candidates, player_index)
+-- The research queue is flattened to a name set, and the current research to its
+-- name and a plain progress number -- but ctx.technologies stays a live
+-- LuaCustomTable, not flattened, so ctx is only valid for the duration of one
+-- search and must not be held across a tick or sent over a remote boundary.
+-- Research state is force-wide, so unlike the item source there is no character
+-- to check for.
+local function gather_annotation_context(player)
+  local force = player.force
+  return {
+    technologies = force.technologies,
+    queued = queued_names(force.research_queue),
+    current_research_name = force.current_research and force.current_research.name,
+    research_progress = force.research_progress,
+  }
+end
+
+function TechnologySource.annotate(candidate, ctx)
+  local technology = ctx.technologies[candidate.id]
+  if technology == nil then
+    return nil
+  end
+  local state = TechnologyPrerequisites.classify_state(technology, ctx.queued)
+  local prerequisites, triggers = TechnologyPrerequisites.collect_prerequisites(technology, ctx.queued)
+  local trigger_content = nil
+  if not technology.researched and technology.prototype.research_trigger ~= nil then
+    trigger_content = TechnologySource.build_trigger_content(technology.prototype.research_trigger)
+  end
+  return TechnologySource.build_annotation(
+    state,
+    prerequisites,
+    triggers,
+    current_progress(ctx, technology),
+    trigger_content
+  )
+end
+
+-- See the item source for why this annotates every match and why the caller
+-- guards it with pcall. Research is force-wide, so unlike the item source there
+-- is no character check -- a candidate is skipped only when the force has no
+-- technology of that name.
+local function apply_annotations(candidates, player)
+  local ctx = gather_annotation_context(player)
+  for _, candidate in ipairs(candidates) do
+    candidate.annotation = TechnologySource.annotate(candidate, ctx)
+  end
+end
+
+local function search(query, player_index)
   local player = game.get_player(player_index)
   if player == nil then
     return {}
   end
-  local force = player.force
-  local queued = queued_names(force.research_queue)
-
-  local annotations = {}
-  for index, candidate in ipairs(candidates) do
-    local technology = force.technologies[candidate.id]
-    if technology ~= nil then
-      local state = TechnologyPrerequisites.classify_state(technology, queued)
-      local prerequisites, triggers = TechnologyPrerequisites.collect_prerequisites(technology, queued)
-      local progress = current_progress(force, technology)
-      local trigger_content = nil
-      if not technology.researched and technology.prototype.research_trigger ~= nil then
-        trigger_content = TechnologySource.build_trigger_content(technology.prototype.research_trigger)
-      end
-      annotations[index] = TechnologySource.build_annotation(state, prerequisites, triggers, progress, trigger_content)
-    end
+  local include_hidden = player.mod_settings["quidquid-include-hidden"].value
+  local translated_names = flib_dictionary.get(player_index, NAMESPACE) or {}
+  local candidates =
+    TechnologySource.build_candidates(query, collect_technologies(), player.locale, translated_names, include_hidden)
+  local ok, err = pcall(apply_annotations, candidates, player)
+  if not ok then
+    log(("quidquid: source 'technologies' annotation failed: %s"):format(tostring(err)))
   end
-  return annotations
+  return candidates
 end
 
 function TechnologySource.register()
-  remote.add_interface("quidquid.technology-source", { search = search, annotate = annotate })
+  remote.add_interface("quidquid.technology-source", { search = search })
   remote.call("quidquid", "register_source", {
     contract_version = 1,
     id = "technologies",

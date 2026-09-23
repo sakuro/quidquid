@@ -185,4 +185,54 @@ describe("ItemSource", function()
       assert.are.same({ "", { "quidquid.item-counts-inventory", "12" } }, annotation.tooltip)
     end)
   end)
+
+  describe(".annotate", function()
+    local function context(state)
+      return {
+        state = state,
+        inventory_index = { ["iron-plate"] = { normal = 12 } },
+        quality_order = { normal = 0 },
+        network_index = { ["iron-plate"] = { normal = 340 } },
+        deliver_index = {},
+        pickup_index = {},
+      }
+    end
+
+    it("pairs the inventory and network totals when connected", function()
+      local annotation = ItemSource.annotate({ id = "iron-plate" }, context("connected"))
+
+      assert.are.equal("12 · 340", annotation.caption)
+      assert.are.same({
+        "",
+        { "quidquid.item-counts-inventory", "12" },
+        "\n",
+        { "quidquid.item-counts-network", "340" },
+      }, annotation.tooltip)
+    end)
+
+    it("shows only the inventory total when locked", function()
+      local annotation = ItemSource.annotate({ id = "iron-plate" }, context("locked"))
+
+      assert.are.equal("12", annotation.caption)
+      assert.are.same({ "", { "quidquid.item-counts-inventory", "12" } }, annotation.tooltip)
+    end)
+
+    it("returns nil for the no_character state", function()
+      assert.is_nil(ItemSource.annotate({ id = "iron-plate" }, context("no_character")))
+    end)
+
+    it("reports zero for a candidate absent from every index", function()
+      local zero = ItemSource.format_count(0)
+
+      local annotation = ItemSource.annotate({ id = "copper-plate" }, context("connected"))
+
+      assert.are.equal(zero .. " · " .. zero, annotation.caption)
+      assert.are.same({
+        "",
+        { "quidquid.item-counts-inventory", zero },
+        "\n",
+        { "quidquid.item-counts-network", zero },
+      }, annotation.tooltip)
+    end)
+  end)
 end)

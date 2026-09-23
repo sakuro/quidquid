@@ -235,4 +235,88 @@ describe("TechnologySource", function()
       assert.are.same(TechnologySource.build_tooltip("available", prerequisites, {}, 0, nil), annotation.tooltip)
     end)
   end)
+
+  describe(".annotate", function()
+    local function technology(name, options)
+      options = options or {}
+      return {
+        name = name,
+        localised_name = { "technology-name." .. name },
+        researched = options.researched or false,
+        level = options.level or 0,
+        saved_progress = options.saved_progress or 0,
+        prototype = {
+          max_level = options.max_level,
+          research_trigger = options.research_trigger,
+        },
+        prerequisites = options.prerequisites or {},
+      }
+    end
+
+    local function context(technologies, overrides)
+      overrides = overrides or {}
+      return {
+        technologies = technologies,
+        queued = overrides.queued or {},
+        current_research_name = overrides.current_research_name,
+        research_progress = overrides.research_progress or 0,
+      }
+    end
+
+    it("returns nil for a candidate the force has no technology for", function()
+      assert.is_nil(TechnologySource.annotate({ id = "nonexistent" }, context({})))
+    end)
+
+    it("captions a researched technology and leaves its tooltip empty", function()
+      local ctx = context({ automation = technology("automation", { researched = true }) })
+
+      local annotation = TechnologySource.annotate({ id = "automation" }, ctx)
+
+      assert.are.same(
+        { "", "[color=green]", { "quidquid.technology-state-researched" }, "[/color]" },
+        annotation.caption
+      )
+      assert.is_nil(annotation.tooltip)
+    end)
+
+    it("reports saved progress for an available technology that is not being researched", function()
+      local ctx = context({ automation = technology("automation", { saved_progress = 0.42 }) })
+
+      local annotation = TechnologySource.annotate({ id = "automation" }, ctx)
+
+      assert.are.same(
+        { "", "[color=yellow]", { "quidquid.technology-state-available" }, "[/color]" },
+        annotation.caption
+      )
+      assert.are.same({ "", { "quidquid.technology-progress", 42 } }, annotation.tooltip)
+    end)
+
+    it("prefers the force's live progress for the technology currently being researched", function()
+      local ctx = context({ automation = technology("automation", { saved_progress = 0.42 }) }, {
+        current_research_name = "automation",
+        research_progress = 0.75,
+      })
+
+      local annotation = TechnologySource.annotate({ id = "automation" }, ctx)
+
+      assert.are.same({ "", { "quidquid.technology-progress", 75 } }, annotation.tooltip)
+    end)
+
+    it("describes the research trigger of an unresearched trigger technology", function()
+      local trigger = { type = "craft-item", item = { name = "electronic-circuit" }, count = 1 }
+      local ctx = context({ ["electronics"] = technology("electronics", { research_trigger = trigger }) })
+
+      local annotation = TechnologySource.annotate({ id = "electronics" }, ctx)
+
+      assert.are.same({
+        "",
+        {
+          "",
+          { "gui-technology-preview.unit-research-trigger-requirements" },
+          ": ",
+          { "technology-trigger.craft-item", "[item=electronic-circuit]" },
+        },
+      }, annotation.tooltip)
+    end)
+  end)
 end)

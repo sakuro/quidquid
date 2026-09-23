@@ -95,9 +95,9 @@ function ItemSource.build_tooltip(
   return tooltip
 end
 
--- The per-candidate result an `annotate` call returns (see #121): nil for
--- no_character, since nothing about personal logistics is shown at all in that
--- state; otherwise the row caption and tooltip built from the same figures.
+-- The per-candidate result an `ItemSource.annotate` call returns (see #121): nil
+-- for no_character, since nothing about personal logistics is shown at all in
+-- that state; otherwise the row caption and tooltip built from the same figures.
 function ItemSource.build_annotation(
   state,
   inventory_total,
@@ -124,6 +124,21 @@ function ItemSource.build_annotation(
   }
 end
 
+-- Pure over plain values: ctx holds everything per-player (state and the merged
+-- count indexes), gathered once per search, so this stays a function of the
+-- candidate alone and can be spec'd without a Factorio runtime.
+function ItemSource.annotate(candidate, ctx)
+  return ItemSource.build_annotation(
+    ctx.state,
+    ItemCounts.total(ctx.inventory_index, candidate.id),
+    ItemCounts.breakdown(ctx.inventory_index, candidate.id, ctx.quality_order),
+    ItemCounts.total(ctx.network_index, candidate.id),
+    ItemCounts.breakdown(ctx.network_index, candidate.id, ctx.quality_order),
+    ItemCounts.total(ctx.deliver_index, candidate.id),
+    ItemCounts.total(ctx.pickup_index, candidate.id)
+  )
+end
+
 local SOURCE_LABEL = { "quidquid.source-items" }
 local NAMESPACE = "items"
 
@@ -144,16 +159,6 @@ end
 
 function ItemSource.build_candidates(query, items, locale, translated_names, include_hidden)
   return build_candidates("item", "item", query, items, locale, translated_names, include_hidden)
-end
-
-local function search(query, player_index)
-  local player = game.get_player(player_index)
-  if player == nil then
-    return {}
-  end
-  local include_hidden = player.mod_settings["quidquid-include-hidden"].value
-  local translated_names = flib_dictionary.get(player_index, NAMESPACE) or {}
-  return ItemSource.build_candidates(query, collect_items(), player.locale, translated_names, include_hidden)
 end
 
 -- Inventories counted toward the "inventory" total: main inventory, cursor stack,
@@ -194,48 +199,66 @@ local function quality_levels()
   return levels
 end
 
--- Called once per render with only the displayed item candidates (see
--- Palette.annotate_candidates), so every per-player fact below (state, the
--- inventory/network/delivery indexes) is gathered once here rather than per
--- candidate.
-local function annotate(candidates, player_index)
+-- Every per-player fact the annotation needs, read once per search rather than
+-- per candidate. Returns nil when there is no character to report on at all.
+local function gather_annotation_context(player)
+  local character = player.character
+  if character == nil then
+    return nil
+  end
+  local requester_point = character.get_logistic_point(defines.logistic_member_index.character_requester)
+  local ctx = {
+    state = LogisticsState.classify(true, requester_point),
+    inventory_index = personal_inventory_index(character),
+    quality_order = quality_levels(),
+    network_index = ItemCounts.merge({}),
+    deliver_index = ItemCounts.merge({}),
+    pickup_index = ItemCounts.merge({}),
+  }
+  if ctx.state == "connected" then
+    ctx.network_index = ItemCounts.merge(requester_point.logistic_network.get_contents())
+    ctx.deliver_index = ItemCounts.merge(requester_point.targeted_items_deliver)
+    ctx.pickup_index = ItemCounts.merge(requester_point.targeted_items_pickup)
+  end
+  return ctx
+end
+
+-- Annotating every match rather than only the displayed ones is deliberate here:
+-- the candidate carries its own annotation across the remote boundary, so there
+-- is no later hook that could narrow the set first. The pcall keeps an
+-- annotation failure from taking the result list down with it -- without it,
+-- Palette.search_all_sources' own pcall would discard every candidate this
+-- source found. But because this loop mutates candidates in place, a failure
+-- partway leaves the earlier candidates annotated and the rest bare -- a mixed
+-- render, not the old hook's all-or-nothing loss of annotations.
+local function apply_annotations(candidates, player)
+  local ctx = gather_annotation_context(player)
+  if ctx == nil then
+    return
+  end
+  for _, candidate in ipairs(candidates) do
+    candidate.annotation = ItemSource.annotate(candidate, ctx)
+  end
+end
+
+local function search(query, player_index)
   local player = game.get_player(player_index)
-  if player == nil or player.character == nil then
+  if player == nil then
     return {}
   end
-  local character = player.character
-  local requester_point = character.get_logistic_point(defines.logistic_member_index.character_requester)
-  local state = LogisticsState.classify(true, requester_point)
-
-  local inventory_index = personal_inventory_index(character)
-  local quality_order = quality_levels()
-
-  local network_index = ItemCounts.merge({})
-  local deliver_index = ItemCounts.merge({})
-  local pickup_index = ItemCounts.merge({})
-  if state == "connected" then
-    network_index = ItemCounts.merge(requester_point.logistic_network.get_contents())
-    deliver_index = ItemCounts.merge(requester_point.targeted_items_deliver)
-    pickup_index = ItemCounts.merge(requester_point.targeted_items_pickup)
+  local include_hidden = player.mod_settings["quidquid-include-hidden"].value
+  local translated_names = flib_dictionary.get(player_index, NAMESPACE) or {}
+  local candidates =
+    ItemSource.build_candidates(query, collect_items(), player.locale, translated_names, include_hidden)
+  local ok, err = pcall(apply_annotations, candidates, player)
+  if not ok then
+    log(("quidquid: source 'items' annotation failed: %s"):format(tostring(err)))
   end
-
-  local annotations = {}
-  for index, candidate in ipairs(candidates) do
-    annotations[index] = ItemSource.build_annotation(
-      state,
-      ItemCounts.total(inventory_index, candidate.id),
-      ItemCounts.breakdown(inventory_index, candidate.id, quality_order),
-      ItemCounts.total(network_index, candidate.id),
-      ItemCounts.breakdown(network_index, candidate.id, quality_order),
-      ItemCounts.total(deliver_index, candidate.id),
-      ItemCounts.total(pickup_index, candidate.id)
-    )
-  end
-  return annotations
+  return candidates
 end
 
 function ItemSource.register()
-  remote.add_interface("quidquid.item-source", { search = search, annotate = annotate })
+  remote.add_interface("quidquid.item-source", { search = search })
   remote.call("quidquid", "register_source", {
     contract_version = 1,
     id = "items",
