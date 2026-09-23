@@ -167,10 +167,12 @@ candidate fields expect. Either field may be omitted. The `namespace` and `id`
 key a cache of normalized names, so pick a namespace of your own and an `id` that
 is stable for the entry.
 
-Quidquid never evicts that cache on its own. An entry whose name can change or
-disappear while the game runs needs `quidquid.forget(namespace, id)` — a prototype
-never does. `forget` drops a whole namespace when given no `id`, and everything
-when given neither.
+A renamed entry needs nothing from you: the cache keeps the raw value it
+normalized and compares it on every read. An entry that *disappears* never gets
+that read, so its keys sit in the cache for the rest of the session —
+`quidquid.forget(namespace, id)` drops them. It takes a whole namespace when given
+no `id`, and everything when given neither. This is a memory question, not a
+correctness one; a source over prototypes has nothing to forget.
 
 Requiring this module needs Quidquid as a hard dependency, not an optional one.
 It is the only file under `__quidquid__` meant to be required from outside;

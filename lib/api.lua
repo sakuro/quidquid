@@ -64,8 +64,10 @@ local function matcher(query, locale)
 end
 
 -- Drops cached normalizations: one entry with `id`, a whole `namespace` without it,
--- everything with neither. An entry whose name can change (or disappear) while the
--- game runs needs this; a prototype's never does.
+-- everything with neither. This is about releasing memory, not correctness -- a
+-- renamed entry re-normalizes on its own, because the cache stores the raw value it
+-- normalized and compares it on every read. An entry that goes away has no such
+-- next read, so without this its keys sit there for the rest of the session.
 local function forget(namespace, id)
   search_key_cache.clear(namespace, id)
 end

@@ -79,7 +79,7 @@ describe("api.matcher", function()
 end)
 
 describe("api.forget", function()
-  it("drops one entry's cached keys so a renamed entry is normalized again", function()
+  it("drops one entry's cached keys, so the next match normalizes it again", function()
     local matcher = api.matcher("iron", "en")
     matcher:match("spec-forget", "widget", { display = "Iron Plate" })
 
