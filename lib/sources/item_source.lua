@@ -237,9 +237,9 @@ end
 -- is no later hook that could narrow the set first. The pcall keeps an
 -- annotation failure from taking the result list down with it -- without it,
 -- Palette.search_all_sources' own pcall would discard every candidate this
--- source found. But because this loop mutates candidates in place, a failure
--- partway leaves the earlier candidates annotated and the rest bare -- a mixed
--- render, not the old hook's all-or-nothing loss of annotations.
+-- source found. Because this loop mutates candidates in place, a failure partway
+-- leaves the earlier candidates annotated and the rest bare: a mixed render is
+-- the accepted cost of not losing the results themselves.
 local function apply_annotations(candidates, player)
   local ctx = gather_annotation_context(player)
   if ctx == nil then
