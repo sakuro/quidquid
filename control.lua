@@ -16,7 +16,6 @@ local TemporaryRequestAction = require("lib.actions.temporary_request_action")
 local TemporaryRequestEditor = require("lib.temporary_request_editor")
 local Palette = require("lib.palette")
 local search_key_cache = require("lib.search_key_cache")
-local PrereqBench = require("lib.prereq_bench")
 
 local registry = Registry.new(log)
 
@@ -157,9 +156,4 @@ end)
 script.on_event(defines.events.on_player_removed, function(event)
   OpenRemoteViewAction.on_player_removed(event)
   Palette.on_player_removed(event)
-end)
-
--- TEMPORARY (see lib/prereq_bench.lua).
-commands.add_command("quidquid-prereq-bench", "Compare live and snapshot prerequisite walks", function(event)
-  PrereqBench.run(event.player_index)
 end)
