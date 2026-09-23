@@ -100,6 +100,120 @@ local halfwidth_kana = {
   [0xFF9F] = 0x309A,
 }
 
+-- Hangul is decomposed to compatibility jamo (U+3131..U+3163) rather than to
+-- conjoining jamo, because compatibility jamo is what the keyboard already
+-- produces for a lone keystroke. Folding onto it means a consonant matches
+-- wherever it sits, initial or final -- which is what a half-typed syllable and
+-- an initials-only (choseong) query both need. Without this, a syllable in
+-- progress and the finished one are unrelated code points (처 U+CC98, 철 U+CCA0)
+-- and incremental search only lands on completed syllables.
+local HANGUL_FIRST = 0xAC00
+local HANGUL_LAST = 0xD7A3
+local JUNGSEONG_FIRST = 0x314F
+local JUNGSEONG_COUNT = 21
+local JONGSEONG_COUNT = 28
+
+local choseong_compat = {
+  [0] = 0x3131, -- ㄱ
+  0x3132, -- ㄲ
+  0x3134, -- ㄴ
+  0x3137, -- ㄷ
+  0x3138, -- ㄸ
+  0x3139, -- ㄹ
+  0x3141, -- ㅁ
+  0x3142, -- ㅂ
+  0x3143, -- ㅃ
+  0x3145, -- ㅅ
+  0x3146, -- ㅆ
+  0x3147, -- ㅇ
+  0x3148, -- ㅈ
+  0x3149, -- ㅉ
+  0x314A, -- ㅊ
+  0x314B, -- ㅋ
+  0x314C, -- ㅌ
+  0x314D, -- ㅍ
+  0x314E, -- ㅎ
+}
+
+local jongseong_compat = {
+  0x3131, -- ㄱ
+  0x3132, -- ㄲ
+  0x3133, -- ㄳ
+  0x3134, -- ㄴ
+  0x3135, -- ㄵ
+  0x3136, -- ㄶ
+  0x3137, -- ㄷ
+  0x3139, -- ㄹ
+  0x313A, -- ㄺ
+  0x313B, -- ㄻ
+  0x313C, -- ㄼ
+  0x313D, -- ㄽ
+  0x313E, -- ㄾ
+  0x313F, -- ㄿ
+  0x3140, -- ㅀ
+  0x3141, -- ㅁ
+  0x3142, -- ㅂ
+  0x3144, -- ㅄ
+  0x3145, -- ㅅ
+  0x3146, -- ㅆ
+  0x3147, -- ㅇ
+  0x3148, -- ㅈ
+  0x314A, -- ㅊ
+  0x314B, -- ㅋ
+  0x314C, -- ㅌ
+  0x314D, -- ㅍ
+  0x314E, -- ㅎ
+}
+
+-- Conjoining jamo (what NFD text carries) and halfwidth jamo both fold onto the
+-- compatibility letters. The halfwidth vowels sit in four runs with gaps between
+-- them, so the runs are listed rather than derived from a single offset.
+local jamo_compat = {}
+for index = 0, #choseong_compat do
+  jamo_compat[0x1100 + index] = choseong_compat[index]
+end
+for index = 0, JUNGSEONG_COUNT - 1 do
+  jamo_compat[0x1161 + index] = JUNGSEONG_FIRST + index
+end
+for index = 1, JONGSEONG_COUNT - 1 do
+  jamo_compat[0x11A7 + index] = jongseong_compat[index]
+end
+for _, run in ipairs({
+  { 0xFFA1, 0xFFBE, 0x3131 },
+  { 0xFFC2, 0xFFC7, 0x314F },
+  { 0xFFCA, 0xFFCF, 0x3155 },
+  { 0xFFD2, 0xFFD7, 0x315B },
+  { 0xFFDA, 0xFFDC, 0x3161 },
+}) do
+  for codepoint = run[1], run[2] do
+    jamo_compat[codepoint] = run[3] + codepoint - run[1]
+  end
+end
+
+-- Clusters and compound vowels split into the keystrokes that produce them, so
+-- the syllable in progress prefixes the finished one (고 before 광, 달 before 닭).
+-- Doubled consonants are deliberately left whole: they are one shifted keystroke.
+local compat_jamo_parts = {
+  [0x3133] = { 0x3131, 0x3145 }, -- ㄳ
+  [0x3135] = { 0x3134, 0x3148 }, -- ㄵ
+  [0x3136] = { 0x3134, 0x314E }, -- ㄶ
+  [0x313A] = { 0x3139, 0x3131 }, -- ㄺ
+  [0x313B] = { 0x3139, 0x3141 }, -- ㄻ
+  [0x313C] = { 0x3139, 0x3142 }, -- ㄼ
+  [0x313D] = { 0x3139, 0x3145 }, -- ㄽ
+  [0x313E] = { 0x3139, 0x314C }, -- ㄾ
+  [0x313F] = { 0x3139, 0x314D }, -- ㄿ
+  [0x3140] = { 0x3139, 0x314E }, -- ㅀ
+  [0x3144] = { 0x3142, 0x3145 }, -- ㅄ
+  [0x3158] = { 0x3157, 0x314F }, -- ㅘ
+  [0x3159] = { 0x3157, 0x3150 }, -- ㅙ
+  [0x315A] = { 0x3157, 0x3163 }, -- ㅚ
+  [0x315D] = { 0x315C, 0x3153 }, -- ㅝ
+  [0x315E] = { 0x315C, 0x3154 }, -- ㅞ
+  [0x315F] = { 0x315C, 0x3163 }, -- ㅟ
+  [0x3162] = { 0x3161, 0x3163 }, -- ㅢ
+}
+
 local function utf8_decode(value)
   local codepoints = {}
   local index = 1
@@ -204,7 +318,23 @@ local function map_codepoint_once(codepoint, locale)
   elseif codepoint == 0x3000 then
     return { 0x20 }
   end
-  return explicit_mapping[codepoint] or generated_mapping[codepoint] or { codepoint }
+  if codepoint >= HANGUL_FIRST and codepoint <= HANGUL_LAST then
+    local index = codepoint - HANGUL_FIRST
+    local trailing = index % JONGSEONG_COUNT
+    local syllable = {
+      choseong_compat[math.floor(index / (JUNGSEONG_COUNT * JONGSEONG_COUNT))],
+      JUNGSEONG_FIRST + math.floor(index % (JUNGSEONG_COUNT * JONGSEONG_COUNT) / JONGSEONG_COUNT),
+    }
+    if trailing > 0 then
+      table.insert(syllable, jongseong_compat[trailing])
+    end
+    return syllable
+  end
+  local jamo = jamo_compat[codepoint]
+  if jamo ~= nil then
+    return { jamo }
+  end
+  return compat_jamo_parts[codepoint] or explicit_mapping[codepoint] or generated_mapping[codepoint] or { codepoint }
 end
 
 -- A single pass is not enough, because a mapping can land on a code point that is
