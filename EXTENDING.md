@@ -109,13 +109,74 @@ ties broken by source registration order) and the top 30 rows are shown.
 | `id` | yes | Your identifier for the entry. Handed back to actions verbatim. |
 | `label` | yes | String or LocalisedString naming the entry. |
 | `icon` | yes | SpritePath, rendered as `[img=...]`. |
-| `search_score` | yes | Ranking score, higher first. A candidate without a numeric one raises an error that aborts the entire search, not just that candidate. |
+| `search_score` | yes | Ranking score, higher first — see [Scoring](#scoring). A candidate without a numeric one raises an error that aborts the entire search, not just that candidate. |
 | `search_display_name` | no | Plain string shown instead of `label` as the name — only a plain string can carry match highlighting. Omitted, `label` is shown. |
 | `search_internal_name` | no | Plain string shown as the muted second line (Quidquid's own sources put the prototype name here). Omitted, `secondary_text` takes that line. |
 | `search_display_ranges`, `search_internal_ranges` | no | Arrays of tables with `start_byte` and `end_byte`, marking the matched part of the corresponding name in bold. Omitted, that name is shown without highlighting. |
 | `secondary_text` | no | Muted second line for a candidate with no `search_internal_name`. Omitted, such a candidate has no second line. |
 | `numeric` | no | Right-align the name column, for a candidate whose label is a value rather than a name. Defaults to `false`. |
 | `annotation` | no | A table with `caption` and `tooltip` LocalisedStrings. The caption is shown at the right end of the row, the tooltip above the action hints. Omitted, the right end carries only the source label. |
+
+### Scoring
+
+Candidates from every searched source are sorted together, so `search_score` only
+works as a ranking if all sources agree on a scale. Quidquid's own sources score
+with `lib/fuzzy_match.lua` (adapted from fzy): an exact match scores `math.huge`,
+a partial match roughly the number of consecutively matched characters, with
+smaller bonuses at word boundaries and a penalty per gap — which can push a thin
+match slightly below zero. A match on the translated name is rewarded with an
+extra 0.5 over the same match on the internal name.
+
+Rather than reproduce that, take it from Quidquid:
+
+```lua
+local quidquid = require("__quidquid__.lib.api")
+
+local function search(query, player_index)
+  local player = game.get_player(player_index)
+  -- Normalizes the query once. Build it per search, not per candidate.
+  local matcher = quidquid.matcher(query, player.locale)
+  local candidates = {}
+
+  for _, entry in ipairs(my_entries()) do
+    local match = matcher:match("my-mod", entry.id, {
+      display = entry.translated_name,
+      internal = entry.name,
+    })
+    if match ~= nil then
+      table.insert(candidates, {
+        type = "my-mod-widget",
+        id = entry.id,
+        label = entry.label,
+        icon = entry.icon,
+        search_display_name = entry.translated_name,
+        search_internal_name = entry.name,
+        search_display_ranges = match.display_ranges,
+        search_internal_ranges = match.internal_ranges,
+        search_score = match.score,
+      })
+    end
+  end
+  return candidates
+end
+```
+
+`matcher:match(namespace, id, fields)` returns `nil` when neither field matches,
+otherwise the score and the byte ranges that matched, already in the shape the
+candidate fields expect. Either field may be omitted. The `namespace` and `id`
+key a cache of normalized names, so pick a namespace of your own and an `id` that
+is stable for the entry.
+
+Quidquid never evicts that cache on its own. An entry whose name can change or
+disappear while the game runs needs `quidquid.forget(namespace, id)` — a prototype
+never does. `forget` drops a whole namespace when given no `id`, and everything
+when given neither.
+
+Requiring this module needs Quidquid as a hard dependency, not an optional one.
+It is the only file under `__quidquid__` meant to be required from outside;
+everything else there is internal and moves without notice. The module itself is
+experimental until Quidquid reaches 1.0, and it is not covered by
+`contract_version` — that number versions the remote contract above, not this.
 
 ### Minimal example
 
@@ -236,6 +297,10 @@ keeps its own dictionary. With flib, create it from `on_init` and
 cannot ride along with the registration above.
 
 ## Reference implementations
+
+These are Quidquid's own sources and actions, shown as examples. Apart from
+`lib/api.lua`, nothing under `lib/` is a public API — read them, don't require
+them.
 
 | File | Shows |
 | --- | --- |
