@@ -1,6 +1,7 @@
 local flib_dictionary = require("__flib__.dictionary")
 local build_candidates = require("lib.sources.prototype_candidate")
 local rich_text = require("lib.rich_text")
+local TechnologyGraph = require("lib.technology_graph")
 local TechnologyPrerequisites = require("lib.technology_prerequisites")
 
 local TechnologySource = {}
@@ -173,15 +174,15 @@ local function current_progress(ctx, technology)
 end
 
 -- The research queue is flattened to a name set, and the current research to its
--- name and a plain progress number -- but ctx.technologies stays a live
--- LuaCustomTable, not flattened, so ctx is only valid for the duration of one
--- search and must not be held across a tick or sent over a remote boundary.
+-- name and a plain progress number. ctx.graph is a plain-Lua snapshot of the
+-- force's technologies (see lib/technology_graph.lua), built once here so the
+-- per-candidate prerequisite walk never crosses Factorio's C++ boundary.
 -- Research state is force-wide, so unlike the item source there is no character
 -- to check for.
 local function gather_annotation_context(player)
   local force = player.force
   return {
-    technologies = force.technologies,
+    graph = TechnologyGraph.build(force.technologies),
     queued = queued_names(force.research_queue),
     current_research_name = force.current_research and force.current_research.name,
     research_progress = force.research_progress,
@@ -189,7 +190,7 @@ local function gather_annotation_context(player)
 end
 
 function TechnologySource.annotate(candidate, ctx)
-  local technology = ctx.technologies[candidate.id]
+  local technology = ctx.graph[candidate.id]
   if technology == nil then
     return nil
   end

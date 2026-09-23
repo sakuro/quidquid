@@ -256,7 +256,7 @@ describe("TechnologySource", function()
     local function context(technologies, overrides)
       overrides = overrides or {}
       return {
-        technologies = technologies,
+        graph = technologies,
         queued = overrides.queued or {},
         current_research_name = overrides.current_research_name,
         research_progress = overrides.research_progress or 0,
