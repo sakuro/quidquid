@@ -34,11 +34,14 @@ describe("ItemSource", function()
     end)
 
     it("shows the network as a muted em dash when out of range", function()
-      assert.are.equal("12 · [color=160,160,160]—[/color]", ItemSource.build_caption("out_of_range", 12, 340))
+      assert.are.equal(
+        "12 [color=160,160,160]·[/color] [color=160,160,160]—[/color]",
+        ItemSource.build_caption("out_of_range", 12, 340)
+      )
     end)
 
     it("shows both counts when connected", function()
-      assert.are.equal("12 · 340", ItemSource.build_caption("connected", 12, 340))
+      assert.are.equal("12 [color=160,160,160]·[/color] 340", ItemSource.build_caption("connected", 12, 340))
     end)
   end)
 
@@ -201,7 +204,7 @@ describe("ItemSource", function()
     it("pairs the inventory and network totals when connected", function()
       local annotation = ItemSource.annotate({ id = "iron-plate" }, context("connected"))
 
-      assert.are.equal("12 · 340", annotation.caption)
+      assert.are.equal("12 [color=160,160,160]·[/color] 340", annotation.caption)
       assert.are.same({
         "",
         { "quidquid.item-counts-inventory", "12" },
@@ -226,7 +229,7 @@ describe("ItemSource", function()
 
       local annotation = ItemSource.annotate({ id = "copper-plate" }, context("connected"))
 
-      assert.are.equal(zero .. " · " .. zero, annotation.caption)
+      assert.are.equal(zero .. " [color=160,160,160]·[/color] " .. zero, annotation.caption)
       assert.are.same({
         "",
         { "quidquid.item-counts-inventory", zero },

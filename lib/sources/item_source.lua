@@ -27,7 +27,8 @@ function ItemSource.format_count(value)
 end
 
 -- SEPARATOR is deliberately not "/": that reads as "current / max", which this isn't
--- -- inventory and network are two independent totals, not a fraction.
+-- -- inventory and network are two independent totals, not a fraction. Muted like the
+-- counts that carry nothing: it is punctuation holding two figures apart, not a figure.
 local SEPARATOR = "·"
 -- Muted for the same reason a zero count is, only more so: this one says the number
 -- can't be read at all, and -- unlike a zero, which varies per row -- it is the same
@@ -43,7 +44,7 @@ function ItemSource.build_caption(state, inventory_total, network_total)
     return inventory_text
   end
   local network_text = state == "out_of_range" and muted(OUT_OF_RANGE_TEXT) or ItemSource.format_count(network_total)
-  return inventory_text .. " " .. SEPARATOR .. " " .. network_text
+  return inventory_text .. " " .. muted(SEPARATOR) .. " " .. network_text
 end
 
 -- Without the Quality mod, prototypes.quality has only "normal" (visible) and
