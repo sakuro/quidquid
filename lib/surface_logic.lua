@@ -35,7 +35,7 @@ function SurfaceLogic.build_candidates(query, descriptors, include_hidden, local
   local matcher = api.matcher(query, locale)
   for _, descriptor in ipairs(descriptors) do
     -- A platform's name is player-written and can carry rich text tags, which are
-    -- masked out before matching (see README, "Surface search limitations"). Its
+    -- masked out before matching (see README, "Surfaces"). Its
     -- prototype name is meaningless to search, so only planets match on one.
     local search_name = descriptor.search_name
     if search_name and descriptor.kind == "platform" then
