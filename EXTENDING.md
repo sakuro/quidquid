@@ -34,23 +34,45 @@ save, `on_configuration_changed` only when something actually changed, and
 load. Register from the first `on_tick` after any load instead:
 
 ```lua
-local registered = false
-
 script.on_event(defines.events.on_tick, function()
-  if registered then
-    return
-  end
-  registered = true
+  script.on_event(defines.events.on_tick, nil)
   remote.add_interface("my-mod-widget-source", { search = search })
   remote.call("quidquid", "register_source", { --[[ definition ]] })
 end)
 ```
 
-Keep the flag a plain local, **not** a field in `storage`. Registrations do not
-survive a save/load, so the flag has to reset on every load — a persisted flag
-makes your source disappear from the second load onward. Registering the
-handler at `control.lua`'s top level brings it back on the next load, so it can
-drop itself with `script.on_event(defines.events.on_tick, nil)` once it has run.
+Register the handler at `control.lua`'s top level. Neither the handler nor the
+registration survives a save/load, so both are re-established on the next load —
+which is what makes dropping the handler safe. For the same reason, never keep an
+"already registered" flag in `storage`: it would still be set after the next
+load, and your source would never register again.
+
+A source with a translation dictionary of its own cannot drop the handler —
+`flib_dictionary.on_tick()` has to run every tick to drive translation. Keep the
+handler and gate the one-shot part with a plain local flag instead, the way
+Quidquid's own `control.lua` does:
+
+```lua
+local flib_dictionary = require("__flib__.dictionary")
+
+local registered = false
+
+script.on_event(defines.events.on_tick, function()
+  if not registered then
+    registered = true
+    remote.add_interface("my-mod-widget-source", { search = search })
+    remote.call("quidquid", "register_source", { --[[ definition ]] })
+  end
+  flib_dictionary.on_tick()
+end)
+
+-- Registers flib's remaining events. It leaves on_tick alone, because the
+-- handler above already holds it.
+flib_dictionary.handle_events()
+```
+
+The flag is a plain local for the same reason as above: it has to reset on every
+load.
 
 ## Sources
 
