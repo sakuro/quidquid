@@ -42,6 +42,19 @@ describe("search_normalization", function()
     assert.are.equal("שלום", normalized("שָׁלוֹם"))
   end)
 
+  -- The arguments below are fullwidth (U+FF21, U+FF29...), not ASCII; they look
+  -- almost identical in a proportional font, so check before "correcting" them.
+  it("case-folds fullwidth letters", function()
+    assert.are.equal("a", normalized("Ａ"))
+    assert.are.equal("iron", normalized("Ｉｒｏｎ"))
+  end)
+
+  it("applies canonical decomposition past the first level", function()
+    assert.are.equal("a", normalized("ǟ"))
+    assert.are.equal("u", normalized("ǖ"))
+    assert.are.equal("e", normalized("ḕ"))
+  end)
+
   it("returns a normalized-codepoint to original-byte-range map", function()
     local value, position_map = normalized("Straße")
     assert.are.equal("strasse", value)

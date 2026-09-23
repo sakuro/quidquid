@@ -1,6 +1,6 @@
 local generated_mapping = require("lib.search_mapping")
 
-local RULE_VERSION = "unicode-18.0.0-r1"
+local RULE_VERSION = "unicode-18.0.0-r2"
 
 -- These are the small set of compatibility mappings that are useful for
 -- names, but are not canonical decompositions in the UCD.
@@ -187,7 +187,7 @@ local function is_removed_mark(codepoint)
     or (codepoint >= 0x06D6 and codepoint <= 0x06ED)
 end
 
-local function map_codepoint(codepoint, locale)
+local function map_codepoint_once(codepoint, locale)
   if locale == "tr" then
     if codepoint == 0x0049 then
       return { 0x0131 }
@@ -205,6 +205,43 @@ local function map_codepoint(codepoint, locale)
     return { 0x20 }
   end
   return explicit_mapping[codepoint] or generated_mapping[codepoint] or { codepoint }
+end
+
+-- A single pass is not enough, because a mapping can land on a code point that is
+-- itself mapped. Both directions occur: the generated table stores intermediate
+-- decompositions (U+01DF -> U+00E4 + U+0304, where U+00E4 still folds to "a"), and
+-- the branches above hand back a code point the table then case-folds (fullwidth
+-- U+FF29 -> U+0049 -> "i"). Iterating to a fixpoint covers both without the
+-- generator having to fully resolve its own output.
+--
+-- The cap is a guard against a mapping cycle, not a real depth: the longest chains
+-- in Unicode 18 settle in two or three passes.
+local MAX_MAPPING_PASSES = 8
+
+local function map_codepoint(codepoint, locale)
+  local values = map_codepoint_once(codepoint, locale)
+  if #values == 1 and values[1] == codepoint then
+    return values
+  end
+
+  for _ = 2, MAX_MAPPING_PASSES do
+    local expanded = {}
+    local changed = false
+    for _, value in ipairs(values) do
+      local mapped = map_codepoint_once(value, locale)
+      if #mapped ~= 1 or mapped[1] ~= value then
+        changed = true
+      end
+      for _, result in ipairs(mapped) do
+        table.insert(expanded, result)
+      end
+    end
+    values = expanded
+    if not changed then
+      break
+    end
+  end
+  return values
 end
 
 local function normalize(value, field_kind, locale)
