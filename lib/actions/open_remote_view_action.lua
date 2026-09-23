@@ -30,8 +30,8 @@ end
 
 -- is_available only gates by candidate type (via this action's registered `types`);
 -- whether remote view actually works for this specific surface (generated, unlocked
--- -- see README "Surface search limitations") is a per-candidate runtime fact, so
--- it's resolved here and reported by execute, not hidden from the tooltip.
+-- -- see README "Surfaces") is a per-candidate runtime fact, so it's resolved here
+-- and reported by execute, not hidden from the tooltip.
 local function execute(candidate, player_index)
   ActionRunner.run(candidate, player_index, SurfaceAccess.resolve_remote_view, function(surface, _candidate, player)
     remember(player)
