@@ -176,7 +176,8 @@ end
 -- The research queue is flattened to a name set, and the current research to its
 -- name and a plain progress number. ctx.graph is a plain-Lua snapshot of the
 -- force's technologies (see lib/technology_graph.lua), built once here so the
--- per-candidate prerequisite walk never crosses Factorio's C++ boundary.
+-- per-candidate prerequisite walk never crosses Factorio's C++ boundary. ctx is
+-- a snapshot of a moment and is valid for the duration of one search only.
 -- Research state is force-wide, so unlike the item source there is no character
 -- to check for.
 local function gather_annotation_context(player)
@@ -229,6 +230,10 @@ local function search(query, player_index)
   local translated_names = flib_dictionary.get(player_index, NAMESPACE) or {}
   local candidates =
     TechnologySource.build_candidates(query, collect_technologies(), player.locale, translated_names, include_hidden)
+  if #candidates == 0 then
+    -- The graph build is per-search, not per-candidate: with nothing to annotate, it's pure waste.
+    return candidates
+  end
   local ok, err = pcall(apply_annotations, candidates, player)
   if not ok then
     log(("quidquid: source 'technologies' annotation failed: %s"):format(tostring(err)))

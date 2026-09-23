@@ -1,3 +1,4 @@
+local TechnologyGraph = require("lib.technology_graph")
 local TechnologySource = require("lib.sources.technology_source")
 
 describe("TechnologySource", function()
@@ -241,12 +242,9 @@ describe("TechnologySource", function()
       options = options or {}
       return {
         name = name,
-        localised_name = { "technology-name." .. name },
         researched = options.researched or false,
-        level = options.level or 0,
         saved_progress = options.saved_progress or 0,
         prototype = {
-          max_level = options.max_level,
           research_trigger = options.research_trigger,
         },
         prerequisites = options.prerequisites or {},
@@ -256,7 +254,7 @@ describe("TechnologySource", function()
     local function context(technologies, overrides)
       overrides = overrides or {}
       return {
-        graph = technologies,
+        graph = TechnologyGraph.build(technologies),
         queued = overrides.queued or {},
         current_research_name = overrides.current_research_name,
         research_progress = overrides.research_progress or 0,
