@@ -55,6 +55,45 @@ describe("search_normalization", function()
     assert.are.equal("e", normalized("ḕ"))
   end)
 
+  describe("Hangul", function()
+    -- Incremental search needs the key of a half-typed syllable to be a prefix of
+    -- the finished one. Precomposed syllables are unrelated code points (처 is
+    -- U+CC98, 철 is U+CCA0), so they only prefix each other once decomposed.
+    local function assert_prefixes(partial, complete)
+      local key = normalized(partial)
+      assert.are.equal(key, normalized(complete):sub(1, #key))
+    end
+
+    it("decomposes a syllable so an unfinished one prefixes it", function()
+      assert_prefixes("처", "철")
+    end)
+
+    it("treats a lone compatibility jamo as the start of a syllable", function()
+      assert_prefixes("ㅊ", "철")
+    end)
+
+    it("gives conjoining jamo and a precomposed syllable the same key", function()
+      assert.are.equal(normalized("가"), normalized("\225\132\128\225\133\161"))
+    end)
+
+    it("gives halfwidth jamo the same key as compatibility jamo", function()
+      assert.are.equal(normalized("ㄱ"), normalized("\239\190\161"))
+    end)
+
+    it("decomposes a compound vowel so the partial vowel prefixes it", function()
+      assert_prefixes("고", "광")
+    end)
+
+    it("decomposes a compound final so the partial final prefixes it", function()
+      assert_prefixes("달", "닭")
+    end)
+
+    it("keeps a doubled consonant distinct from the single one", function()
+      local single = normalized("가")
+      assert.are_not.equal(single, normalized("까"):sub(1, #single))
+    end)
+  end)
+
   it("returns a normalized-codepoint to original-byte-range map", function()
     local value, position_map = normalized("Straße")
     assert.are.equal("strasse", value)
