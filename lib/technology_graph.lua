@@ -21,13 +21,16 @@ function TechnologyGraph.build(technologies)
     }
   end
   -- Second pass: a node's prerequisites may not exist yet during the first one,
-  -- since pairs() order is unspecified. A force holds every technology, so each
-  -- lookup here resolves; a partial collection would link nil and fail loudly at
-  -- traversal time rather than silently producing a short walk.
+  -- since pairs() order is unspecified. A force holds every technology, so this
+  -- lookup always resolves in production; the assert exists so a partial
+  -- collection fails loudly at build time rather than silently linking nothing
+  -- and producing a graph that walks short.
   for name, technology in pairs(technologies) do
     local prerequisites = nodes[name].prerequisites
     for prerequisite_name in pairs(technology.prerequisites) do
-      prerequisites[prerequisite_name] = nodes[prerequisite_name]
+      local node = nodes[prerequisite_name]
+      assert(node, "technology graph: unknown prerequisite " .. prerequisite_name .. " of " .. name)
+      prerequisites[prerequisite_name] = node
     end
   end
   return nodes

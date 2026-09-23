@@ -86,5 +86,54 @@ describe("TechnologyGraph", function()
       assert.are.same({ "steel-processing", "logistics" }, live_names)
       assert.are.same(live_names, snapshot_names)
     end)
+
+    it("walks a trigger prerequisite through the same branch for the source and the snapshot", function()
+      local trigger = { type = "craft-item", item = { name = "iron-gear-wheel" }, count = 1 }
+      local technologies = linked({
+        technology("steel-processing"),
+        technology("orbital-launch", nil, { research_trigger = trigger }),
+        technology("automation", { "steel-processing", "orbital-launch" }),
+      })
+      local graph = TechnologyGraph.build(technologies)
+
+      local live_prerequisites, live_triggers =
+        TechnologyPrerequisites.collect_prerequisites(technologies.automation, {})
+      local snapshot_prerequisites, snapshot_triggers =
+        TechnologyPrerequisites.collect_prerequisites(graph.automation, {})
+
+      local function names(list)
+        local result = {}
+        for index, entry in ipairs(list) do
+          result[index] = entry.name
+        end
+        return result
+      end
+
+      assert.are.same({ "steel-processing" }, names(live_prerequisites))
+      assert.are.same(names(live_prerequisites), names(snapshot_prerequisites))
+      assert.are.same({ "orbital-launch" }, names(live_triggers))
+      assert.are.same(names(live_triggers), names(snapshot_triggers))
+    end)
+
+    it("returns an empty table for an empty collection", function()
+      assert.are.same({}, TechnologyGraph.build({}))
+    end)
+
+    it("raises when a technology names a prerequisite absent from the collection", function()
+      -- Built directly rather than through linked(): linked() resolves
+      -- prerequisite_names via technologies[name], so an unknown name would
+      -- resolve to nil and assigning prerequisites[name] = nil creates no
+      -- entry at all -- it could never reach build()'s assert. This bypasses
+      -- that fixture-building step to construct the case build() itself must
+      -- reject: a prerequisites key with no matching node in the collection.
+      local technologies = {
+        automation = technology("automation", { "missing-technology" }),
+      }
+      technologies.automation.prerequisites = { ["missing-technology"] = true }
+
+      assert.has_error(function()
+        TechnologyGraph.build(technologies)
+      end)
+    end)
   end)
 end)
