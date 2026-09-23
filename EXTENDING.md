@@ -43,9 +43,7 @@ end)
 
 Register the handler at `control.lua`'s top level. Neither the handler nor the
 registration survives a save/load, so both are re-established on the next load —
-which is what makes dropping the handler safe. For the same reason, never keep an
-"already registered" flag in `storage`: it would still be set after the next
-load, and your source would never register again.
+which is what makes dropping the handler safe.
 
 A source with a translation dictionary of its own cannot drop the handler —
 `flib_dictionary.on_tick()` has to run every tick to drive translation. Keep the
@@ -71,8 +69,9 @@ end)
 flib_dictionary.handle_events()
 ```
 
-The flag is a plain local for the same reason as above: it has to reset on every
-load.
+Keep the flag a plain local, **not** a field in `storage`. The registration does
+not survive a save/load either, so a persisted flag would still be set on the
+next load and the source would never register again.
 
 ## Sources
 
