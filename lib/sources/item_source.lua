@@ -162,16 +162,6 @@ function ItemSource.build_candidates(query, items, locale, translated_names, inc
   return build_candidates("item", "item", query, items, locale, translated_names, include_hidden)
 end
 
-local function search(query, player_index)
-  local player = game.get_player(player_index)
-  if player == nil then
-    return {}
-  end
-  local include_hidden = player.mod_settings["quidquid-include-hidden"].value
-  local translated_names = flib_dictionary.get(player_index, NAMESPACE) or {}
-  return ItemSource.build_candidates(query, collect_items(), player.locale, translated_names, include_hidden)
-end
-
 -- Inventories counted toward the "inventory" total: main inventory, cursor stack,
 -- ammo and guns (confirmed over RCON that character.get_item_count covers exactly
 -- this set, but only for a single quality at a time, hence merging get_contents()
@@ -234,30 +224,43 @@ local function gather_annotation_context(player)
   return ctx
 end
 
--- Called once per render with only the displayed item candidates (see
--- Palette.annotate_candidates), so the context is gathered once here rather than
--- per candidate.
-local function annotate(candidates, player_index)
+-- Annotating every match rather than only the displayed ones is deliberate here:
+-- the candidate carries its own annotation across the remote boundary, so there
+-- is no later hook that could narrow the set first. The pcall keeps an
+-- annotation failure from taking the result list down with it -- without it,
+-- Palette.search_all_sources' own pcall would discard every candidate this
+-- source found, where the old annotate hook only lost the annotations.
+local function apply_annotations(candidates, player)
+  local ctx = gather_annotation_context(player)
+  if ctx == nil then
+    return
+  end
+  local probe = Bench.probe()
+  for _, candidate in ipairs(candidates) do
+    candidate.annotation = ItemSource.annotate(candidate, ctx)
+  end
+  Bench.record("bench.annotate.items", probe)
+  Bench.count("bench.count.items", #candidates)
+end
+
+local function search(query, player_index)
   local player = game.get_player(player_index)
   if player == nil then
     return {}
   end
-  local ctx = gather_annotation_context(player)
-  if ctx == nil then
-    return {}
+  local include_hidden = player.mod_settings["quidquid-include-hidden"].value
+  local translated_names = flib_dictionary.get(player_index, NAMESPACE) or {}
+  local candidates =
+    ItemSource.build_candidates(query, collect_items(), player.locale, translated_names, include_hidden)
+  local ok, err = pcall(apply_annotations, candidates, player)
+  if not ok then
+    log(("quidquid: source 'items' annotation failed: %s"):format(tostring(err)))
   end
-  local probe = Bench.probe()
-  local annotations = {}
-  for index, candidate in ipairs(candidates) do
-    annotations[index] = ItemSource.annotate(candidate, ctx)
-  end
-  Bench.record("bench.annotate.items", probe)
-  Bench.count("bench.count.items", #candidates)
-  return annotations
+  return candidates
 end
 
 function ItemSource.register()
-  remote.add_interface("quidquid.item-source", { search = search, annotate = annotate })
+  remote.add_interface("quidquid.item-source", { search = search })
   remote.call("quidquid", "register_source", {
     contract_version = 1,
     id = "items",

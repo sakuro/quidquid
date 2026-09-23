@@ -154,22 +154,6 @@ function TechnologySource.build_candidates(query, technologies, locale, translat
   return build_candidates("technology", "technology", query, technologies, locale, translated_names, include_hidden)
 end
 
-local function search(query, player_index)
-  local player = game.get_player(player_index)
-  if player == nil then
-    return {}
-  end
-  local include_hidden = player.mod_settings["quidquid-include-hidden"].value
-  local translated_names = flib_dictionary.get(player_index, NAMESPACE) or {}
-  return TechnologySource.build_candidates(
-    query,
-    collect_technologies(),
-    player.locale,
-    translated_names,
-    include_hidden
-  )
-end
-
 local function queued_names(research_queue)
   local names = {}
   for _, technology in ipairs(research_queue) do
@@ -220,27 +204,38 @@ function TechnologySource.annotate(candidate, ctx)
   )
 end
 
--- Called once per render with only the displayed technology candidates (see
--- Palette.annotate_candidates), so the context is gathered once here rather than
--- per candidate.
-local function annotate(candidates, player_index)
+-- See the item source for why this annotates every match and why the caller
+-- guards it with pcall. Research is force-wide, so unlike the item source there
+-- is no character check -- a candidate is skipped only when the force has no
+-- technology of that name.
+local function apply_annotations(candidates, player)
+  local ctx = gather_annotation_context(player)
+  local probe = Bench.probe()
+  for _, candidate in ipairs(candidates) do
+    candidate.annotation = TechnologySource.annotate(candidate, ctx)
+  end
+  Bench.record("bench.annotate.technologies", probe)
+  Bench.count("bench.count.technologies", #candidates)
+end
+
+local function search(query, player_index)
   local player = game.get_player(player_index)
   if player == nil then
     return {}
   end
-  local ctx = gather_annotation_context(player)
-  local probe = Bench.probe()
-  local annotations = {}
-  for index, candidate in ipairs(candidates) do
-    annotations[index] = TechnologySource.annotate(candidate, ctx)
+  local include_hidden = player.mod_settings["quidquid-include-hidden"].value
+  local translated_names = flib_dictionary.get(player_index, NAMESPACE) or {}
+  local candidates =
+    TechnologySource.build_candidates(query, collect_technologies(), player.locale, translated_names, include_hidden)
+  local ok, err = pcall(apply_annotations, candidates, player)
+  if not ok then
+    log(("quidquid: source 'technologies' annotation failed: %s"):format(tostring(err)))
   end
-  Bench.record("bench.annotate.technologies", probe)
-  Bench.count("bench.count.technologies", #candidates)
-  return annotations
+  return candidates
 end
 
 function TechnologySource.register()
-  remote.add_interface("quidquid.technology-source", { search = search, annotate = annotate })
+  remote.add_interface("quidquid.technology-source", { search = search })
   remote.call("quidquid", "register_source", {
     contract_version = 1,
     id = "technologies",

@@ -171,50 +171,12 @@ function Palette.search_all_sources(query, player_index, locked_source)
   return merged
 end
 
--- Batches every displayed candidate from the same source into one annotate call
--- (called after PaletteLogic.merge_candidates truncation, never per source's full
--- match list -- see #121) and writes each returned annotation onto its wrapped
--- entry's `annotation` field, mutating `merged` in place. Sources that don't
--- implement annotate, or whose call fails, are simply left without one.
-function Palette.annotate_candidates(merged, player_index)
-  local groups = {}
-  local group_order = {}
-  for _, wrapped in ipairs(merged) do
-    local group = groups[wrapped.source_interface]
-    if group == nil then
-      group = { entries = {}, candidates = {} }
-      groups[wrapped.source_interface] = group
-      table.insert(group_order, wrapped.source_interface)
-    end
-    table.insert(group.entries, wrapped)
-    table.insert(group.candidates, wrapped.candidate)
-  end
-
-  for _, interface in ipairs(group_order) do
-    if RemoteCaller:has(interface, "annotate") then
-      local group = groups[interface]
-      local ok, annotations =
-        pcall(RemoteCaller.call, RemoteCaller, interface, "annotate", group.candidates, player_index)
-      if ok then
-        for index, wrapped in ipairs(group.entries) do
-          wrapped.annotation = annotations[index]
-        end
-      else
-        log(("quidquid: source '%s' annotate failed: %s"):format(interface, tostring(annotations)))
-      end
-    end
-  end
-
-  return merged
-end
-
 -- TEMPORARY (see lib/bench.lua): mirrors refresh_candidates minus rendering, so a
 -- bench run measures exactly the work one keystroke does to produce candidates.
 -- Keep this in step with refresh_candidates across the refactor.
 function Palette.bench_query(query, player_index)
   local total = Bench.probe()
   local candidates = Palette.search_all_sources(query, player_index, nil)
-  Palette.annotate_candidates(candidates, player_index)
   Bench.record("bench.total", total)
   return candidates
 end
@@ -335,7 +297,7 @@ end
 
 local function candidate_tooltip(wrapped, player_index)
   local resolved = registry:resolve_actions(wrapped.candidate, player_index, RemoteCaller)
-  local annotation_tooltip = wrapped.annotation and wrapped.annotation.tooltip
+  local annotation_tooltip = wrapped.candidate.annotation and wrapped.candidate.annotation.tooltip
   return Palette.build_tooltip(resolved, annotation_tooltip)
 end
 
@@ -399,7 +361,7 @@ local function build_candidate_row(pane, wrapped, index, player_index)
   -- top line of the right end, with the source label demoted to a second, muted line
   -- below it -- same column as the plain, single-line source label a candidate without
   -- an annotation still gets.
-  local annotation_caption = wrapped.annotation and wrapped.annotation.caption
+  local annotation_caption = wrapped.candidate.annotation and wrapped.candidate.annotation.caption
   if annotation_caption ~= nil then
     -- Not squashable, unlike `names` -- `side` keeps its actual content's
     -- natural size (up to SIDE_COLUMN_WIDTH) so the row squashes `names`
@@ -466,7 +428,6 @@ local function refresh_candidates(player, text, locked_source)
     return
   end
   local candidates = Palette.search_all_sources(text, player.index, locked_source)
-  Palette.annotate_candidates(candidates, player.index)
   render_candidates(player, candidates)
 end
 
