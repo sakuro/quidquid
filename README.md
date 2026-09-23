@@ -148,6 +148,12 @@ quality selection when the Quality system is available.
 
 Show hidden or internal entries in search results.
 
+## Extending Quidquid
+
+Other mods can add their own search sources and palette actions through
+Quidquid's remote interface. See
+[EXTENDING.md](https://github.com/sakuro/quidquid/blob/main/EXTENDING.md).
+
 ## Third-party software
 
 The fuzzy matching implementation in
