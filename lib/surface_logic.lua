@@ -1,10 +1,5 @@
-local fuzzy_match = require("lib.fuzzy_match")
-local normalization = require("lib.search_normalization")
-local search_key_cache = require("lib.search_key_cache")
-local search_highlight = require("lib.search_highlight")
+local api = require("lib.api")
 local rich_text = require("lib.rich_text")
-
-local DISPLAY_NAME_BONUS = 0.5
 
 local SurfaceLogic = {}
 
@@ -37,41 +32,20 @@ end
 
 function SurfaceLogic.build_candidates(query, descriptors, include_hidden, locale)
   local candidates = {}
-  local internal_query = normalization.normalize(query, "internal", nil)
-  local display_query = normalization.normalize(query, "display", locale)
+  local matcher = api.matcher(query, locale)
   for _, descriptor in ipairs(descriptors) do
-    local best
-    if descriptor.search_name then
-      local search_name = descriptor.search_name
-      if descriptor.kind == "platform" then
-        search_name = rich_text.mask_tags(search_name)
-      end
-      local display_target, display_position_map =
-        search_key_cache.get("surface", descriptor.id, "display", locale, search_name)
-      local display_score, display_positions = fuzzy_match(display_query, display_target)
-      if display_score ~= nil then
-        best = {
-          score = display_score + DISPLAY_NAME_BONUS,
-          field = "display",
-          positions = display_positions,
-          ranges = search_highlight.positions_to_ranges(display_position_map, display_positions),
-        }
-      end
+    -- A platform's name is player-written and can carry rich text tags, which are
+    -- masked out before matching (see README, "Surface search limitations"). Its
+    -- prototype name is meaningless to search, so only planets match on one.
+    local search_name = descriptor.search_name
+    if search_name and descriptor.kind == "platform" then
+      search_name = rich_text.mask_tags(search_name)
     end
-    if descriptor.kind ~= "platform" then
-      local internal_target, internal_position_map =
-        search_key_cache.get("surface", descriptor.id, "internal", nil, descriptor.name)
-      local internal_score, internal_positions = fuzzy_match(internal_query, internal_target)
-      if internal_score ~= nil and (best == nil or internal_score > best.score) then
-        best = {
-          score = internal_score,
-          field = "internal",
-          positions = internal_positions,
-          ranges = search_highlight.positions_to_ranges(internal_position_map, internal_positions),
-        }
-      end
-    end
-    if SurfaceLogic.is_visible(descriptor, include_hidden) and best ~= nil then
+    local match = matcher:match("surface", descriptor.id, {
+      display = search_name,
+      internal = descriptor.kind ~= "platform" and descriptor.name or nil,
+    })
+    if SurfaceLogic.is_visible(descriptor, include_hidden) and match ~= nil then
       local label = descriptor.label
       if descriptor.kind == "platform" and not descriptor.own then
         label = { "quidquid.surface-with-force", label, descriptor.force_name }
@@ -84,9 +58,9 @@ function SurfaceLogic.build_candidates(query, descriptors, include_hidden, local
         icon = descriptor.icon,
         search_display_name = type(descriptor.search_name) == "string" and descriptor.search_name or nil,
         search_internal_name = descriptor.kind ~= "platform" and descriptor.name or nil,
-        search_display_ranges = best.field == "display" and best.ranges or {},
-        search_internal_ranges = best.field == "internal" and best.ranges or {},
-        search_score = best.score,
+        search_display_ranges = match.display_ranges,
+        search_internal_ranges = match.internal_ranges,
+        search_score = match.score,
       })
     end
   end
