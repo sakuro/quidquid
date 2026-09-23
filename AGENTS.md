@@ -27,6 +27,8 @@ Root-level Lua files are limited to the Factorio stage entry points (`settings.l
 - `prototypes/` - declarative prototype definitions (`data:extend({...})`), used from both the settings stage (setting prototypes) and the data stage (item/recipe/entity/etc. prototypes)
 - `lib/` - runtime code: control-stage logic and helpers shared across stages
 
+`lib/api.lua` is the one module other mods are invited to `require` (see EXTENDING.md "Scoring"). Its signatures are public: changing them breaks dependents silently, since Factorio has no version negotiation for a required file. Everything else under `lib/` is internal.
+
 ## Tests
 
 `spec/` holds busted unit tests; run them with `mise run test`.

@@ -1,27 +1,4 @@
-local fuzzy_match = require("lib.fuzzy_match")
-local normalization = require("lib.search_normalization")
-local search_key_cache = require("lib.search_key_cache")
-local search_highlight = require("lib.search_highlight")
-
-local DISPLAY_NAME_BONUS = 0.5
-
-local function select_match(best, score, field, positions, position_map)
-  if score == nil then
-    return best
-  end
-  if field == "display" then
-    score = score + DISPLAY_NAME_BONUS
-  end
-  if best == nil or score > best.score or (score == best.score and field == "display") then
-    return {
-      score = score,
-      field = field,
-      positions = positions,
-      ranges = search_highlight.positions_to_ranges(position_map, positions),
-    }
-  end
-  return best
-end
+local api = require("lib.api")
 
 local function build_candidates(
   candidate_type,
@@ -33,24 +10,15 @@ local function build_candidates(
   include_hidden
 )
   local candidates = {}
-  local internal_query = normalization.normalize(query, "internal", nil)
-  local display_query = normalization.normalize(query, "display", locale)
+  local matcher = api.matcher(query, locale)
   for _, prototype in ipairs(prototype_list) do
     if include_hidden or not prototype.hidden then
-      local best = nil
-      local internal_target, internal_position_map =
-        search_key_cache.get("prototype", prototype.name, "internal", nil, prototype.name)
-      local internal_score, internal_positions = fuzzy_match(internal_query, internal_target)
-      best = select_match(best, internal_score, "internal", internal_positions, internal_position_map)
-
       local translated = translated_names[prototype.name]
-      if type(translated) == "string" then
-        local display_target, display_position_map =
-          search_key_cache.get("prototype", prototype.name, "display", locale, translated)
-        local display_score, display_positions = fuzzy_match(display_query, display_target)
-        best = select_match(best, display_score, "display", display_positions, display_position_map)
-      end
-      if best ~= nil then
+      local match = matcher:match("prototype", prototype.name, {
+        display = translated,
+        internal = prototype.name,
+      })
+      if match ~= nil then
         table.insert(candidates, {
           type = candidate_type,
           id = prototype.name,
@@ -58,9 +26,9 @@ local function build_candidates(
           icon = icon_prefix .. "/" .. prototype.name,
           search_display_name = translated,
           search_internal_name = prototype.name,
-          search_display_ranges = best.field == "display" and best.ranges or {},
-          search_internal_ranges = best.field == "internal" and best.ranges or {},
-          search_score = best.score,
+          search_display_ranges = match.display_ranges,
+          search_internal_ranges = match.internal_ranges,
+          search_score = match.score,
         })
       end
     end

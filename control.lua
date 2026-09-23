@@ -15,7 +15,7 @@ local PipetteAction = require("lib.actions.pipette_action")
 local TemporaryRequestAction = require("lib.actions.temporary_request_action")
 local TemporaryRequestEditor = require("lib.temporary_request_editor")
 local Palette = require("lib.palette")
-local search_key_cache = require("lib.search_key_cache")
+local api = require("lib.api")
 
 local registry = Registry.new(log)
 
@@ -138,16 +138,15 @@ script.on_event({
 -- player or surface is removed so reused indices cannot inherit old positions.
 script.on_event(defines.events.on_player_changed_position, OpenRemoteViewAction.on_player_changed_position)
 
--- SurfaceSource's search_key_cache entries are keyed by surface name; evict them
--- alongside the position history above so a destroyed surface's cache doesn't linger
--- for the rest of the session. on_pre_surface_deleted only gives surface_index, so
--- the surface (still valid -- this fires just before deletion) is looked up to get
--- its name.
+-- SurfaceSource's cached search keys are keyed by surface name; evict them alongside
+-- the position history above so a destroyed surface's cache doesn't linger for the
+-- rest of the session. on_pre_surface_deleted only gives surface_index, so the surface
+-- (still valid -- this fires just before deletion) is looked up to get its name.
 script.on_event(defines.events.on_pre_surface_deleted, function(event)
   OpenRemoteViewAction.on_pre_surface_deleted(event)
   local surface = game.get_surface(event.surface_index)
   if surface ~= nil then
-    search_key_cache.clear("surface", surface.name)
+    api.forget("surface", surface.name)
   end
 end)
 
