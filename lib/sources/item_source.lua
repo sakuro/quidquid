@@ -1,5 +1,4 @@
 local flib_dictionary = require("__flib__.dictionary")
-local Bench = require("lib.bench")
 local FontColors = require("lib.font_colors")
 local ItemCounts = require("lib.item_counts")
 local LogisticsState = require("lib.logistics_state")
@@ -235,12 +234,9 @@ local function apply_annotations(candidates, player)
   if ctx == nil then
     return
   end
-  local probe = Bench.probe()
   for _, candidate in ipairs(candidates) do
     candidate.annotation = ItemSource.annotate(candidate, ctx)
   end
-  Bench.record("bench.annotate.items", probe)
-  Bench.count("bench.count.items", #candidates)
 end
 
 local function search(query, player_index)

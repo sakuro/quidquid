@@ -1,5 +1,4 @@
 local flib_dictionary = require("__flib__.dictionary")
-local Bench = require("lib.bench")
 local build_candidates = require("lib.sources.prototype_candidate")
 local rich_text = require("lib.rich_text")
 local TechnologyPrerequisites = require("lib.technology_prerequisites")
@@ -210,12 +209,9 @@ end
 -- technology of that name.
 local function apply_annotations(candidates, player)
   local ctx = gather_annotation_context(player)
-  local probe = Bench.probe()
   for _, candidate in ipairs(candidates) do
     candidate.annotation = TechnologySource.annotate(candidate, ctx)
   end
-  Bench.record("bench.annotate.technologies", probe)
-  Bench.count("bench.count.technologies", #candidates)
 end
 
 local function search(query, player_index)

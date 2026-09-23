@@ -1,4 +1,3 @@
-local Bench = require("lib.bench")
 local FontColors = require("lib.font_colors")
 local PaletteLogic = require("lib.palette_logic")
 local RemoteCaller = require("lib.remote_caller")
@@ -149,9 +148,7 @@ function Palette.search_all_sources(query, player_index, locked_source)
   local results = {}
   local sources = locked_source and { locked_source } or registry:default_search_sources()
   for _, source in ipairs(sources) do
-    local probe = Bench.probe()
     local ok, candidates = pcall(remote.call, source.interface, "search", trimmed_query, player_index)
-    Bench.record("bench.source." .. tostring(source.id), probe)
     if ok then
       local wrapped = {}
       for _, candidate in ipairs(candidates) do
@@ -165,20 +162,8 @@ function Palette.search_all_sources(query, player_index, locked_source)
       log(("quidquid: source '%s' search failed: %s"):format(tostring(source.id), tostring(candidates)))
     end
   end
-  local merge_probe = Bench.probe()
   local merged = PaletteLogic.merge_candidates(results, DISPLAY_LIMIT)
-  Bench.record("bench.merge", merge_probe)
   return merged
-end
-
--- TEMPORARY (see lib/bench.lua): mirrors refresh_candidates minus rendering, so a
--- bench run measures exactly the work one keystroke does to produce candidates.
--- Keep this in step with refresh_candidates across the refactor.
-function Palette.bench_query(query, player_index)
-  local total = Bench.probe()
-  local candidates = Palette.search_all_sources(query, player_index, nil)
-  Bench.record("bench.total", total)
-  return candidates
 end
 
 function Palette.is_query_valid(query, player_index, locked_source)

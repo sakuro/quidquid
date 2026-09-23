@@ -16,7 +16,6 @@ local TemporaryRequestAction = require("lib.actions.temporary_request_action")
 local TemporaryRequestEditor = require("lib.temporary_request_editor")
 local Palette = require("lib.palette")
 local search_key_cache = require("lib.search_key_cache")
-local Bench = require("lib.bench")
 
 local registry = Registry.new(log)
 
@@ -157,20 +156,4 @@ end)
 script.on_event(defines.events.on_player_removed, function(event)
   OpenRemoteViewAction.on_player_removed(event)
   Palette.on_player_removed(event)
-end)
-
--- TEMPORARY (see lib/bench.lua). Refuses to run before flib has finished
--- translating: without a dictionary, display-name matching is absent and the
--- candidate counts come out far too low to compare against.
-commands.add_command("quidquid-bench", "Run the quidquid annotation benchmark", function(event)
-  local player = game.get_player(event.player_index)
-  if player == nil then
-    return
-  end
-  if flib_dictionary.get(event.player_index, "items") == nil then
-    player.print("quidquid-bench: dictionaries not translated yet, try again in a moment")
-    return
-  end
-  Bench.run(Palette.bench_query, event.player_index)
-  player.print("quidquid-bench: done, see factorio-current.log")
 end)
