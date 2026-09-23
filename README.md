@@ -2,12 +2,13 @@
 
 [![Downloads](https://img.shields.io/badge/dynamic/json.svg?label=Downloads&url=https%3A%2F%2Fmods.factorio.com%2Fapi%2Fmods%2Fquidquid&query=%24.downloads_count)](https://mods.factorio.com/mod/quidquid)
 
-Quidquid is a command palette for Factorio. Open it with `Ctrl/Cmd + K` to
-search available entries and perform actions on the selected result.
+Quidquid is a general-purpose palette with incremental search for Factorio.
+Items, fluids, recipes, technologies and surfaces are searched together, and each
+result offers the actions that apply to it. Open it with `Ctrl/Cmd + K`.
 
 ## Features
 
-- Ctrl/Cmd + K command palette for searching and acting on items, fluids, recipes,
+- Ctrl/Cmd + K palette for searching and acting on items, fluids, recipes,
   technologies, planets, and accessible space platforms
 - Source-specific actions including Factoriopedia, technology screens, remote view,
   crafting, and research-queue management
@@ -25,7 +26,7 @@ search available entries and perform actions on the selected result.
 
 ## Usage
 
-Press `Ctrl/Cmd + K` to open the command palette.
+Press `Ctrl/Cmd + K` to open the palette.
 
 Type a search query to find matching entries. A recognized prefix followed by a
 space locks the search to that source. For example:
