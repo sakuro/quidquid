@@ -33,8 +33,8 @@ describe("ItemSource", function()
       assert.are.equal("12", ItemSource.build_caption("locked", 12, 340))
     end)
 
-    it("shows the network as an em dash when out of range", function()
-      assert.are.equal("12 · —", ItemSource.build_caption("out_of_range", 12, 340))
+    it("shows the network as a muted em dash when out of range", function()
+      assert.are.equal("12 · [color=160,160,160]—[/color]", ItemSource.build_caption("out_of_range", 12, 340))
     end)
 
     it("shows both counts when connected", function()

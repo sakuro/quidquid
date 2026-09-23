@@ -8,15 +8,20 @@ local build_candidates = require("lib.sources.prototype_candidate")
 
 local ItemSource = {}
 
+-- Uses FontColors.MUTED so this can't drift from palette.lua's own style.font_color
+-- of the same name.
+local function muted(text)
+  local color = FontColors.MUTED
+  return ("[color=%d,%d,%d]%s[/color]"):format(color.r, color.g, color.b, text)
+end
+
 -- Muting a zero count, rather than hiding it, is #121's whole point: a candidate the
 -- player holds none of still shows a 0, just one that doesn't visually compete with
--- ones they do. Uses FontColors.MUTED so this can't drift from palette.lua's own
--- style.font_color of the same name.
+-- ones they do.
 function ItemSource.format_count(value)
   local text = NumberFormat.suffixed(value)
   if value == 0 then
-    local muted = FontColors.MUTED
-    return ("[color=%d,%d,%d]%s[/color]"):format(muted.r, muted.g, muted.b, text)
+    return muted(text)
   end
   return text
 end
@@ -24,17 +29,20 @@ end
 -- SEPARATOR is deliberately not "/": that reads as "current / max", which this isn't
 -- -- inventory and network are two independent totals, not a fraction.
 local SEPARATOR = "·"
+-- Muted for the same reason a zero count is, only more so: this one says the number
+-- can't be read at all, and -- unlike a zero, which varies per row -- it is the same
+-- mark on every row while the player is out of range.
 local OUT_OF_RANGE_TEXT = "—"
 
 -- The row's headline: just the inventory count while locked (there's nothing to pair
--- it with yet), otherwise inventory SEPARATOR network, with network replaced by an
--- em dash when the player is outside any network's range.
+-- it with yet), otherwise inventory SEPARATOR network, with network replaced by the
+-- muted dash when the player is outside any network's range.
 function ItemSource.build_caption(state, inventory_total, network_total)
   local inventory_text = ItemSource.format_count(inventory_total)
   if state == "locked" then
     return inventory_text
   end
-  local network_text = state == "out_of_range" and OUT_OF_RANGE_TEXT or ItemSource.format_count(network_total)
+  local network_text = state == "out_of_range" and muted(OUT_OF_RANGE_TEXT) or ItemSource.format_count(network_total)
   return inventory_text .. " " .. SEPARATOR .. " " .. network_text
 end
 
