@@ -3,10 +3,12 @@ local TechnologyUpgradeChain = {}
 -- An `upgrade = true` family is a run of separate, finite prototypes
 -- (braking-force-1 .. -7), not one multi-level prototype -- see
 -- TechnologyPrerequisites.is_multi_level for that unrelated mechanism. The
--- engine's technology screen renders only part of such a run, and nothing in
--- the runtime API reports which part, so the rule below was derived by
--- observing the screen in game against states set up over RCON. Every claim
--- it makes is pinned by a case in spec/lib/technology_upgrade_chain_spec.lua.
+-- technology screen's grid draws only part of such a run as tiles; its tree
+-- view still shows every level, so this models what the grid offers, not what
+-- the player can reach. Nothing in the runtime API reports which part the grid
+-- draws, so the rule below was derived by observing it in game against states
+-- set up over RCON. Every claim it makes is pinned by a case in
+-- spec/lib/technology_upgrade_chain_spec.lua.
 
 -- Splits "braking-force-6" into "braking-force" and 6. Returns nil for a name
 -- that carries no trailing level, which every chain head may do

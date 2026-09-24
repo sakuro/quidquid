@@ -168,10 +168,11 @@ local function technology_chain_links()
   return chain_links
 end
 
--- Drops the upgrade-chain levels the technology screen does not draw as their own
--- tile, so the palette never offers a technology the player has had no way to see.
--- Only matched candidates are tested, so the cost scales with the result list
--- rather than with the prototype count.
+-- Drops the upgrade-chain levels the technology screen's grid does not draw as
+-- their own tile, so a search answers with the levels that grid offers. The tree
+-- view lists every level either way, and include-hidden brings them all back
+-- here. Only matched candidates are tested, so the cost scales with the result
+-- list rather than with the prototype count.
 function TechnologySource.filter_visible(candidates, links, researched, queued)
   local visible = {}
   for _, candidate in ipairs(candidates) do
