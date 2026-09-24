@@ -1,0 +1,17 @@
+#!/usr/bin/env bash
+#MISE description="Check function doc comments in the mod's Lua source"
+set -euo pipefail
+
+# Every Lua file the mod itself loads: lib/, prototypes/, and the stage entry
+# points at the root (AGENTS.md "Lua source layout"). Today they all live in
+# lib/ -- prototypes/ is declarative and the entry points hold only closures --
+# but a public function added elsewhere has to be caught too. spec/ is test code
+# and tools/ holds standalone dev scripts, including this checker's
+# intentionally-malformed fixtures, so both stay out.
+#
+# Extra arguments are passed through, so the baseline can be regenerated with
+#   mise run doc-check -- --write-baseline > .doc-check-baseline
+{
+  find lib prototypes -name '*.lua'
+  find . -maxdepth 1 -name '*.lua'
+} | sed 's|^\./||' | sort | xargs lua tools/doc_check.lua --baseline .doc-check-baseline "$@"
