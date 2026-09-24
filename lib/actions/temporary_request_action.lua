@@ -22,8 +22,8 @@ end
 -- whenever a player's locale changed.
 local GROUP = "[virtual-signal=signal-Q] Quidquid: Temporary requests"
 
--- pure, testable: `existing_groups` is a plain array of group-name strings already
--- extracted from real sections by the caller
+-- `existing_groups` is a plain array of group-name strings already extracted from real
+-- sections by the caller
 function TemporaryRequestAction.find_section_index_by_group(existing_groups, group)
   for i, g in ipairs(existing_groups) do
     if g == group then
@@ -33,7 +33,7 @@ function TemporaryRequestAction.find_section_index_by_group(existing_groups, gro
   return nil
 end
 
--- pure, testable: `existing` is a plain array already extracted from real slots by the caller
+-- `existing` is a plain array already extracted from real slots by the caller
 function TemporaryRequestAction.find_or_next_slot_index(existing, item_name, quality)
   for i, slot in ipairs(existing) do
     if slot.value ~= nil and slot.value.name == item_name and slot.value.quality == quality then
@@ -43,11 +43,11 @@ function TemporaryRequestAction.find_or_next_slot_index(existing, item_name, qua
   return #existing + 1
 end
 
--- pure, testable: `filters` is shaped like `LuaLogisticPoint.filters` (a plain array of
--- {name=.., quality=.., count=..} tables), already extracted by the caller. `filters`
--- already reflects Factorio's own per-item pooled total across every section on the
--- point, so a single matching entry's `count` IS the combined target -- no manual
--- summation across sections is needed here.
+-- `filters` is shaped like `LuaLogisticPoint.filters` (a plain array of {name=..,
+-- quality=.., count=..} tables), already extracted by the caller. `filters` already
+-- reflects Factorio's own per-item pooled total across every section on the point, so
+-- a single matching entry's `count` IS the combined target -- no manual summation
+-- across sections is needed here.
 function TemporaryRequestAction.combined_target(filters, item_name, quality)
   for _, filter in ipairs(filters) do
     if filter.name == item_name and filter.quality == quality then
@@ -89,12 +89,12 @@ function TemporaryRequestAction.get_or_create_section(point)
   return point.add_section(GROUP)
 end
 
--- pure, testable: decides whether selected_candidate has an item-shaped target to
--- request. Item candidates always do; recipe candidates need at least one item
--- ingredient (a request naming only fluid ingredients doesn't make sense). Returns
--- true, or false plus a locale key explaining why not (nil for a recipe candidate
--- with no matching force recipe -- a near-impossible case not worth a message, since
--- RecipeSource builds candidates from prototypes.recipe directly).
+-- Decides whether selected_candidate has an item-shaped target to request. Item
+-- candidates always do; recipe candidates need at least one item ingredient (a request
+-- naming only fluid ingredients doesn't make sense). Returns true, or false plus a
+-- locale key explaining why not (nil for a recipe candidate with no matching force
+-- recipe -- a near-impossible case not worth a message, since RecipeSource builds
+-- candidates from prototypes.recipe directly).
 -- is_available only gates on player/logistics-network state, uniform across every
 -- candidate; this per-candidate fact is resolved here and reported by execute
 -- instead, not hidden from the tooltip.

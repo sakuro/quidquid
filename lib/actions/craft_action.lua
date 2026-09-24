@@ -9,11 +9,11 @@ local function resolve_recipe(selected_candidate, player)
   return player.force.recipes[selected_candidate.id]
 end
 
--- pure, testable: true when character's prototype can hand-craft at least one of
--- recipe's categories. A recipe whose categories are all machine-only (e.g.
--- smelting) can never be hand-crafted, regardless of the force-level
--- get_hand_crafting_disabled_for_recipe flag -- that flag toggles a recipe that
--- otherwise CAN be hand-crafted, it doesn't cover this case.
+-- True when character's prototype can hand-craft at least one of recipe's categories.
+-- A recipe whose categories are all machine-only (e.g. smelting) can never be
+-- hand-crafted, regardless of the force-level get_hand_crafting_disabled_for_recipe
+-- flag -- that flag toggles a recipe that otherwise CAN be hand-crafted, it doesn't
+-- cover this case.
 function CraftAction.is_hand_craftable(recipe, character)
   if character == nil then
     return false

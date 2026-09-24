@@ -66,12 +66,12 @@ end
 
 ResearchQueueAction.queue_index = queue_index
 
--- pure, testable: decides what happens when candidate's technology is added to
--- force's research queue. Returns the technology, a locale key, and its message
--- args -- plus the new queue to install when the outcome is an actual enqueue (nil
--- when the outcome is only a message, e.g. already queued/researched/full). Returns
--- nil for a candidate with no matching force technology (near-impossible, since
--- TechnologySource builds candidates from force.technologies directly).
+-- Decides what happens when candidate's technology is added to force's research
+-- queue. Returns the technology, a locale key, and its message args -- plus the new
+-- queue to install when the outcome is an actual enqueue (nil when the outcome is only
+-- a message, e.g. already queued/researched/full). Returns nil for a candidate with no
+-- matching force technology (near-impossible, since TechnologySource builds candidates
+-- from force.technologies directly).
 -- is_available only gates on state uniform across every candidate (there is none
 -- registered for this action); per-candidate queue eligibility is a runtime fact
 -- resolved here and reported by execute, not hidden from the tooltip.
