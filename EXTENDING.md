@@ -309,5 +309,6 @@ them.
 | [`lib/sources/calculator_source.lua`](lib/sources/calculator_source.lua) | The smallest source, plus `is_query_valid` and `secondary_text` |
 | [`lib/sources/fluid_source.lua`](lib/sources/fluid_source.lua) | A prototype-backed source with a translation dictionary |
 | [`lib/sources/item_source.lua`](lib/sources/item_source.lua) | Per-candidate `annotation` |
+| [`lib/sources/resource_source.lua`](lib/sources/resource_source.lua) | A source that builds candidates from world state rather than prototypes, and keeps a `storage` cache |
 | [`lib/actions/open_factoriopedia_action.lua`](lib/actions/open_factoriopedia_action.lua) | The smallest action, acting on several types |
 | [`lib/actions/temporary_request_action.lua`](lib/actions/temporary_request_action.lua) | `is_available` against player state |
