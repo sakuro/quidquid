@@ -130,5 +130,57 @@ describe("ResourceLogic", function()
     it("returns nothing when no cluster matches", function()
       assert.are.same({}, ResourceLogic.build_candidates("uranium", clusters, "en", translated, localised_names))
     end)
+
+    it("puts the surface token and the floored position on secondary_text", function()
+      local surface_tokens = { [1] = "[planet=nauvis]" }
+      local candidates =
+        ResourceLogic.build_candidates("copper", clusters, "en", translated, localised_names, surface_tokens)
+
+      -- The copper-ore fixture's anchor is { x = -5, y = -5 }, already whole numbers;
+      -- see the floored-position case below for a fixture that actually exercises
+      -- math.floor.
+      assert.are.equal("[planet=nauvis] (-5, -5)", candidates[1].secondary_text)
+    end)
+
+    it("floors fractional coordinates on secondary_text", function()
+      local fractional_clusters = {
+        cluster("iron-ore:fractional", "iron-ore", 2000, { left = 0, top = 0, right = 10, bottom = 10 }, {
+          ["0,0"] = { amount = 2000, left = 0, top = 0, right = 10, bottom = 10, anchor = { x = -137.5, y = 9.9 } },
+        }),
+      }
+      local surface_tokens = { [1] = "[planet=nauvis]" }
+
+      local candidates =
+        ResourceLogic.build_candidates("iron", fractional_clusters, "en", translated, localised_names, surface_tokens)
+
+      assert.are.equal("[planet=nauvis] (-138, 9)", candidates[1].secondary_text)
+    end)
+
+    it("does not set search_internal_name or search_internal_ranges on a resource candidate", function()
+      local surface_tokens = { [1] = "[planet=nauvis]" }
+      local candidates =
+        ResourceLogic.build_candidates("copper", clusters, "en", translated, localised_names, surface_tokens)
+
+      assert.is_nil(candidates[1].search_internal_name)
+      assert.is_nil(candidates[1].search_internal_ranges)
+    end)
+
+    it("still matches on the prototype name once search_internal_name is no longer displayed", function()
+      local surface_tokens = { [1] = "[planet=nauvis]" }
+      local candidates =
+        ResourceLogic.build_candidates("copper-ore", clusters, "en", translated, localised_names, surface_tokens)
+
+      assert.are.equal(1, #candidates)
+      assert.are.equal("copper-ore:0,0", candidates[1].id)
+    end)
+
+    it("falls back to a usable secondary_text when the surface has no token in the map", function()
+      -- surface_tokens is deliberately empty: a caller that did not describe this
+      -- cluster's surface (or omitted the map entirely) must not crash or render
+      -- a literal "nil" on the second line.
+      local candidates = ResourceLogic.build_candidates("copper", clusters, "en", translated, localised_names, {})
+
+      assert.are.equal("1 (-5, -5)", candidates[1].secondary_text)
+    end)
   end)
 end)

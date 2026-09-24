@@ -218,16 +218,33 @@ local function collect_localised_names()
   return localised_names
 end
 
+-- The rich-text token for a resource candidate's surface: a planet icon when the
+-- surface has one (the same "[planet=...]" tag vanilla's own Space Age locale uses,
+-- rendered as rich text by lib/search_highlight.lua like the rest of this line), or
+-- the plain surface name otherwise -- LuaSurface.planet is nil for a scripted surface
+-- from another mod that has none.
+local function surface_token(surface)
+  if surface.planet ~= nil then
+    return "[planet=" .. surface.planet.name .. "]"
+  end
+  return surface.name
+end
+
+-- Collects both the visible clusters and each of their surfaces' display tokens in
+-- one pass, since this loop already has every relevant LuaSurface in hand -- a second
+-- pass just to build the token map would walk the same surfaces again for nothing.
 local function visible_clusters(player)
   local clusters = {}
+  local surface_tokens = {}
   local resources = state()
   if resources == nil then
-    return clusters
+    return clusters, surface_tokens
   end
   local force = player.force
   for surface_index, store in pairs(resources.surfaces) do
     local surface = game.get_surface(surface_index)
     if surface ~= nil and surface.platform == nil then
+      surface_tokens[surface_index] = surface_token(surface)
       for _, cluster in ipairs(ResourceClustering.all(store)) do
         for key in pairs(cluster.chunks) do
           local x, y = key:match("^(-?%d+),(-?%d+)$")
@@ -239,7 +256,7 @@ local function visible_clusters(player)
       end
     end
   end
-  return clusters
+  return clusters, surface_tokens
 end
 
 -- One find_entities_filtered per candidate, with limit = 1 so the engine stops at the
@@ -303,12 +320,14 @@ local function search(query, player_index)
     return {}
   end
   local translated_names = flib_dictionary.get(player_index, NAMESPACE) or {}
+  local clusters, surface_tokens = visible_clusters(player)
   local candidates = ResourceLogic.build_candidates(
     query,
-    visible_clusters(player),
+    clusters,
     player.locale,
     translated_names,
-    collect_localised_names()
+    collect_localised_names(),
+    surface_tokens
   )
   local ok, err = pcall(apply_annotations, candidates)
   if not ok then

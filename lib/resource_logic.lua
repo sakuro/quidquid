@@ -28,6 +28,21 @@ local function richest_chunk_anchor(chunks)
   return best_entry.anchor
 end
 
+--- A patch's own second line: where it is, not what it's called.
+---
+--- Every patch of one resource shares the same prototype name, so putting that name
+--- on the muted second line (as search_internal_name would) gives ten identical
+--- lines for ten patches -- the one line that could distinguish them carries
+--- nothing. The surface token plus the anchor's floored coordinates does distinguish
+--- them, and the coordinates match the anchor used for the pin and remote view, so
+--- what is shown is where the player actually lands.
+---@param surface_token string  the surface's display token, "[planet=x]" or a plain name
+---@param position table  { x, y }, the candidate's own position
+---@return string
+local function secondary_text(surface_token, position)
+  return ("%s (%d, %d)"):format(surface_token, math.floor(position.x), math.floor(position.y))
+end
+
 --- Builds the resource source's candidates for one query.
 ---
 --- Clusters of one resource all carry the same name and so the same match score.
@@ -40,10 +55,14 @@ end
 ---@param translated_names table  resource name -> translated name, from flib's dictionary
 ---@param localised_names table  resource name -> LocalisedString, from the resource
 --- prototypes; used as the label until a translated name arrives
+---@param surface_tokens table  surface_index -> display token ("[planet=x]" or a plain
+--- surface name), built by the caller from the LuaSurface it already has in hand; a
+--- cluster whose surface has no entry falls back to the surface index itself
 ---@return table  candidates, richest first; see EXTENDING.md "Candidates"
-function ResourceLogic.build_candidates(query, clusters, locale, translated_names, localised_names)
+function ResourceLogic.build_candidates(query, clusters, locale, translated_names, localised_names, surface_tokens)
   local candidates = {}
   local matcher = api.matcher(query, locale)
+  surface_tokens = surface_tokens or {}
   for _, cluster in ipairs(clusters) do
     local translated = translated_names[cluster.resource_name]
     local match = matcher:match("resource", cluster.resource_name, {
@@ -51,19 +70,20 @@ function ResourceLogic.build_candidates(query, clusters, locale, translated_name
       internal = cluster.resource_name,
     })
     if match ~= nil then
+      local position = richest_chunk_anchor(cluster.chunks)
+      local surface_token = surface_tokens[cluster.surface_index] or tostring(cluster.surface_index)
       table.insert(candidates, {
         type = "resource",
         id = cluster.id,
         resource_name = cluster.resource_name,
         surface_index = cluster.surface_index,
         amount = cluster.amount,
-        position = richest_chunk_anchor(cluster.chunks),
+        position = position,
         label = translated or localised_names[cluster.resource_name],
         icon = "entity/" .. cluster.resource_name,
         search_display_name = translated,
-        search_internal_name = cluster.resource_name,
+        secondary_text = secondary_text(surface_token, position),
         search_display_ranges = match.display_ranges,
-        search_internal_ranges = match.internal_ranges,
         search_score = match.score,
       })
     end
