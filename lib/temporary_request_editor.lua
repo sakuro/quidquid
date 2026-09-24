@@ -22,6 +22,17 @@ local CONFIRM_BUTTON_NAME = "quidquid-temporary-request-editor-confirm-button"
 local UNKNOWN_QUALITY_NAME = "quality-unknown"
 local DEFAULT_FONT_COLOR = { r = 0, g = 0, b = 0 }
 
+-- A frame does not clip its children, so a ceiling on the frame alone doesn't
+-- keep the title inside it: a long localised name (e.g. Space Age's
+-- "Space platform starter pack", longer still in Japanese) renders at its
+-- natural width, spilling past the frame's right edge and pushing the close
+-- button out of view entirely. The title label needs a ceiling of its own,
+-- derived from the frame's: what's left after the frame's padding, the close
+-- button, the titlebar flow's spacing, and a sliver of draggable filler. An
+-- estimate pending in-game confirmation, not a measured fit.
+local FRAME_MAX_WIDTH = 360
+local TITLE_MAX_WIDTH = FRAME_MAX_WIDTH - 70
+
 local function get_frame(player)
   return player.gui.screen[FRAME_NAME]
 end
@@ -220,18 +231,26 @@ function TemporaryRequestEditor.open(player, selected_candidate)
     name = FRAME_NAME,
     direction = "vertical",
   })
-  frame.style.maximal_width = 360
+  frame.style.maximal_width = FRAME_MAX_WIDTH
   frame.auto_center = true
 
   local titlebar = frame.add({ type = "flow", name = TITLEBAR_NAME, direction = "horizontal" })
   titlebar.drag_target = frame
-  titlebar.add({
+  local title_label = titlebar.add({
     type = "label",
     name = TITLE_LABEL_NAME,
     style = "frame_title",
     caption = title_caption(target, "normal"),
     ignored_by_interaction = true,
   })
+  title_label.style.maximal_width = TITLE_MAX_WIDTH
+  -- The ceiling only truncates while the label stays on one line -- frame_title
+  -- already is single-line, but the two belong together, so pin it here rather
+  -- than lean on that style's default.
+  title_label.style.single_line = true
+  -- Without this the label keeps its natural width under the titlebar flow's
+  -- layout and the ceiling above never bites.
+  title_label.style.horizontally_squashable = true
   local titlebar_filler = titlebar.add({
     type = "empty-widget",
     style = "draggable_space_header",
