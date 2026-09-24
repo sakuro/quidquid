@@ -259,8 +259,8 @@ local function visible_clusters(player)
 end
 
 -- One find_entities_filtered per candidate, with limit = 1 so the engine stops at the
--- first hit. Annotations run over every candidate the source returns, not just the 30
--- PaletteLogic.merge_candidates keeps, so the count matters -- see issue #174.
+-- first hit. Occupancy is checked over every candidate the source returns, not just
+-- the 30 PaletteLogic.merge_candidates keeps, so the count matters -- see issue #174.
 --
 -- Every link of the chain -- the surface, this surface's store, this cluster -- is
 -- guarded rather than indexed straight through: state() can be nil like every other
@@ -298,17 +298,24 @@ end
 
 -- Mutates candidates in place, mirroring item_source's apply_annotations: the caller
 -- runs this inside a pcall so one candidate's failure (an invalid surface mid-search,
--- say) logs rather than dropping every result this source found. The amount already
--- lives in the candidate's label (see lib/resource_logic.lua), so an unoccupied patch
--- gets no annotation at all -- the row's right end falls back to the source label,
--- like any other source's row.
-local function apply_annotations(candidates)
+-- say) logs rather than dropping every result this source found. This no longer sets
+-- an `annotation` -- the occupied marker moved onto the muted second line instead (see
+-- lib/resource_logic.lua), freeing the row's right end entirely. An unoccupied
+-- candidate's secondary_text, built by ResourceLogic.build_candidates, is left as-is.
+--
+-- Rebuilding that second line here needs the same surface token and position
+-- build_candidates used, but the candidate's public shape (see EXTENDING.md
+-- "Candidates") has no field for the token, only the coordinates it already carries as
+-- `position` (used for the pin and remote view). Rather than widen every resource
+-- candidate with a token field only this function reads, the token is recovered from
+-- the plain secondary_text build_candidates already wrote: it is always
+-- "<token> (x, y)", so the text up to the last " (" is the token, unchanged since no
+-- token this source produces contains that sequence itself.
+local function mark_occupied(candidates)
   for _, candidate in ipairs(candidates) do
     if is_occupied(candidate) then
-      candidate.annotation = {
-        caption = { "quidquid.resource-occupied" },
-        tooltip = { "quidquid.resource-occupied-tooltip" },
-      }
+      local token = candidate.secondary_text:match("^(.*) %(")
+      candidate.secondary_text = ResourceLogic.secondary_text(token, candidate.position, true)
     end
   end
 end
@@ -328,9 +335,9 @@ local function search(query, player_index)
     collect_localised_names(),
     surface_tokens
   )
-  local ok, err = pcall(apply_annotations, candidates)
+  local ok, err = pcall(mark_occupied, candidates)
   if not ok then
-    log(("quidquid: source 'resources' annotation failed: %s"):format(tostring(err)))
+    log(("quidquid: source 'resources' occupancy marking failed: %s"):format(tostring(err)))
   end
   return candidates
 end

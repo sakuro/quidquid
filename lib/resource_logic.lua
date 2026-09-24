@@ -37,11 +37,29 @@ end
 --- nothing. The surface token plus the anchor's floored coordinates does distinguish
 --- them, and the coordinates match the anchor used for the pin and remote view, so
 --- what is shown is where the player actually lands.
+---
+--- A patch already worked by a mining drill is occupied -- a runtime fact this pure
+--- module never learns on its own (see lib/sources/resource_source.lua, which calls
+--- back in with `occupied` once it knows). The marker used to be a separate
+--- `annotation` at the row's right end; it now lives here instead, right after the
+--- coordinates, freeing the annotation area entirely. `search_highlight.highlight`
+--- (lib/search_highlight.lua) wraps a plain second line in "[font=default]...[/font]",
+--- but skips that wrapper for any value that is not a plain string -- so the occupied
+--- form has to carry the identical font tags itself, as a LocalisedString, or an
+--- occupied row's second line would render in a different font from every other
+--- row's.
 ---@param surface_token string  the surface's display token, "[planet=x]" or a plain name
 ---@param position table  { x, y }, the candidate's own position
----@return string
-local function secondary_text(surface_token, position)
-  return ("%s (%d, %d)"):format(surface_token, math.floor(position.x), math.floor(position.y))
+---@param occupied boolean|nil  true when a mining drill already works this patch;
+--- false or nil for the plain, unoccupied form
+---@return string|table  the plain string when unoccupied; a LocalisedString, already
+--- carrying the plain form's own font wrapper, when occupied
+function ResourceLogic.secondary_text(surface_token, position, occupied)
+  local plain = ("%s (%d, %d)"):format(surface_token, math.floor(position.x), math.floor(position.y))
+  if not occupied then
+    return plain
+  end
+  return { "", "[font=default]", plain .. " ", { "quidquid.resource-occupied" }, "[/font]" }
 end
 
 --- Builds the resource source's candidates for one query.
@@ -95,7 +113,7 @@ function ResourceLogic.build_candidates(query, clusters, locale, translated_name
         label = label,
         icon = "entity/" .. cluster.resource_name,
         search_display_name = search_display_name,
-        secondary_text = secondary_text(surface_token, position),
+        secondary_text = ResourceLogic.secondary_text(surface_token, position),
         search_display_ranges = match.display_ranges,
         search_score = match.score,
       })

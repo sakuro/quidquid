@@ -12,6 +12,40 @@ local function cluster(id, resource_name, amount, bounds, chunks)
 end
 
 describe("ResourceLogic", function()
+  describe(".secondary_text", function()
+    it("returns the plain string when occupied is false", function()
+      local text = ResourceLogic.secondary_text("[planet=nauvis]", { x = -137.5, y = -330.1 }, false)
+
+      assert.are.equal("[planet=nauvis] (-138, -331)", text)
+    end)
+
+    it("returns the plain string when occupied is omitted", function()
+      local text = ResourceLogic.secondary_text("[planet=nauvis]", { x = -137, y = -330 })
+
+      assert.are.equal("[planet=nauvis] (-137, -330)", text)
+    end)
+
+    it(
+      "returns a LocalisedString carrying the token, the floored coordinates, the occupied key and the "
+        .. "plain second line's own font wrapper, when occupied is true",
+      function()
+        local text = ResourceLogic.secondary_text("[planet=nauvis]", { x = -137.5, y = -330.1 }, true)
+
+        -- lib/search_highlight.lua's highlight(value, nil, "default", "default-bold") --
+        -- what Palette.internal_caption calls for a plain secondary_text -- wraps a
+        -- plain string as "[font=default]" .. value .. "[/font]" when there are no
+        -- ranges to bold. A non-string value skips that wrapper entirely (highlight
+        -- returns it unchanged), so this LocalisedString must carry the identical
+        -- "[font=default]"/"[/font]" tags itself, or an occupied row's second line
+        -- would render in a different font from every other row's.
+        assert.are.same(
+          { "", "[font=default]", "[planet=nauvis] (-138, -331) ", { "quidquid.resource-occupied" }, "[/font]" },
+          text
+        )
+      end
+    )
+  end)
+
   describe(".build_candidates", function()
     -- Each fixture cluster carries a real chunks table, not just bounds: position comes
     -- from the richest chunk's `anchor`, an actual entity position recorded by
@@ -238,6 +272,19 @@ describe("ResourceLogic", function()
       local candidates = ResourceLogic.build_candidates("copper", clusters, "en", translated, localised_names, {})
 
       assert.are.equal("1 (-5, -5)", candidates[1].secondary_text)
+    end)
+
+    it("builds a candidate with a plain-string secondary_text and no annotation", function()
+      -- The occupied marker used to be a right-end `annotation` set by the runtime
+      -- resource_source.lua, applied after build_candidates ran. That field is gone
+      -- now: build_candidates itself never sets it, occupied or not -- occupancy is a
+      -- runtime fact this pure module has no way to know at candidate-build time.
+      local surface_tokens = { [1] = "[planet=nauvis]" }
+      local candidates =
+        ResourceLogic.build_candidates("copper", clusters, "en", translated, localised_names, surface_tokens)
+
+      assert.are.equal("[planet=nauvis] (-5, -5)", candidates[1].secondary_text)
+      assert.is_nil(candidates[1].annotation)
     end)
   end)
 end)

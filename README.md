@@ -204,8 +204,9 @@ following minutes rather than all at once — an empty or partial result
 during that window does not mean the resource isn't there.
 
 Each result's name is followed by its remaining amount. A patch that already
-has a mining drill working it is marked at the right end of the row instead;
-an unoccupied patch shows no such marker there. A finite resource's amount
+has a mining drill working it is marked on the line below instead, right
+after its surface and coordinates; an unoccupied patch shows no such marker
+there. A finite resource's amount
 stays accurate because each entity exhausted to nothing raises an event that
 re-scans its chunk. Infinite resources — crude oil, sulfuric acid geysers —
 raise that event at most once, as they decay toward their minimum yield, so
