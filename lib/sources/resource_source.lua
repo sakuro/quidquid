@@ -1,4 +1,6 @@
+local flib_dictionary = require("__flib__.dictionary")
 local ResourceClustering = require("lib.resource_clustering")
+local ResourceLogic = require("lib.resource_logic")
 
 local ResourceSource = {}
 
@@ -184,6 +186,75 @@ function ResourceSource.on_built_entity(event)
     return
   end
   enqueue(entity.surface_index, math.floor(entity.position.x / 32), math.floor(entity.position.y / 32))
+end
+
+local SOURCE_LABEL = { "quidquid.source-resources" }
+local NAMESPACE = "resources"
+
+local function collect_resources()
+  local resources = {}
+  for _, prototype in pairs(prototypes.entity) do
+    if prototype.type == "resource" then
+      table.insert(resources, prototype)
+    end
+  end
+  return resources
+end
+
+local function visible_clusters(player)
+  local clusters = {}
+  local force = player.force
+  for surface_index, store in pairs(state().surfaces) do
+    local surface = game.get_surface(surface_index)
+    if surface ~= nil and surface.platform == nil then
+      for _, cluster in ipairs(ResourceClustering.all(store)) do
+        for key in pairs(cluster.chunks) do
+          local x, y = key:match("^(-?%d+),(-?%d+)$")
+          if force.is_chunk_charted(surface, { x = tonumber(x), y = tonumber(y) }) then
+            table.insert(clusters, cluster)
+            break
+          end
+        end
+      end
+    end
+  end
+  return clusters
+end
+
+local function search(query, player_index)
+  local player = game.get_player(player_index)
+  if player == nil then
+    return {}
+  end
+  local translated_names = flib_dictionary.get(player_index, NAMESPACE) or {}
+  return ResourceLogic.build_candidates(query, visible_clusters(player), player.locale, translated_names)
+end
+
+--- Registers the resource-name dictionary with flib, for translated-name search.
+---
+--- Must run from on_init/on_configuration_changed, before the first on_tick -- see
+--- control.lua and EXTENDING.md "Translated names".
+function ResourceSource.register_dictionary()
+  flib_dictionary.new(NAMESPACE)
+  for _, prototype in ipairs(collect_resources()) do
+    flib_dictionary.add(NAMESPACE, prototype.name, prototype.localised_name)
+  end
+end
+
+--- Adds this source's remote interface and registers it with Quidquid.
+function ResourceSource.register()
+  remote.add_interface("quidquid.resource-source", { search = search })
+  remote.call("quidquid", "register_source", {
+    contract_version = 1,
+    id = "resources",
+    type = "resource",
+    label = SOURCE_LABEL,
+    -- "R" is uppercase because recipes hold "r". Prefix matching is case-sensitive --
+    -- see EXTENDING.md "Definition" and spec/lib/registry_spec.lua.
+    prefixes = { "resource", "R" },
+    in_default_search = false,
+    interface = "quidquid.resource-source",
+  })
 end
 
 return ResourceSource

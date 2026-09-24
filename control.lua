@@ -6,6 +6,7 @@ local RecipeSource = require("lib.sources.recipe_source")
 local TechnologySource = require("lib.sources.technology_source")
 local SurfaceSource = require("lib.sources.surface_source")
 local CalculatorSource = require("lib.sources.calculator_source")
+local ResourceSource = require("lib.sources.resource_source")
 local OpenRemoteViewAction = require("lib.actions.open_remote_view_action")
 local OpenFactoriopediaAction = require("lib.actions.open_factoriopedia_action")
 local OpenTechnologyAction = require("lib.actions.open_technology_action")
@@ -35,7 +36,7 @@ remote.add_interface("quidquid", {
   end,
 })
 
-local dictionary_sources = { ItemSource, FluidSource, RecipeSource, TechnologySource, SurfaceSource }
+local dictionary_sources = { ItemSource, FluidSource, RecipeSource, TechnologySource, SurfaceSource, ResourceSource }
 
 -- flib_dictionary.new/.add may only run before flib's internal init_ran flag flips true,
 -- which happens on the first on_tick -- so dictionaries must be (re-)registered from
@@ -52,10 +53,12 @@ end
 script.on_init(function()
   flib_dictionary.on_init()
   register_dictionaries()
+  ResourceSource.ensure_storage()
 end)
 script.on_configuration_changed(function()
   flib_dictionary.on_configuration_changed()
   register_dictionaries()
+  ResourceSource.ensure_storage()
 end)
 
 -- remote.call is only valid inside an event, never at control.lua's top level (confirmed
@@ -83,8 +86,10 @@ script.on_event(defines.events.on_tick, function()
     CraftAction.register()
     PipetteAction.register()
     TemporaryRequestAction.register()
+    ResourceSource.register()
   end
   flib_dictionary.on_tick()
+  ResourceSource.on_tick()
 end)
 
 script.on_event(defines.events.on_string_translated, flib_dictionary.on_string_translated)
@@ -148,6 +153,7 @@ script.on_event(defines.events.on_pre_surface_deleted, function(event)
   if surface ~= nil then
     api.forget("surface", surface.name)
   end
+  ResourceSource.on_surface_removed(event)
 end)
 
 -- Palette also keys a small per-player table (pin state) by player_index, which needs
@@ -156,3 +162,17 @@ script.on_event(defines.events.on_player_removed, function(event)
   OpenRemoteViewAction.on_player_removed(event)
   Palette.on_player_removed(event)
 end)
+
+-- The resource cluster cache is derived from the world, so every event that changes
+-- which resources exist, or which chunks hold them, has to reach it. There is no event
+-- for un-charting: LuaForce.clear_chart raises nothing, so visibility is filtered per
+-- force at search time rather than tracked here.
+script.on_event(defines.events.on_chunk_charted, ResourceSource.on_chunk_charted)
+script.on_event(defines.events.on_chunk_deleted, ResourceSource.on_chunk_deleted)
+script.on_event(defines.events.on_surface_cleared, ResourceSource.on_surface_removed)
+script.on_event(defines.events.on_resource_depleted, ResourceSource.on_resource_depleted)
+script.on_event(
+  { defines.events.on_built_entity, defines.events.on_robot_built_entity, defines.events.script_raised_built },
+  ResourceSource.on_built_entity,
+  { { filter = "type", type = "resource" } }
+)
