@@ -93,6 +93,11 @@ function Registry:default_search_sources()
 end
 
 --- The source a prefix word locks the palette to.
+---
+--- Looked up exactly, so prefixes are case-sensitive even though the search itself
+--- is not: "R" and "r" are separate prefixes and two sources may hold one each. That
+--- asymmetry is deliberate -- it frees the uppercase letters for sources whose
+--- natural initial is already taken. See EXTENDING.md "Definition".
 ---@param prefix string
 ---@return table|nil  nil when no source claimed that prefix
 function Registry:source_for_prefix(prefix)

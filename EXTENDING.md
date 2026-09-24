@@ -85,7 +85,7 @@ A source answers search queries with candidates of one type.
 | `type` | yes | The candidate type this source produces. Unique across all sources — a duplicate is rejected. Actions are matched to candidates by this string. |
 | `id` | yes | Identifies your source in Quidquid's log messages. |
 | `label` | yes | LocalisedString shown as the source label on each result row. |
-| `prefixes` | no | Prefix words that lock the palette to this source — with `{ "w", "widget" }`, typing `widget ` locks to it. A prefix already taken by another source is ignored with a log line, as is an empty string. Defaults to none. |
+| `prefixes` | no | Prefix words that lock the palette to this source — with `{ "w", "widget" }`, typing `widget ` locks to it. Matched case-sensitively, so `W` and `w` are separate prefixes and either may be claimed on its own. A prefix already taken by another source is ignored with a log line, as is an empty string. Defaults to none. |
 | `in_default_search` | no | When true, the source takes part in the unlocked search. Defaults to `false`, which leaves it reachable only through a prefix. |
 | `interface` | yes | Name of your remote interface implementing the functions below. |
 

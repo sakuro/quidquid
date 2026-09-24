@@ -162,6 +162,32 @@ describe("Registry", function()
       assert.is_true(fluid_ok)
     end)
 
+    it("treats prefixes differing only in case as distinct", function()
+      local logger, messages = spy_logger()
+      local registry = Registry.new(logger)
+
+      local recipe_ok = registry:register_source({
+        contract_version = 1,
+        id = "recipes",
+        type = "recipe",
+        prefixes = { "r" },
+        interface = "my-mod.source-recipes",
+      })
+      local resource_ok = registry:register_source({
+        contract_version = 1,
+        id = "resources",
+        type = "resource",
+        prefixes = { "R" },
+        interface = "my-mod.source-resources",
+      })
+
+      assert.is_true(recipe_ok)
+      assert.is_true(resource_ok)
+      assert.are.same({}, messages)
+      assert.are.equal("recipes", registry:source_for_prefix("r").id)
+      assert.are.equal("resources", registry:source_for_prefix("R").id)
+    end)
+
     it("ignores an empty-string prefix but still registers the source and its other prefixes", function()
       local logger, messages = spy_logger()
       local registry = Registry.new(logger)
@@ -195,6 +221,20 @@ describe("Registry", function()
       local source = registry:source_for_prefix("item")
 
       assert.are.equal("items", source.id)
+    end)
+
+    it("does not match a prefix typed in another case", function()
+      local registry = Registry.new()
+      registry:register_source({
+        contract_version = 1,
+        id = "items",
+        type = "item",
+        prefixes = { "i", "item" },
+        interface = "my-mod.source-items",
+      })
+
+      assert.is_nil(registry:source_for_prefix("I"))
+      assert.is_nil(registry:source_for_prefix("Item"))
     end)
 
     it("returns nil for an unregistered prefix", function()
