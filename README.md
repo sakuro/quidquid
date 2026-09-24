@@ -91,12 +91,13 @@ Search for fluids by name.
 | --- | --- |
 | `Alt` + left click | Open in Factoriopedia |
 
-Known limitation: in an English locale, an entry whose name starts with the word
-Fluid cannot be reached by typing its name as it reads — the Fluid wagon item,
-its recipe and its technology, and the Fluid handling technology. The space after
-`fluid` completes the `fluid ` source prefix, so the palette locks to fluids and
-clears the input instead of carrying on with the query. Leave the space out —
-`fluidwagon` still matches — or unlock again with the × next to the source label.
+Known limitation: when the game language is English, an entry whose name starts
+with the word Fluid cannot be reached by typing its name as it reads — the
+Fluid wagon item, its recipe and its technology, and the Fluid handling
+technology. The space after `fluid` completes the `fluid ` source prefix, so the
+palette locks to fluids and clears the input instead of carrying on with the
+query. Leave the space out — `fluidwagon` still matches — or unlock again with
+the × next to the source label.
 
 ### Recipes
 
