@@ -39,7 +39,9 @@ describe("ResourceLogic", function()
 
       assert.are.equal(2, #candidates)
       assert.are.equal("resource", candidates[1].type)
-      assert.are.equal("Iron ore", candidates[1].search_display_name)
+      -- candidates[1] is the 9000-amount cluster (richest first); NumberFormat.suffixed
+      -- renders that as "9.0k".
+      assert.are.equal("Iron ore 9.0k", candidates[1].search_display_name)
     end)
 
     it("matches on the prototype name", function()
@@ -115,16 +117,71 @@ describe("ResourceLogic", function()
       assert.are.equal("entity/copper-ore", candidates[1].icon)
     end)
 
-    it("labels a candidate with the translated name when one is available", function()
+    it("labels a candidate with the translated name and the amount when a translation is available", function()
       local candidates = ResourceLogic.build_candidates("copper", clusters, "en", translated, localised_names)
 
-      assert.are.equal("Copper ore", candidates[1].label)
+      -- The copper-ore fixture's amount is 100, under the "k" tier, so
+      -- NumberFormat.suffixed renders it as the plain whole number "100".
+      assert.are.equal("Copper ore 100", candidates[1].label)
     end)
 
-    it("falls back to the resource's localised name when there is no translated name yet", function()
+    it("falls back to the localised name, with the amount appended, when untranslated", function()
       local candidates = ResourceLogic.build_candidates("copper", clusters, "en", {}, localised_names)
 
-      assert.are.same({ "entity-name.copper-ore" }, candidates[1].label)
+      assert.are.same({ "", { "entity-name.copper-ore" }, " ", "100" }, candidates[1].label)
+    end)
+
+    it("sets both label and search_display_name to the same plain string when translated", function()
+      local candidates = ResourceLogic.build_candidates("copper", clusters, "en", translated, localised_names)
+
+      assert.are.equal("Copper ore 100", candidates[1].label)
+      assert.are.equal("Copper ore 100", candidates[1].search_display_name)
+    end)
+
+    it("leaves search_display_name nil when untranslated, even though label still carries the amount", function()
+      local candidates = ResourceLogic.build_candidates("copper", clusters, "en", {}, localised_names)
+
+      assert.is_nil(candidates[1].search_display_name)
+      assert.are.same({ "", { "entity-name.copper-ore" }, " ", "100" }, candidates[1].label)
+    end)
+
+    it("keeps search_display_ranges inside the name, not spilling into the appended amount", function()
+      local candidates = ResourceLogic.build_candidates("copper", clusters, "en", translated, localised_names)
+
+      -- "Copper ore" is 10 bytes; the amount is appended after it, so every matched
+      -- range must stay within those first 10 bytes for the highlight to still land
+      -- on the name after the append.
+      local name_length = #"Copper ore"
+      assert.is_true(#candidates[1].search_display_ranges > 0)
+      for _, range in ipairs(candidates[1].search_display_ranges) do
+        assert.is_true(range.end_byte <= name_length)
+      end
+    end)
+
+    it("sorts by the numeric amount, not the formatted amount string", function()
+      -- 9000 formats as "9.0k" and 800 as "800"; comparing amount as a number must
+      -- still put the 9000 cluster first, whatever the formatted text happens to say.
+      local unformatted_order_clusters = {
+        cluster("iron-ore:small", "iron-ore", 800, { left = 0, top = 0, right = 10, bottom = 10 }, {
+          ["0,0"] = { amount = 800, left = 0, top = 0, right = 10, bottom = 10, anchor = { x = 5, y = 5 } },
+        }),
+        cluster("iron-ore:large", "iron-ore", 9000, { left = 100, top = 100, right = 110, bottom = 110 }, {
+          ["10,10"] = {
+            amount = 9000,
+            left = 100,
+            top = 100,
+            right = 110,
+            bottom = 110,
+            anchor = { x = 105, y = 105 },
+          },
+        }),
+      }
+
+      local candidates =
+        ResourceLogic.build_candidates("iron", unformatted_order_clusters, "en", translated, localised_names)
+
+      assert.are.equal("iron-ore:large", candidates[1].id)
+      assert.are.equal("iron-ore:small", candidates[2].id)
     end)
 
     it("returns nothing when no cluster matches", function()

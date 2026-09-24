@@ -1,5 +1,4 @@
 local flib_dictionary = require("__flib__.dictionary")
-local NumberFormat = require("lib.number_format")
 local ResourceClustering = require("lib.resource_clustering")
 local ResourceLogic = require("lib.resource_logic")
 
@@ -299,17 +298,17 @@ end
 
 -- Mutates candidates in place, mirroring item_source's apply_annotations: the caller
 -- runs this inside a pcall so one candidate's failure (an invalid surface mid-search,
--- say) logs rather than dropping every result this source found.
+-- say) logs rather than dropping every result this source found. The amount already
+-- lives in the candidate's label (see lib/resource_logic.lua), so an unoccupied patch
+-- gets no annotation at all -- the row's right end falls back to the source label,
+-- like any other source's row.
 local function apply_annotations(candidates)
   for _, candidate in ipairs(candidates) do
-    local amount = NumberFormat.suffixed(candidate.amount)
     if is_occupied(candidate) then
       candidate.annotation = {
-        caption = { "quidquid.resource-amount-occupied", amount },
+        caption = { "quidquid.resource-occupied" },
         tooltip = { "quidquid.resource-occupied-tooltip" },
       }
-    else
-      candidate.annotation = { caption = { "quidquid.resource-amount", amount } }
     end
   end
 end

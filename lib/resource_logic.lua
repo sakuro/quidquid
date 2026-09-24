@@ -1,4 +1,5 @@
 local api = require("lib.api")
+local NumberFormat = require("lib.number_format")
 
 local ResourceLogic = {}
 
@@ -72,6 +73,18 @@ function ResourceLogic.build_candidates(query, clusters, locale, translated_name
     if match ~= nil then
       local position = richest_chunk_anchor(cluster.chunks)
       local surface_token = surface_tokens[cluster.surface_index] or tostring(cluster.surface_index)
+      local amount_text = NumberFormat.suffixed(cluster.amount)
+      -- The amount goes after the name, in both cases: appended directly when
+      -- `translated` is a plain string (see the module comment on why that is safe
+      -- for search_display_ranges), or spliced into a LocalisedString when only the
+      -- prototype's localised_name is available.
+      local label, search_display_name
+      if translated ~= nil then
+        label = translated .. " " .. amount_text
+        search_display_name = label
+      else
+        label = { "", localised_names[cluster.resource_name], " ", amount_text }
+      end
       table.insert(candidates, {
         type = "resource",
         id = cluster.id,
@@ -79,9 +92,9 @@ function ResourceLogic.build_candidates(query, clusters, locale, translated_name
         surface_index = cluster.surface_index,
         amount = cluster.amount,
         position = position,
-        label = translated or localised_names[cluster.resource_name],
+        label = label,
         icon = "entity/" .. cluster.resource_name,
-        search_display_name = translated,
+        search_display_name = search_display_name,
         secondary_text = secondary_text(surface_token, position),
         search_display_ranges = match.display_ranges,
         search_score = match.score,
