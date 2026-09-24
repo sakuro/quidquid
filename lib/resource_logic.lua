@@ -108,6 +108,7 @@ function ResourceLogic.build_candidates(query, clusters, locale, translated_name
         id = cluster.id,
         resource_name = cluster.resource_name,
         surface_index = cluster.surface_index,
+        surface_token = surface_token,
         amount = cluster.amount,
         position = position,
         label = label,

@@ -304,18 +304,15 @@ end
 -- candidate's secondary_text, built by ResourceLogic.build_candidates, is left as-is.
 --
 -- Rebuilding that second line here needs the same surface token and position
--- build_candidates used, but the candidate's public shape (see EXTENDING.md
--- "Candidates") has no field for the token, only the coordinates it already carries as
--- `position` (used for the pin and remote view). Rather than widen every resource
--- candidate with a token field only this function reads, the token is recovered from
--- the plain secondary_text build_candidates already wrote: it is always
--- "<token> (x, y)", so the text up to the last " (" is the token, unchanged since no
--- token this source produces contains that sequence itself.
+-- build_candidates used. `position` is already a candidate field read elsewhere (the
+-- pin and remote-view actions); `surface_token` is a plain private field alongside it,
+-- carried by build_candidates for exactly this reader -- one more field costs nothing
+-- next to the `resource_name`/`surface_index`/`amount`/`position` this source's own
+-- candidates already carry outside EXTENDING.md's documented contract.
 local function mark_occupied(candidates)
   for _, candidate in ipairs(candidates) do
     if is_occupied(candidate) then
-      local token = candidate.secondary_text:match("^(.*) %(")
-      candidate.secondary_text = ResourceLogic.secondary_text(token, candidate.position, true)
+      candidate.secondary_text = ResourceLogic.secondary_text(candidate.surface_token, candidate.position, true)
     end
   end
 end

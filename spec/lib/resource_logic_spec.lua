@@ -286,5 +286,24 @@ describe("ResourceLogic", function()
       assert.are.equal("[planet=nauvis] (-5, -5)", candidates[1].secondary_text)
       assert.is_nil(candidates[1].annotation)
     end)
+
+    it("carries the surface token on the candidate, for the runtime source to recompose secondary_text with", function()
+      -- lib/sources/resource_source.lua rewrites secondary_text when a patch turns out
+      -- to be occupied (a runtime fact this pure module never learns), and needs the
+      -- same surface token this function used to build the plain second line.
+      -- Carrying it as its own field keeps that a plain field read, not a parse of
+      -- secondary_text's rendered text.
+      local surface_tokens = { [1] = "[planet=nauvis]" }
+      local candidates =
+        ResourceLogic.build_candidates("copper", clusters, "en", translated, localised_names, surface_tokens)
+
+      assert.are.equal("[planet=nauvis]", candidates[1].surface_token)
+    end)
+
+    it("falls back to the surface index as surface_token when the surface has no token in the map", function()
+      local candidates = ResourceLogic.build_candidates("copper", clusters, "en", translated, localised_names, {})
+
+      assert.are.equal("1", candidates[1].surface_token)
+    end)
   end)
 end)
