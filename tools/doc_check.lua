@@ -186,11 +186,14 @@ local function check_file(path, found)
   end
 end
 
+-- Returns the listed keys, their order, and whether the file was there at all.
+-- A missing or misspelled path yields an empty baseline, which can only make the
+-- check stricter -- every violation is then reported -- never weaker.
 local function read_baseline(path)
   local listed, order = {}, {}
   local handle = path and io.open(path, "r")
   if handle == nil then
-    return listed, order
+    return listed, order, false
   end
   for line in handle:lines() do
     local key = line:gsub("^%s+", ""):gsub("%s+$", "")
@@ -200,7 +203,7 @@ local function read_baseline(path)
     end
   end
   handle:close()
-  return listed, order
+  return listed, order, true
 end
 
 local baseline_path, write_baseline, paths = nil, false, {}
@@ -244,8 +247,22 @@ if write_baseline then
   os.exit(0)
 end
 
-local listed, order = read_baseline(baseline_path)
+local listed, order, baseline_present = read_baseline(baseline_path)
 local failures = {}
+
+-- The baseline is scaffolding for a backlog, not a permanent file. Once the last
+-- entry goes it has no reason to exist, and saying so here is what makes it
+-- actually get deleted rather than linger as an empty file.
+if baseline_present and #order == 0 then
+  table.insert(failures, {
+    path = baseline_path,
+    line = 0,
+    text = string.format(
+      "%s: no entries left -- delete the file and drop --baseline from tasks/doc-check",
+      baseline_path
+    ),
+  })
+end
 for _, entry in ipairs(functions) do
   local in_baseline = listed[entry.key] ~= nil
   if in_baseline then

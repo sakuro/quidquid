@@ -84,6 +84,13 @@ Regenerate it with `mise run doc-check -- --write-baseline > .doc-check-baseline
 — but as a rule, delete the lines you fixed rather than regenerating, so an
 accidental regression cannot be absorbed into the baseline.
 
+The baseline is scaffolding for that backlog and is meant to disappear: when its
+last entry goes, `doc-check` says so and fails, and the cleanup is to delete the
+file, drop `--baseline` from `tasks/doc-check`, and remove its line from AGENTS.md's
+Document Map. The checker itself stays — it is what keeps new functions in line.
+A missing or misspelled baseline path is safe in the meantime: it suppresses
+nothing, so the check can only get stricter, never quietly weaker.
+
 `tools/doc_check_test.sh` is the checker's own fixture test; CI runs it. A doc
 checker that silently passes everything would make the baseline a lie, so changes
 to `tools/doc_check.lua` belong with a case in that test.

@@ -111,6 +111,27 @@ else
   cat "$TMP/out" >&2
 fi
 
+# --- an emptied baseline asks to be deleted ------------------------------------
+
+printf '# only a comment\n' >"$TMP/empty"
+run_checker --baseline "$TMP/empty" "$FIXTURES/good.lua"
+if [ "$status" -eq 1 ] && grep -q "no entries left" "$TMP/out"; then
+  pass "a baseline with no entries left asks to be deleted"
+else
+  fail "an emptied baseline should ask to be deleted, got status $status:"
+  cat "$TMP/out" >&2
+fi
+
+# --- a missing baseline makes the check stricter, not weaker --------------------
+
+run_checker --baseline "$TMP/absent" "$FIXTURES/bad.lua"
+if [ "$status" -eq 1 ] && [ "$(grep -c ': Bad\.' "$TMP/out")" -eq 6 ]; then
+  pass "a missing baseline suppresses nothing"
+else
+  fail "a missing baseline should suppress nothing, got status $status:"
+  cat "$TMP/out" >&2
+fi
+
 # --- --write-baseline lists exactly the violating functions --------------------
 
 run_checker --write-baseline "$FIXTURES/bad.lua" "$FIXTURES/good.lua"

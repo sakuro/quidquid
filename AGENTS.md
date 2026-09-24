@@ -72,7 +72,7 @@ Do not create a section for the next release version directly — version bumpin
 - CONTRIBUTING.md: Development setup, pull request guidelines, and the function doc-comment convention enforced by `mise run doc-check` (see "Comment conventions")
 - EXTENDING.md: Remote-interface contract for mods adding sources/actions (linked from README.md)
 - .scaffold-sync.json / .scaffold-sync.paths: scaffold-drift sync state and tracked-path list; do not delete (see CONTRIBUTING.md "Scaffold drift")
-- .doc-check-baseline: public functions in `lib/` that predate the doc-comment convention; shrinks as they are documented (see CONTRIBUTING.md "Comment conventions")
+- .doc-check-baseline: public functions that predate the doc-comment convention; shrinks as they are documented, and is deleted once empty (see CONTRIBUTING.md "Comment conventions")
 
 # External References
 
