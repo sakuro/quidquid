@@ -91,19 +91,13 @@ since `prototypes/` is declarative and the entry points hold only closures, but
 one added elsewhere is checked the same way. `spec/` is test code and `tools/`
 holds standalone dev scripts, so neither is in scope.
 
-Public functions written before this convention are listed in
-`.doc-check-baseline`, which suppresses them. The list can only shrink:
-`doc-check` also fails on an entry whose function is now documented, or gone.
-Regenerate it with `mise run doc-check -- --write-baseline > .doc-check-baseline`
-— but as a rule, delete the lines you fixed rather than regenerating, so an
-accidental regression cannot be absorbed into the baseline.
-
-The baseline is scaffolding for that backlog and is meant to disappear: when its
-last entry goes, `doc-check` says so and fails, and the cleanup is to delete the
-file, drop `--baseline` from `tasks/doc-check`, and remove its line from AGENTS.md's
-Document Map. The checker itself stays — it is what keeps new functions in line.
-A missing or misspelled baseline path is safe in the meantime: it suppresses
-nothing, so the check can only get stricter, never quietly weaker.
+Every public function is documented, so `doc-check` runs against nothing
+suppressed. Should a batch of undocumented code ever arrive at once — a large
+import, say — `mise run doc-check -- --write-baseline > .doc-check-baseline` captures
+it and `--baseline .doc-check-baseline` in `tasks/doc-check` suppresses it while it
+is worked through. Such a list can only shrink: `doc-check` fails on an entry whose
+function is now documented or gone, and on a baseline with no entries left, which is
+how the last one got deleted.
 
 `tools/doc_check_test.sh` is the checker's own fixture test; CI runs it. A doc
 checker that silently passes everything would make the baseline a lie, so changes

@@ -13,6 +13,8 @@ local registry = nil
 local pin_choices = {}
 local selection_states = {}
 
+--- Wires in the registry, which control.lua passes after building it.
+---@param registry_instance table  as Registry.new returns
 function Palette.init(registry_instance)
   registry = registry_instance
 end
@@ -143,6 +145,16 @@ local function set_active_index(player, index)
   end
 end
 
+--- Searches every source (or just the locked one) and returns the rows to show.
+---
+--- Each source's search is pcall'd: a source that raises is logged and contributes
+--- nothing, rather than taking the whole result list with it. The query is trimmed here,
+--- once, so every source is handed the same thing (EXTENDING.md states that `search`
+--- receives it already trimmed).
+---@param query string  as typed, trimmed here
+---@param player_index uint
+---@param locked_source table|nil  a source definition to search alone, from a prefix lock
+---@return table  at most DISPLAY_LIMIT entries, best score first
 function Palette.search_all_sources(query, player_index, locked_source)
   local trimmed_query = query:match("^%s*(.-)%s*$")
   local results = {}
@@ -165,6 +177,15 @@ function Palette.search_all_sources(query, player_index, locked_source)
   return PaletteLogic.merge_candidates(results, DISPLAY_LIMIT)
 end
 
+--- Whether the searched sources consider this query valid, for the input's error style.
+---
+--- Every searched source is asked and one `false` is enough, per EXTENDING.md. A source
+--- whose check raises is logged and treated as no objection: a broken source should not
+--- be able to mark every query invalid.
+---@param query string
+---@param player_index uint
+---@param locked_source table|nil
+---@return boolean
 function Palette.is_query_valid(query, player_index, locked_source)
   local trimmed_query = query:match("^%s*(.-)%s*$")
   local sources = locked_source and { locked_source } or registry:default_search_sources()
@@ -184,22 +205,33 @@ function Palette.is_query_valid(query, player_index, locked_source)
   return true
 end
 
+--- A row's name, with the matched part bolded.
+---
+--- Only a plain string can carry highlighting, so a candidate that supplied no
+--- search_display_name falls back to its label unhighlighted.
+---@param candidate table
+---@return string|table  a string, or the candidate's own LocalisedString label
 function Palette.row_caption(candidate)
   local display_name = candidate.search_display_name or candidate.label
   display_name = search_highlight.highlight(display_name, candidate.search_display_ranges)
   return display_name
 end
 
+--- A row's icon, as a LocalisedString wrapping the candidate's own SpritePath.
+---@param candidate table
+---@return table  a LocalisedString
 function Palette.icon_caption(candidate)
   return { "", "[img=", candidate.icon, "]" }
 end
 
--- The muted secondary line under a candidate's label: a highlighted
--- internal-name match when the candidate has one, or -- for a candidate with
--- no internal name to search at all, e.g. the calculator's result -- plain
--- secondary_text instead. highlight() with no ranges already renders a plain
--- string in the same font, so secondary_text needs no highlighting logic of
--- its own here.
+--- The muted second line under a row's name.
+---
+--- A highlighted internal-name match when the candidate has one, or -- for a candidate
+--- with no internal name to search at all, such as the calculator's result -- its plain
+--- secondary_text. highlight() with no ranges already renders a plain string in the same
+--- font, so secondary_text needs no highlighting logic of its own here.
+---@param candidate table
+---@return string|table|nil  nil for a candidate with neither
 function Palette.internal_caption(candidate)
   if candidate.search_internal_name ~= nil then
     return search_highlight.highlight(
@@ -241,13 +273,16 @@ end
 -- reject the tooltip outright.
 local MAX_TOOLTIP_ACTIONS = 10
 
--- annotation_tooltip, when given, is a source's own LocalisedString (e.g. #121's item
--- counts) shown above the action hints, separated from them by the same newline
--- convention as the hints use between each other. It costs 2 slots of its own (the
--- line plus its leading separator) and, unlike a second-and-later hint, makes even
--- the *first* hint pay for a separator too (see the loop below) -- so the safe
--- budget for hints drops from MAX_TOOLTIP_ACTIONS to MAX_TOOLTIP_ACTIONS - 1 whenever
--- one is present.
+--- A row's tooltip: the source's own annotation, then one hint per available action.
+---
+--- The hint count is capped because a LocalisedString array holds at most 20 parameters.
+--- An annotation costs 2 slots of its own -- the line plus its leading separator -- and,
+--- unlike a second-and-later hint, makes even the first hint pay for a separator too, so
+--- the safe budget for hints drops by one whenever an annotation is present.
+---@param resolved table  input_name -> action definition, as Registry:resolve_actions returns
+---@param annotation_tooltip table|nil  the candidate's own annotation tooltip, shown
+---  above the hints
+---@return table|nil  nil when there is neither an annotation nor an action to hint at
 function Palette.build_tooltip(resolved, annotation_tooltip)
   local input_names = {}
   for input_name, _ in pairs(resolved) do
@@ -415,6 +450,10 @@ local function refresh_candidates(player, text, locked_source)
   render_candidates(player, candidates)
 end
 
+--- Builds and shows the palette, focused on its input.
+---
+--- Does nothing if it is already open, so a second trigger cannot build the frame twice.
+---@param player LuaPlayer
 function Palette.open(player)
   if get_frame(player) ~= nil then
     return
@@ -533,6 +572,11 @@ function Palette.open(player)
   input_row[INPUT_NAME].focus()
 end
 
+--- Destroys the palette and drops the player's selection state.
+---
+--- The pin choice deliberately survives, since it is a preference for the session rather
+--- than state belonging to this frame.
+---@param player LuaPlayer
 function Palette.close(player)
   local frame = get_frame(player)
   if frame == nil then
@@ -589,10 +633,22 @@ local function dispatch(player, selected_candidate, input_name)
   refresh_candidates(player, text, get_locked_source(player))
 end
 
+--- True when an element is the palette's own text input.
+---
+--- Every GUI event this module handles arrives for every element in the game, so each
+--- handler starts by asking this or checking a tag.
+---@param element LuaGuiElement|nil
+---@return boolean
 function Palette.is_palette_input(element)
   return element ~= nil and element.valid and element.name == INPUT_NAME
 end
 
+--- The prefix word a player has just completed, or nil if they have not.
+---
+--- The trailing space is the trigger: "item" is still being typed, "item " asks to lock
+--- to the item source.
+---@param text string  the input's current content
+---@return string|nil  the text without its trailing space, or nil when it has none
 function Palette.trigger_prefix(text)
   if text:sub(-1) ~= " " then
     return nil
@@ -625,6 +681,11 @@ local function unlock_source(player)
   set_input_validity(player, true)
 end
 
+--- Re-searches as the player types, and handles a completed prefix word.
+---
+--- A trailing space either locks the palette to the named source or, when the word names
+--- none, is left in place as ordinary query text.
+---@param event table  on_gui_text_changed; ignored unless it is the palette's input
 function Palette.on_gui_text_changed(event)
   if not Palette.is_palette_input(event.element) then
     return
@@ -652,6 +713,11 @@ function Palette.on_gui_text_changed(event)
   refresh_candidates(player, event.text, locked_source)
 end
 
+--- Runs the action bound to the pressed key for the row the event came from.
+---
+--- Which actions exist is resolved per candidate at press time, not when the row was
+--- rendered, so a key that no longer applies simply does nothing.
+---@param event table  a custom-input event; event.element carries the candidate tag
 function Palette.on_action_key(event)
   local player = game.get_player(event.player_index)
   if player == nil then
@@ -685,14 +751,23 @@ local function move_active_index(event, direction)
   end
 end
 
+--- Moves the selection up one row, wrapping at the top.
+---@param event table  the custom-input event
 function Palette.on_palette_up(event)
   move_active_index(event, -1)
 end
 
+--- Moves the selection down one row, wrapping at the bottom.
+---@param event table  the custom-input event
 function Palette.on_palette_down(event)
   move_active_index(event, 1)
 end
 
+--- Moves keyboard focus from the input onto the selected row, on Enter.
+---
+--- Enter does not run an action: the row's own action keys do, and focusing the row is
+--- what makes them reachable from the keyboard.
+---@param event table  on_gui_confirmed; ignored unless it is the palette's input
 function Palette.on_gui_confirmed(event)
   if not Palette.is_palette_input(event.element) then
     return
@@ -721,6 +796,8 @@ function Palette.on_gui_confirmed(event)
   end
 end
 
+--- Selects the hovered row, so mouse and keyboard agree on what is active.
+---@param event table  on_gui_hover; ignored unless the element carries a candidate index
 function Palette.on_gui_hover(event)
   local element = event.element
   if element == nil or not element.valid then
@@ -736,6 +813,8 @@ function Palette.on_gui_hover(event)
   end
 end
 
+--- Clears a source lock and re-searches with the text that is already there.
+---@param event table  on_gui_click; ignored unless the element carries the unlock tag
 function Palette.on_unlock_button(event)
   local element = event.element
   if element == nil or not element.valid or element.tags.quidquid_unlock == nil then
@@ -756,6 +835,12 @@ function Palette.on_unlock_button(event)
   refresh_candidates(player, current_text, nil)
 end
 
+--- Toggles the pin, which keeps the palette open after an action runs.
+---
+--- Kept per player for the session rather than in `storage`: it is a preference about
+--- this session's frames, and resetting it on load is acceptable (unlike surface
+--- navigation history).
+---@param event table  on_gui_click; ignored unless the element carries the pin tag
 function Palette.on_toggle_pin(event)
   local element = event.element
   if element == nil or not element.valid or element.tags.quidquid_pin == nil then
@@ -765,11 +850,18 @@ function Palette.on_toggle_pin(event)
   pin_choices[event.player_index] = element.toggled
 end
 
+--- Drops a removed player's pin choice and selection state.
+---
+--- Player indices are reused, so a leftover entry would hand the next player someone
+--- else's state. Registered from control.lua.
+---@param event table  on_player_removed
 function Palette.on_player_removed(event)
   pin_choices[event.player_index] = nil
   selection_states[event.player_index] = nil
 end
 
+--- Closes the palette from its titlebar close button.
+---@param event table  on_gui_click; ignored unless the element carries the cancel tag
 function Palette.on_cancel_button(event)
   local element = event.element
   if element == nil or not element.valid or element.tags.quidquid_cancel == nil then
@@ -782,16 +874,24 @@ function Palette.on_cancel_button(event)
   Palette.close(player)
 end
 
+--- Fans one click out to the three buttons that can have been clicked.
+---
+--- Each branch checks its own tag, so passing the event to all three is cheaper than
+--- deciding here which one it belongs to.
+---@param event table  on_gui_click
 function Palette.on_gui_click(event)
   Palette.on_unlock_button(event)
   Palette.on_toggle_pin(event)
   Palette.on_cancel_button(event)
 end
 
--- When some other GUI (e.g. the temporary-request editor) reassigned player.opened away
--- from the palette and later closes, player.opened is left nil rather than reverting --
--- so if the palette is still around (pinned), Escape would otherwise hit nothing opened
--- and fall through to the game's own pause menu instead of closing the palette.
+--- Makes the palette `player.opened` again after another GUI took that over.
+---
+--- When some other GUI -- the temporary-request editor, say -- reassigns player.opened
+--- away from the palette and later closes, player.opened is left nil rather than
+--- reverting. If the palette is still around (pinned), Escape would then hit nothing
+--- opened and fall through to the game's own pause menu instead of closing the palette.
+---@param player LuaPlayer
 function Palette.reclaim_opened(player)
   if player.opened ~= nil then
     return
@@ -802,6 +902,12 @@ function Palette.reclaim_opened(player)
   end
 end
 
+--- Closes the palette when Factorio closes its frame, e.g. on Escape.
+---
+--- A frame tagged as an incidental close is left alone: an action that opens its own GUI
+--- reassigns player.opened, which raises this event for the palette even though the
+--- player did not dismiss it.
+---@param event table  on_gui_closed; ignored unless it is the palette's frame
 function Palette.on_gui_closed(event)
   local element = event.element
   if element == nil or not element.valid or element.name ~= FRAME_NAME then
@@ -817,6 +923,8 @@ function Palette.on_gui_closed(event)
   Palette.close(player)
 end
 
+--- Opens the palette on its keyboard shortcut.
+---@param event table  the custom-input event
 function Palette.on_open(event)
   local player = game.get_player(event.player_index)
   if player ~= nil then

@@ -2,6 +2,14 @@ local SurfaceLogic = require("lib.surface_logic")
 
 local SurfaceAccess = {}
 
+--- A plain-value descriptor for a real surface, as seen by one player's force.
+---
+--- Everything the surface source and the visibility rules need, flattened to plain
+--- values so those decisions stay out of the runtime (see lib/surface_logic.lua).
+--- Ownership and hidden-ness are per force, which is why the player comes in.
+---@param surface LuaSurface
+---@param player LuaPlayer
+---@return table|nil  nil for a surface that is neither a platform nor a planet's
 function SurfaceAccess.describe(surface, player)
   local platform = surface.platform
   if platform ~= nil then
@@ -35,6 +43,13 @@ function SurfaceAccess.describe(surface, player)
   return nil
 end
 
+--- A descriptor for a planet, whether or not its surface exists yet.
+---
+--- `generated = false` here: a caller holding a real LuaSurface overwrites it. This is
+--- what lets an unvisited planet still be searched and explain itself.
+---@param planet LuaPlanet
+---@param player LuaPlayer
+---@return table
 function SurfaceAccess.describe_planet(planet, player)
   return {
     id = planet.name,
@@ -49,6 +64,9 @@ function SurfaceAccess.describe_planet(planet, player)
   }
 end
 
+--- The planet prototype behind a surface candidate, for when no LuaSurface exists.
+---@param candidate table
+---@return LuaSpaceLocationPrototype|nil  nil unless the candidate names a real planet
 function SurfaceAccess.planet_prototype(candidate)
   if candidate.type ~= "surface" or candidate.planet_name == nil then
     return nil
@@ -57,11 +75,16 @@ function SurfaceAccess.planet_prototype(candidate)
   return planet ~= nil and planet.prototype or nil
 end
 
--- Returns (surface, descriptor). `surface` is nil for a planet that has no
--- LuaSurface yet (never visited/generated) -- there's nothing to act on -- but
--- `descriptor` is still populated from the planet prototype in that case, so
--- callers that only need to reason about availability (not act on a real surface)
--- still get one.
+--- Resolves a surface candidate to whatever of it exists, if the player may see it.
+---
+--- Both results are nil for a candidate the player cannot see at all, so a caller that
+--- only checks visibility needs nothing else.
+---@param candidate table
+---@param player LuaPlayer
+---@return LuaSurface|nil  nil for a planet with no surface yet (never visited), where
+---  there is nothing to act on
+---@return table|nil  the descriptor, still populated from the planet prototype in that
+---  case, for callers reasoning about availability rather than acting
 function SurfaceAccess.resolve(candidate, player)
   if candidate.type ~= "surface" then
     return nil
@@ -84,8 +107,15 @@ function SurfaceAccess.resolve(candidate, player)
   return nil
 end
 
--- Returns the surface, or nil plus a locale key explaining why not (nil, nil for a
--- candidate that doesn't resolve to a surface/planet at all).
+--- The surface remote view should open for a candidate, or why it can't.
+---
+--- Shaped for ActionRunner.run's (payload, locale_key) convention, which is what
+--- OpenRemoteViewAction passes it as its resolve step.
+---@param candidate table
+---@param player LuaPlayer
+---@return LuaSurface|nil
+---@return string|nil  locale key explaining a nil surface; nil for a candidate that
+---  does not resolve to a surface or planet at all, which is not worth a message
 function SurfaceAccess.resolve_remote_view(candidate, player)
   local surface, descriptor = SurfaceAccess.resolve(candidate, player)
   if descriptor == nil then

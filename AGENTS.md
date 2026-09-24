@@ -36,9 +36,8 @@ optional rationale paragraph (*why*, not *what*), `---@param` per declared
 parameter in declaration order, and `---@return` per returned value. "Public"
 includes a `local function` the module exports through its `return` or onto its
 module table, documented at its definition.
-`mise run doc-check` enforces that shape, suppressing the pre-existing backlog
-listed in `.doc-check-baseline`; when you document one of those functions, delete
-its line. A comment explaining a single line stays inside the body. The full
+`mise run doc-check` enforces that shape, and every public function currently
+satisfies it. A comment explaining a single line stays inside the body. The full
 convention is CONTRIBUTING.md "Comment conventions".
 
 ## Tests
@@ -74,7 +73,6 @@ Do not create a section for the next release version directly — version bumpin
 - CONTRIBUTING.md: Development setup, pull request guidelines, and the function doc-comment convention enforced by `mise run doc-check` (see "Comment conventions")
 - EXTENDING.md: Remote-interface contract for mods adding sources/actions (linked from README.md)
 - .scaffold-sync.json / .scaffold-sync.paths: scaffold-drift sync state and tracked-path list; do not delete (see CONTRIBUTING.md "Scaffold drift")
-- .doc-check-baseline: public functions that predate the doc-comment convention; shrinks as they are documented, and is deleted once empty (see CONTRIBUTING.md "Comment conventions")
 
 # External References
 
