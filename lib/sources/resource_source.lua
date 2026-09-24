@@ -5,7 +5,7 @@ local ResourceLogic = require("lib.resource_logic")
 
 local ResourceSource = {}
 
-local SCHEMA_VERSION = 1
+local SCHEMA_VERSION = 2
 local SCAN_CHUNKS_PER_TICK = 8
 
 -- Every handler starts from here and returns early on nil. ensure_storage runs from

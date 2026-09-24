@@ -37,7 +37,7 @@ end
 --- where the runtime hands it a LuaEntity array -- no per-entity allocation on the
 --- scanning path.
 ---@param entities table  array of things answering .name, .amount and .position
----@return table  resource name -> { amount, tiles, left, top, right, bottom }
+---@return table  resource name -> { amount, tiles, left, top, right, bottom, anchor }
 function ResourceClustering.group_chunk(entities)
   local grouped = {}
   for _, entity in ipairs(entities) do
@@ -61,6 +61,35 @@ function ResourceClustering.group_chunk(entities)
       entry.bottom = math.max(entry.bottom, position.y)
     end
   end
+
+  -- Second pass, once every entry's bounding box is final: pick, per resource, the
+  -- entity closest to that box's centre as the anchor. The centre itself can fall on a
+  -- tile boundary (see lib.resource_logic) and is only ever used here to rank real
+  -- entity positions -- it is never returned as a position itself. A tie is broken by
+  -- smaller x, then smaller y, so the result does not depend on entities' iteration
+  -- order.
+  local anchor_distance = {}
+  for _, entity in ipairs(entities) do
+    local entry = grouped[entity.name]
+    local position = entity.position
+    local centre_x = (entry.left + entry.right) / 2
+    local centre_y = (entry.top + entry.bottom) / 2
+    local dx, dy = position.x - centre_x, position.y - centre_y
+    local distance = dx * dx + dy * dy
+    local best_distance = anchor_distance[entity.name]
+    if
+      best_distance == nil
+      or distance < best_distance
+      or (
+        distance == best_distance
+        and (position.x < entry.anchor.x or (position.x == entry.anchor.x and position.y < entry.anchor.y))
+      )
+    then
+      entry.anchor = { x = position.x, y = position.y }
+      anchor_distance[entity.name] = distance
+    end
+  end
+
   return grouped
 end
 

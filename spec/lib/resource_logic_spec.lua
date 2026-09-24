@@ -13,19 +13,19 @@ end
 
 describe("ResourceLogic", function()
   describe(".build_candidates", function()
-    -- Each fixture cluster carries a real chunks table, not just bounds: position is
-    -- now anchored on the richest chunk's own centre (Fix 3), and for a single-chunk
-    -- cluster that chunk's bounds are set equal to the cluster's bounds so the two
-    -- definitions coincide.
+    -- Each fixture cluster carries a real chunks table, not just bounds: position comes
+    -- from the richest chunk's `anchor`, an actual entity position recorded by
+    -- ResourceClustering.group_chunk -- never a computed centre. See lib/resource_logic.lua
+    -- for why a computed centre can land on a tile boundary with no ore under it.
     local clusters = {
       cluster("iron-ore:0,0", "iron-ore", 5000, { left = 0, top = 0, right = 40, bottom = 20 }, {
-        ["0,0"] = { amount = 5000, left = 0, top = 0, right = 40, bottom = 20 },
+        ["0,0"] = { amount = 5000, left = 0, top = 0, right = 40, bottom = 20, anchor = { x = 20, y = 10 } },
       }),
       cluster("iron-ore:9,9", "iron-ore", 9000, { left = 300, top = 300, right = 310, bottom = 310 }, {
-        ["9,9"] = { amount = 9000, left = 300, top = 300, right = 310, bottom = 310 },
+        ["9,9"] = { amount = 9000, left = 300, top = 300, right = 310, bottom = 310, anchor = { x = 305, y = 305 } },
       }),
       cluster("copper-ore:0,0", "copper-ore", 100, { left = -10, top = -10, right = 0, bottom = 0 }, {
-        ["0,0"] = { amount = 100, left = -10, top = -10, right = 0, bottom = 0 },
+        ["0,0"] = { amount = 100, left = -10, top = -10, right = 0, bottom = 0, anchor = { x = -5, y = -5 } },
       }),
     }
     local translated = { ["iron-ore"] = "Iron ore", ["copper-ore"] = "Copper ore" }
@@ -56,33 +56,51 @@ describe("ResourceLogic", function()
       assert.are.equal("iron-ore:0,0", candidates[2].id)
     end)
 
-    it("puts the centre of the richest chunk on a single-chunk cluster", function()
+    it("puts the richest chunk's anchor on a single-chunk cluster", function()
       local candidates = ResourceLogic.build_candidates("copper", clusters, "en", translated, localised_names)
 
       assert.are.same({ x = -5, y = -5 }, candidates[1].position)
     end)
 
-    it("anchors position on the richest chunk's centre, not the bounding box's", function()
+    it("anchors position on the richest chunk's anchor, not the bounding box's centre", function()
       local multi_chunk_clusters = {
         cluster("iron-ore:multi", "iron-ore", 6000, { left = 0, top = 0, right = 340, bottom = 20 }, {
-          ["0,0"] = { amount = 1000, left = 0, top = 0, right = 40, bottom = 20 },
-          ["9,0"] = { amount = 5000, left = 300, top = 0, right = 340, bottom = 20 },
+          ["0,0"] = { amount = 1000, left = 0, top = 0, right = 40, bottom = 20, anchor = { x = 20, y = 10 } },
+          ["9,0"] = { amount = 5000, left = 300, top = 0, right = 340, bottom = 20, anchor = { x = 320, y = 10 } },
         }),
       }
 
       local candidates = ResourceLogic.build_candidates("iron", multi_chunk_clusters, "en", translated, localised_names)
 
-      -- The richer chunk ("9,0", amount 5000) centres at (320, 10). The bounding box
-      -- centres at (170, 10) -- off the ore entirely, which is exactly the bug Fix 3
-      -- exists to avoid.
+      -- The richer chunk ("9,0", amount 5000) anchors at (320, 10), an actual entity
+      -- position. The bounding box centres at (170, 10) -- off the ore entirely, which
+      -- is exactly the bug the anchor exists to avoid.
       assert.are.same({ x = 320, y = 10 }, candidates[1].position)
+    end)
+
+    it("uses the richest chunk's recorded entity position, not a midpoint that can fall on a tile boundary", function()
+      -- Entities at tile centres x = 0.5 and x = 9.5 span an odd number of tiles: their
+      -- midpoint is (0.5 + 9.5) / 2 = 5.0, a whole integer -- a tile BOUNDARY, inside no
+      -- resource entity's collision box. This is the exact defect reported in the field
+      -- (see lib/resource_logic.lua's comment). group_chunk's anchor is recorded from a
+      -- real entity, so it is immune to this per-axis parity coin-flip.
+      local parity_clusters = {
+        cluster("iron-ore:parity", "iron-ore", 2000, { left = 0.5, top = 0.5, right = 9.5, bottom = 0.5 }, {
+          ["0,0"] = { amount = 2000, left = 0.5, top = 0.5, right = 9.5, bottom = 0.5, anchor = { x = 9.5, y = 0.5 } },
+        }),
+      }
+
+      local candidates = ResourceLogic.build_candidates("iron", parity_clusters, "en", translated, localised_names)
+
+      assert.are.same({ x = 9.5, y = 0.5 }, candidates[1].position)
+      assert.are_not.equal(5.0, candidates[1].position.x)
     end)
 
     it("breaks a tie between equally rich chunks by chunk key, ascending", function()
       local tied_clusters = {
         cluster("iron-ore:tie", "iron-ore", 2000, { left = 0, top = 0, right = 340, bottom = 20 }, {
-          ["9,0"] = { amount = 1000, left = 300, top = 0, right = 340, bottom = 20 },
-          ["0,0"] = { amount = 1000, left = 0, top = 0, right = 40, bottom = 20 },
+          ["9,0"] = { amount = 1000, left = 300, top = 0, right = 340, bottom = 20, anchor = { x = 320, y = 10 } },
+          ["0,0"] = { amount = 1000, left = 0, top = 0, right = 40, bottom = 20, anchor = { x = 20, y = 10 } },
         }),
       }
 

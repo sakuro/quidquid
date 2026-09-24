@@ -2,15 +2,19 @@ local api = require("lib.api")
 
 local ResourceLogic = {}
 
--- Anchoring on the bounding box's centre routinely lands off the ore, because clusters
--- merge on chunk adjacency alone and never split (see lib.resource_clustering): two
--- patches a chunk apart merge and the centre falls in the gap, an L-shaped or
--- ring-shaped patch does the same, and a patch mined out in the middle keeps its old
--- bounds. The richest chunk's own left/top/right/bottom are the min/max of that chunk's
--- actual entity positions, so its centre is always inside real ore. Ties -- equal
--- amount -- are broken by chunk key, ascending, so the result is stable across runs
--- regardless of pairs() iteration order.
-local function richest_chunk_centre(chunks)
+-- A geometric centre is not safe to hand to LuaPlayer.add_pin: resource entities sit at
+-- tile centres (n + 0.5), so averaging a chunk's min and max entity coordinate on an
+-- axis gives (i + j) / 2 + 0.5, which lands on another tile centre only when i + j is
+-- even -- and on a bare tile BOUNDARY, inside no entity's collision box, when i + j is
+-- odd. That parity is a per-axis coin-flip independent of patch shape, so it bit
+-- convex, single-chunk patches as often as ring-shaped ones (confirmed in the field:
+-- the engine's "no resource entity found at the given position" fires for exactly the
+-- patches whose richest chunk spans an odd number of tiles on some axis). Anchoring on
+-- an actual entity position instead -- recorded by ResourceClustering.group_chunk as
+-- the chunk's `anchor` -- sidesteps the parity question entirely, since a real entity's
+-- own position is always on ore. Ties -- equal amount -- are broken by chunk key,
+-- ascending, so the result is stable across runs regardless of pairs() iteration order.
+local function richest_chunk_anchor(chunks)
   local best_key, best_entry
   for key, entry in pairs(chunks) do
     if
@@ -21,10 +25,7 @@ local function richest_chunk_centre(chunks)
       best_key, best_entry = key, entry
     end
   end
-  return {
-    x = (best_entry.left + best_entry.right) / 2,
-    y = (best_entry.top + best_entry.bottom) / 2,
-  }
+  return best_entry.anchor
 end
 
 --- Builds the resource source's candidates for one query.
@@ -56,7 +57,7 @@ function ResourceLogic.build_candidates(query, clusters, locale, translated_name
         resource_name = cluster.resource_name,
         surface_index = cluster.surface_index,
         amount = cluster.amount,
-        position = richest_chunk_centre(cluster.chunks),
+        position = richest_chunk_anchor(cluster.chunks),
         label = translated or localised_names[cluster.resource_name],
         icon = "entity/" .. cluster.resource_name,
         search_display_name = translated,

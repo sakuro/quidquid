@@ -51,6 +51,39 @@ describe("ResourceClustering", function()
     it("returns an empty table for a chunk with no resources", function()
       assert.are.same({}, ResourceClustering.group_chunk({}))
     end)
+
+    it("anchors on the entity nearest the bounding box's centre", function()
+      -- Bounding box centre is ((0.5 + 9.5) / 2, 0.5) = (5.0, 0.5), a tile boundary.
+      -- The entity at (4.5, 0.5) is 0.5 tiles from it; the ones at the ends are 4.5 --
+      -- so (4.5, 0.5), a real entity position, is the anchor.
+      local grouped = ResourceClustering.group_chunk({
+        { name = "iron-ore", amount = 100, position = { x = 0.5, y = 0.5 } },
+        { name = "iron-ore", amount = 100, position = { x = 9.5, y = 0.5 } },
+        { name = "iron-ore", amount = 100, position = { x = 4.5, y = 0.5 } },
+      })
+
+      assert.are.same({ x = 4.5, y = 0.5 }, grouped["iron-ore"].anchor)
+    end)
+
+    it("breaks a distance tie by the smaller x", function()
+      -- Bounding box centre is (5.0, 0.5); both entities are 4.5 tiles from it.
+      local grouped = ResourceClustering.group_chunk({
+        { name = "iron-ore", amount = 100, position = { x = 9.5, y = 0.5 } },
+        { name = "iron-ore", amount = 100, position = { x = 0.5, y = 0.5 } },
+      })
+
+      assert.are.same({ x = 0.5, y = 0.5 }, grouped["iron-ore"].anchor)
+    end)
+
+    it("breaks a further tie by the smaller y when x is equal", function()
+      -- Bounding box centre is (0.5, 5.0); both entities are 4.5 tiles from it.
+      local grouped = ResourceClustering.group_chunk({
+        { name = "iron-ore", amount = 100, position = { x = 0.5, y = 9.5 } },
+        { name = "iron-ore", amount = 100, position = { x = 0.5, y = 0.5 } },
+      })
+
+      assert.are.same({ x = 0.5, y = 0.5 }, grouped["iron-ore"].anchor)
+    end)
   end)
 
   describe(".insert", function()
