@@ -3,6 +3,7 @@ local build_candidates = require("lib.sources.prototype_candidate")
 local rich_text = require("lib.rich_text")
 local TechnologyGraph = require("lib.technology_graph")
 local TechnologyPrerequisites = require("lib.technology_prerequisites")
+local TechnologyUpgradeChain = require("lib.technology_upgrade_chain")
 
 local TechnologySource = {}
 
@@ -154,10 +155,50 @@ function TechnologySource.build_candidates(query, technologies, locale, translat
   return build_candidates("technology", "technology", query, technologies, locale, translated_names, include_hidden)
 end
 
+-- Prototypes are fixed for the run of a save, so the chain links are derived once
+-- and kept here. Deliberately not in `storage`: this is derived data, identical on
+-- every peer and rebuilt on load, and saving it would only risk carrying a stale
+-- copy across a mod change.
+local chain_links = nil
+
+local function technology_chain_links()
+  if chain_links == nil then
+    chain_links = TechnologyUpgradeChain.build_links(collect_technologies())
+  end
+  return chain_links
+end
+
+-- Drops the upgrade-chain levels the technology screen's grid does not draw as
+-- their own tile, so a search answers with the levels that grid offers. The tree
+-- view lists every level either way, and include-hidden brings them all back
+-- here. Only matched candidates are tested, so the cost scales with the result
+-- list rather than with the prototype count.
+function TechnologySource.filter_visible(candidates, links, researched, queued)
+  local visible = {}
+  for _, candidate in ipairs(candidates) do
+    if TechnologyUpgradeChain.is_visible(candidate.id, links, researched, queued) then
+      table.insert(visible, candidate)
+    end
+  end
+  return visible
+end
+
 local function queued_names(research_queue)
   local names = {}
   for _, technology in ipairs(research_queue) do
     names[technology.name] = true
+  end
+  return names
+end
+
+-- Read off the graph rather than the force: the graph pass has already crossed
+-- into C++ for every technology, so this one stays in plain Lua.
+local function researched_names(graph)
+  local names = {}
+  for name, node in pairs(graph) do
+    if node.researched then
+      names[name] = true
+    end
   end
   return names
 end
@@ -214,11 +255,20 @@ end
 -- guards it with pcall. Research is force-wide, so unlike the item source there
 -- is no character check -- a candidate is skipped only when the force has no
 -- technology of that name.
-local function apply_annotations(candidates, player)
+--
+-- Filtering and annotating share one ctx: both read the same force snapshot, and
+-- building the graph twice per search would be the expensive half of each.
+local function refine_candidates(candidates, player, include_hidden)
   local ctx = gather_annotation_context(player)
-  for _, candidate in ipairs(candidates) do
+  local refined = candidates
+  if not include_hidden then
+    refined =
+      TechnologySource.filter_visible(candidates, technology_chain_links(), researched_names(ctx.graph), ctx.queued)
+  end
+  for _, candidate in ipairs(refined) do
     candidate.annotation = TechnologySource.annotate(candidate, ctx)
   end
+  return refined
 end
 
 local function search(query, player_index)
@@ -234,11 +284,14 @@ local function search(query, player_index)
     -- The graph build is per-search, not per-candidate: with nothing to annotate, it's pure waste.
     return candidates
   end
-  local ok, err = pcall(apply_annotations, candidates, player)
+  -- On failure the unrefined list is still a usable answer -- every match, no
+  -- annotations -- so the search degrades instead of coming back empty.
+  local ok, refined = pcall(refine_candidates, candidates, player, include_hidden)
   if not ok then
-    log(("quidquid: source 'technologies' annotation failed: %s"):format(tostring(err)))
+    log(("quidquid: source 'technologies' candidate refinement failed: %s"):format(tostring(refined)))
+    return candidates
   end
-  return candidates
+  return refined
 end
 
 function TechnologySource.register()

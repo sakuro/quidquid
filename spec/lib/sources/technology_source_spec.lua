@@ -1,5 +1,6 @@
 local TechnologyGraph = require("lib.technology_graph")
 local TechnologySource = require("lib.sources.technology_source")
+local TechnologyUpgradeChain = require("lib.technology_upgrade_chain")
 
 describe("TechnologySource", function()
   describe(".build_candidates", function()
@@ -315,6 +316,42 @@ describe("TechnologySource", function()
           { "technology-trigger.craft-item", "[item=electronic-circuit]" },
         },
       }, annotation.tooltip)
+    end)
+  end)
+
+  describe(".filter_visible", function()
+    -- braking-force-1 .. -3, the shape the technology screen collapses.
+    local function chain_links()
+      return TechnologyUpgradeChain.build_links({
+        { name = "braking-force-1", upgrade = true, prerequisites = {} },
+        { name = "braking-force-2", upgrade = true, prerequisites = { ["braking-force-1"] = true } },
+        { name = "braking-force-3", upgrade = true, prerequisites = { ["braking-force-2"] = true } },
+      })
+    end
+
+    it("keeps a candidate the technology screen shows", function()
+      local candidates = { { id = "braking-force-2" } }
+
+      local visible = TechnologySource.filter_visible(candidates, chain_links(), { ["braking-force-1"] = true }, {})
+
+      assert.are.equal(1, #visible)
+      assert.are.equal("braking-force-2", visible[1].id)
+    end)
+
+    it("drops a candidate the technology screen hides", function()
+      local candidates = { { id = "braking-force-3" } }
+
+      local visible = TechnologySource.filter_visible(candidates, chain_links(), {}, {})
+
+      assert.are.same({}, visible)
+    end)
+
+    it("keeps a candidate that belongs to no upgrade chain", function()
+      local candidates = { { id = "automation" } }
+
+      local visible = TechnologySource.filter_visible(candidates, chain_links(), {}, {})
+
+      assert.are.equal(1, #visible)
     end)
   end)
 end)
