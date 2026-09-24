@@ -17,7 +17,9 @@ lib/actions/open_remote_view_action.lua:OpenRemoteViewAction.register
 lib/actions/open_technology_action.lua:OpenTechnologyAction.register
 lib/actions/pipette_action.lua:PipetteAction.resolve_item_prototype
 lib/actions/pipette_action.lua:PipetteAction.register
+lib/actions/research_queue_action.lua:queued_level
 lib/actions/research_queue_action.lua:ResearchQueueAction.progress_for
+lib/actions/research_queue_action.lua:queue_index
 lib/actions/research_queue_action.lua:ResearchQueueAction.resolve_enqueue
 lib/actions/research_queue_action.lua:ResearchQueueAction.register
 lib/actions/temporary_request_action.lua:TemporaryRequestAction.init
@@ -31,6 +33,7 @@ lib/actions/temporary_request_action.lua:TemporaryRequestAction.resolve_requesta
 lib/actions/temporary_request_action.lua:TemporaryRequestAction.is_available
 lib/actions/temporary_request_action.lua:TemporaryRequestAction.on_inventory_changed
 lib/actions/temporary_request_action.lua:TemporaryRequestAction.register
+lib/fuzzy_match.lua:fuzzy_match
 lib/item_counts.lua:ItemCounts.merge
 lib/item_counts.lua:ItemCounts.total
 lib/item_counts.lua:ItemCounts.breakdown
@@ -63,6 +66,13 @@ lib/palette.lua:Palette.on_gui_closed
 lib/palette.lua:Palette.on_open
 lib/palette_logic.lua:PaletteLogic.merge_candidates
 lib/palette_logic.lua:PaletteLogic.move_index
+lib/rich_text.lua:mask_tags
+lib/rich_text.lua:icon_list_caption
+lib/search_highlight.lua:positions_to_ranges
+lib/search_highlight.lua:highlight
+lib/search_key_cache.lua:get
+lib/search_key_cache.lua:clear
+lib/search_normalization.lua:normalize
 lib/sources/calculator_source.lua:CalculatorSource.format_result
 lib/sources/calculator_source.lua:CalculatorSource.valid_value
 lib/sources/calculator_source.lua:CalculatorSource.build_candidate
@@ -78,6 +88,7 @@ lib/sources/item_source.lua:ItemSource.annotate
 lib/sources/item_source.lua:ItemSource.register_dictionary
 lib/sources/item_source.lua:ItemSource.build_candidates
 lib/sources/item_source.lua:ItemSource.register
+lib/sources/prototype_candidate.lua:build_candidates
 lib/sources/recipe_source.lua:RecipeSource.register_dictionary
 lib/sources/recipe_source.lua:RecipeSource.build_candidates
 lib/sources/recipe_source.lua:RecipeSource.register

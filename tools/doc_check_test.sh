@@ -67,18 +67,42 @@ expect_line "Bad.no_summary: doc comment must open with a one-line summary"
 expect_line "Bad.wrong_params: @param list is (value, missing), declared (value, size)"
 expect_line "Bad.swapped_params: @param list is (size, value), declared (value, size)"
 expect_line "Bad.silent_return: returns a value but has no @return"
+expect_line "assigned_export: missing doc comment"
 
-count=$(grep -c ': Bad\.' "$TMP/out" || true)
-if [ "$count" -eq 6 ]; then
-  pass "bad.lua reports 6 problems, one per function"
+count=$(grep -c 'bad\.lua:' "$TMP/out" || true)
+if [ "$count" -eq 7 ]; then
+  pass "bad.lua reports 7 problems, one per function"
 else
-  fail "bad.lua should report 6 problems, got $count"
+  fail "bad.lua should report 7 problems, got $count"
+  cat "$TMP/out" >&2
+fi
+
+# --- an exported local is public; one the module keeps is not -------------------
+
+run_checker "$FIXTURES/exports.lua"
+if [ "$status" -eq 1 ] \
+  && grep -q "undocumented_export: missing doc comment" "$TMP/out" \
+  && ! grep -q "kept_private" "$TMP/out" \
+  && ! grep -q "__index\|Exports:" "$TMP/out" \
+  && [ "$(grep -c 'exports\.lua:' "$TMP/out")" -eq 1 ]; then
+  pass "a local exported in the return table is checked, a private one is not"
+else
+  fail "return-table exports handled wrong, got status $status:"
+  cat "$TMP/out" >&2
+fi
+
+run_checker "$FIXTURES/bare_export.lua"
+if [ "$status" -eq 1 ] && grep -q "bare_export: missing doc comment" "$TMP/out"; then
+  pass "a local exported by a bare return is checked"
+else
+  fail "a bare-return export should be checked, got status $status:"
   cat "$TMP/out" >&2
 fi
 
 # --- a baseline suppresses listed functions -----------------------------------
 
-sed -n 's/^\(tools\/doc_check_fixtures\/bad\.lua\):[0-9]*: \(Bad\.[a-z_]*\):.*/\1:\2/p' "$TMP/out" \
+run_checker "$FIXTURES/bad.lua"
+sed -n 's/^\(tools\/doc_check_fixtures\/bad\.lua\):[0-9]*: \([A-Za-z_][A-Za-z_0-9.:]*\):.*/\1:\2/p' "$TMP/out" \
   | sort -u >"$TMP/baseline"
 
 run_checker --baseline "$TMP/baseline" "$FIXTURES/bad.lua"
@@ -125,7 +149,7 @@ fi
 # --- a missing baseline makes the check stricter, not weaker --------------------
 
 run_checker --baseline "$TMP/absent" "$FIXTURES/bad.lua"
-if [ "$status" -eq 1 ] && [ "$(grep -c ': Bad\.' "$TMP/out")" -eq 6 ]; then
+if [ "$status" -eq 1 ] && [ "$(grep -c 'bad\.lua:' "$TMP/out")" -eq 7 ]; then
   pass "a missing baseline suppresses nothing"
 else
   fail "a missing baseline should suppress nothing, got status $status:"
@@ -136,8 +160,8 @@ fi
 
 run_checker --write-baseline "$FIXTURES/bad.lua" "$FIXTURES/good.lua"
 entries=$(grep -vc '^#' "$TMP/out" || true)
-if [ "$status" -eq 0 ] && [ "$entries" -eq 6 ] && ! grep -q 'good\.lua' "$TMP/out"; then
-  pass "--write-baseline lists the 6 violating functions and nothing from good.lua"
+if [ "$status" -eq 0 ] && [ "$entries" -eq 7 ] && ! grep -q 'good\.lua' "$TMP/out"; then
+  pass "--write-baseline lists the 7 violating functions and nothing from good.lua"
 else
   fail "--write-baseline output unexpected, got status $status:"
   cat "$TMP/out" >&2

@@ -42,4 +42,10 @@ function Bad.silent_return(value)
   return value
 end
 
+local function assigned_export(value)
+  return value
+end
+
+Bad.assigned_export = assigned_export
+
 return Bad

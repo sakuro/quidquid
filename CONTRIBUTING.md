@@ -64,9 +64,23 @@ function Module.round_up(value, size)
 - Comments **inside** a function body stay there. A comment explaining why one
   line is the way it is belongs next to that line; only the description of the
   function itself belongs above it.
-- Local functions are the author's judgement call: document the ones that are not
-  obvious from their name and a few lines of body. A local exported by assignment
-  (`Module.name = name`) is documented at its definition.
+- Comment lines wrap at about 88 columns, like the code around them; `luacheck`'s
+  hard limit is 120. A tag's note that does not fit continues on the next line,
+  indented under the tag:
+
+  ```lua
+  ---@param requester_point LuaLogisticPoint|nil  only `logistic_network` is read;
+  ---  extracted by the caller, e.g. TemporaryRequestAction.requester_point_for
+  ```
+
+- "Public" means reachable from outside the module, whichever syntax gets it there:
+  a `function Module.name(...)` definition, or a `local function` the module hands
+  out through its final `return` (bare or in a table) or an assignment onto the
+  module table. An exported local is documented at its own definition, which is
+  where a reader looks. Locals that stay inside the module are the author's
+  judgement call: document the ones that are not obvious from their name and a few
+  lines of body. If a local is exported only so a spec can reach it, that export is
+  still public — either document it or test it through the public entry point.
 
 `mise run doc-check` enforces the mechanical half of this: a `---` block with a
 summary line, one `---@param` per declared parameter in the right order, and a
