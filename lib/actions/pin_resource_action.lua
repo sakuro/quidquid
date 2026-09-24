@@ -21,17 +21,18 @@ end
 -- resource parameter; its description ("The resource prototype to add an entire
 -- resource patch with") confirms this pins the whole patch rather than one entity.
 --
--- The label comes from search_display_name, not from the candidate's label: add_pin
--- declares label as a plain string, while the label is a LocalisedString until flib's
--- dictionary has translated this resource. Handing it the table raises, and the
--- palette's outer pcall would turn that into a log line and a pin that never appears.
+-- No label is passed, deliberately. Given surface, position and resource, the engine
+-- resolves the whole patch and holds a reference to every entity in it -- confirmed in
+-- game: a pin made here and one made by Factorio's own map-search pin button come back
+-- with the same 1096 targets and the same centre. It renders the name and the remaining
+-- amount from those entities, so the figure follows the patch as it is mined. Any label
+-- we passed would be a frozen copy of that figure sitting beside the live one.
 local function execute(candidate, player_index)
   ActionRunner.run(candidate, player_index, resolve, function(surface, selected_candidate, player)
     player.add_pin({
       surface = surface,
       position = selected_candidate.position,
       resource = selected_candidate.resource_name,
-      label = selected_candidate.search_display_name or selected_candidate.resource_name,
       preview_distance = PREVIEW_DISTANCE,
     })
   end, "quidquid.action-pin-resource-unavailable")
