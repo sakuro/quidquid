@@ -30,6 +30,15 @@ local function field_match(namespace, id, field, locale, query, raw_value)
   return { score = score, ranges = search_highlight.positions_to_ranges(position_map, positions) }
 end
 
+--- Scores one entry's names against the matcher's query.
+---
+--- Returns nil when neither field matches. `namespace` and `id` key the cache of
+--- normalized names, so a source picks a namespace of its own and an id stable for
+--- the entry; see EXTENDING.md "Scoring".
+---@param namespace string
+---@param id string
+---@param fields table  { display = string|nil, internal = string|nil }; either may be omitted
+---@return table|nil  { score, display_ranges, internal_ranges } in the shape candidate fields expect
 function Matcher:match(namespace, id, fields)
   local best_field = nil
   local best = field_match(namespace, id, "display", self.locale, self.display_query, fields.display)
@@ -55,6 +64,13 @@ function Matcher:match(namespace, id, fields)
   }
 end
 
+--- A matcher for one query, to score every entry of a search against.
+---
+--- The query is normalized once here rather than per entry: `locale` picks the
+--- normalization for display names, which differs from the internal-name one.
+---@param query string
+---@param locale string|nil  the player's locale, or nil to score internal names only
+---@return table  a matcher, with :match(namespace, id, fields)
 local function matcher(query, locale)
   return setmetatable({
     internal_query = normalization.normalize(query, "internal", nil),
@@ -63,11 +79,15 @@ local function matcher(query, locale)
   }, Matcher)
 end
 
--- Drops cached normalizations: one entry with `id`, a whole `namespace` without it,
--- everything with neither. This is about releasing memory, not correctness -- a
--- renamed entry re-normalizes on its own, because the cache stores the raw value it
--- normalized and compares it on every read. An entry that goes away has no such
--- next read, so without this its keys sit there for the rest of the session.
+--- Drops cached normalizations: one entry with `id`, a whole `namespace` without
+--- it, everything with neither.
+---
+--- This is about releasing memory, not correctness -- a renamed entry
+--- re-normalizes on its own, because the cache stores the raw value it normalized
+--- and compares it on every read. An entry that goes away has no such next read,
+--- so without this its keys sit there for the rest of the session.
+---@param namespace string|nil
+---@param id string|nil
 local function forget(namespace, id)
   search_key_cache.clear(namespace, id)
 end

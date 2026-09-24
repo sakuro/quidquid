@@ -3,7 +3,6 @@
 # these and reports any entry that is now documented or gone, so the list
 # can only shrink. Regenerate with:
 #   mise run doc-check -- --write-baseline > .doc-check-baseline
-lib/action_runner.lua:ActionRunner.run
 lib/actions/craft_action.lua:CraftAction.is_hand_craftable
 lib/actions/craft_action.lua:CraftAction.resolve_craftable
 lib/actions/craft_action.lua:CraftAction.fixed_count
@@ -32,7 +31,6 @@ lib/actions/temporary_request_action.lua:TemporaryRequestAction.resolve_requesta
 lib/actions/temporary_request_action.lua:TemporaryRequestAction.is_available
 lib/actions/temporary_request_action.lua:TemporaryRequestAction.on_inventory_changed
 lib/actions/temporary_request_action.lua:TemporaryRequestAction.register
-lib/api.lua:Matcher:match
 lib/item_counts.lua:ItemCounts.merge
 lib/item_counts.lua:ItemCounts.total
 lib/item_counts.lua:ItemCounts.breakdown
@@ -65,14 +63,6 @@ lib/palette.lua:Palette.on_gui_closed
 lib/palette.lua:Palette.on_open
 lib/palette_logic.lua:PaletteLogic.merge_candidates
 lib/palette_logic.lua:PaletteLogic.move_index
-lib/registry.lua:Registry.new
-lib/registry.lua:Registry:register_source
-lib/registry.lua:Registry:default_search_sources
-lib/registry.lua:Registry:source_for_prefix
-lib/registry.lua:Registry:register_action
-lib/registry.lua:Registry:resolve_actions
-lib/remote_caller.lua:RemoteCaller:has
-lib/remote_caller.lua:RemoteCaller:call
 lib/sources/calculator_source.lua:CalculatorSource.format_result
 lib/sources/calculator_source.lua:CalculatorSource.valid_value
 lib/sources/calculator_source.lua:CalculatorSource.build_candidate
