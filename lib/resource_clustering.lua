@@ -156,4 +156,52 @@ function ResourceClustering.all(store)
   return clusters
 end
 
+--- Takes one chunk out of whatever cluster holds it.
+---
+--- Never splits: a cluster whose remaining chunks are no longer contiguous stays one
+--- cluster, so a patch a player already knows does not silently become two. It goes
+--- away only once nothing is left of it.
+---@param store table  from new_store
+---@param resource_name string
+---@param key string  as chunk_key returns it
+---@return boolean  false when the store held no such chunk
+function ResourceClustering.remove_chunk(store, resource_name, key)
+  local owner = store.owner[resource_name]
+  local cluster = owner and owner[key] and store.clusters[owner[key]] or nil
+  if cluster == nil then
+    return false
+  end
+
+  cluster.chunks[key] = nil
+  owner[key] = nil
+  if next(cluster.chunks) == nil then
+    store.clusters[cluster.id] = nil
+  else
+    recalculate(cluster)
+  end
+  return true
+end
+
+--- Takes an amount off one chunk, dropping the chunk once nothing is left of it.
+---@param store table  from new_store
+---@param resource_name string
+---@param key string  as chunk_key returns it
+---@param amount number
+---@return boolean  false when the store held no such chunk
+function ResourceClustering.subtract(store, resource_name, key, amount)
+  local owner = store.owner[resource_name]
+  local cluster = owner and owner[key] and store.clusters[owner[key]] or nil
+  if cluster == nil then
+    return false
+  end
+
+  local entry = cluster.chunks[key]
+  entry.amount = entry.amount - amount
+  if entry.amount <= 0 then
+    return ResourceClustering.remove_chunk(store, resource_name, key)
+  end
+  recalculate(cluster)
+  return true
+end
+
 return ResourceClustering

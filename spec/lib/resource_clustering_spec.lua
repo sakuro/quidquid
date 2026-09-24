@@ -1,5 +1,9 @@
 local ResourceClustering = require("lib.resource_clustering")
 
+local function entry(amount, x, y)
+  return { amount = amount, tiles = 1, left = x, top = y, right = x, bottom = y }
+end
+
 describe("ResourceClustering", function()
   describe(".chunk_key", function()
     it("joins the coordinates with a comma", function()
@@ -50,10 +54,6 @@ describe("ResourceClustering", function()
   end)
 
   describe(".insert", function()
-    local function entry(amount, x, y)
-      return { amount = amount, tiles = 1, left = x, top = y, right = x, bottom = y }
-    end
-
     it("creates a cluster for a chunk with no charted neighbour", function()
       local store = ResourceClustering.new_store()
 
@@ -106,6 +106,74 @@ describe("ResourceClustering", function()
 
       assert.are.equal(60, cluster.amount)
       assert.are.equal(1, #ResourceClustering.all(store))
+    end)
+  end)
+
+  describe(".remove_chunk", function()
+    it("drops the chunk and keeps the cluster", function()
+      local store = ResourceClustering.new_store()
+      ResourceClustering.insert(store, 1, "iron-ore", "0,0", entry(100, 5, 5))
+      ResourceClustering.insert(store, 1, "iron-ore", "1,0", entry(50, 40, 5))
+
+      assert.is_true(ResourceClustering.remove_chunk(store, "iron-ore", "1,0"))
+
+      local clusters = ResourceClustering.all(store)
+      assert.are.equal(1, #clusters)
+      assert.are.equal(100, clusters[1].amount)
+    end)
+
+    it("removes the cluster once its last chunk is gone", function()
+      local store = ResourceClustering.new_store()
+      ResourceClustering.insert(store, 1, "iron-ore", "0,0", entry(100, 5, 5))
+
+      ResourceClustering.remove_chunk(store, "iron-ore", "0,0")
+
+      assert.are.same({}, ResourceClustering.all(store))
+    end)
+
+    it("keeps one cluster when the chunk between its halves is removed", function()
+      local store = ResourceClustering.new_store()
+      ResourceClustering.insert(store, 1, "iron-ore", "0,0", entry(100, 5, 5))
+      ResourceClustering.insert(store, 1, "iron-ore", "1,0", entry(10, 40, 5))
+      ResourceClustering.insert(store, 1, "iron-ore", "2,0", entry(100, 70, 5))
+
+      ResourceClustering.remove_chunk(store, "iron-ore", "1,0")
+
+      local clusters = ResourceClustering.all(store)
+      assert.are.equal(1, #clusters)
+      assert.are.equal(200, clusters[1].amount)
+    end)
+
+    it("reports nothing removed for a chunk it does not hold", function()
+      local store = ResourceClustering.new_store()
+
+      assert.is_false(ResourceClustering.remove_chunk(store, "iron-ore", "9,9"))
+    end)
+  end)
+
+  describe(".subtract", function()
+    it("lowers the chunk's amount and the cluster's total", function()
+      local store = ResourceClustering.new_store()
+      ResourceClustering.insert(store, 1, "iron-ore", "0,0", entry(100, 5, 5))
+
+      assert.is_true(ResourceClustering.subtract(store, "iron-ore", "0,0", 30))
+
+      assert.are.equal(70, ResourceClustering.all(store)[1].amount)
+    end)
+
+    it("drops a chunk subtracted to nothing, and the cluster with it", function()
+      local store = ResourceClustering.new_store()
+      ResourceClustering.insert(store, 1, "iron-ore", "0,0", entry(100, 5, 5))
+
+      ResourceClustering.subtract(store, "iron-ore", "0,0", 100)
+
+      assert.are.same({}, ResourceClustering.all(store))
+    end)
+
+    it("reports nothing subtracted for a chunk it does not hold", function()
+      local store = ResourceClustering.new_store()
+
+      assert.is_false(ResourceClustering.subtract(store, "iron-ore", "9,9", 10))
     end)
   end)
 end)
