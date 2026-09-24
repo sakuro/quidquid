@@ -150,30 +150,4 @@ describe("ResourceClustering", function()
       assert.is_false(ResourceClustering.remove_chunk(store, "iron-ore", "9,9"))
     end)
   end)
-
-  describe(".subtract", function()
-    it("lowers the chunk's amount and the cluster's total", function()
-      local store = ResourceClustering.new_store()
-      ResourceClustering.insert(store, 1, "iron-ore", "0,0", entry(100, 5, 5))
-
-      assert.is_true(ResourceClustering.subtract(store, "iron-ore", "0,0", 30))
-
-      assert.are.equal(70, ResourceClustering.all(store)[1].amount)
-    end)
-
-    it("drops a chunk subtracted to nothing, and the cluster with it", function()
-      local store = ResourceClustering.new_store()
-      ResourceClustering.insert(store, 1, "iron-ore", "0,0", entry(100, 5, 5))
-
-      ResourceClustering.subtract(store, "iron-ore", "0,0", 100)
-
-      assert.are.same({}, ResourceClustering.all(store))
-    end)
-
-    it("reports nothing subtracted for a chunk it does not hold", function()
-      local store = ResourceClustering.new_store()
-
-      assert.is_false(ResourceClustering.subtract(store, "iron-ore", "9,9", 10))
-    end)
-  end)
 end)

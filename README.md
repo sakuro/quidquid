@@ -193,17 +193,24 @@ one. This merging never undoes itself: a patch never splits once found, so
 mining out or deleting the chunks in the middle leaves the rest as a single
 patch, not two.
 
-Only charted area is listed, checked per force at search time. When the mod
-is added to an existing save, a background scan works through the world a
-few chunks per tick, so the list fills in gradually over the following
-minutes rather than all at once — an empty or partial result during that
-window does not mean the resource isn't there. Space platforms are skipped;
-they hold no resources.
+A patch is listed once any one of its chunks is charted, checked per force at
+search time — it then reports its full extent and total amount, including
+whatever part still sits under fog of war. Space platforms are skipped; they
+hold no resources.
+
+When the mod is added to an existing save, a background scan works through
+the world a few chunks per tick, so the list fills in gradually over the
+following minutes rather than all at once — an empty or partial result
+during that window does not mean the resource isn't there.
 
 Each result shows the patch's remaining amount, and marks a patch that
-already has a mining drill working it. Pinning a patch uses Factorio's own
-map-pin system: the pin is per-player, and is dismissed from Factorio's own
-UI rather than by Quidquid.
+already has a mining drill working it. A finite resource's amount stays
+accurate because each entity exhausted to nothing raises an event that
+re-scans its chunk. Infinite resources — crude oil, sulfuric acid geysers —
+raise that event at most once, as they decay toward their minimum yield, so
+an oil field's shown amount can stay at its chart-time value indefinitely.
+Pinning a patch uses Factorio's own map-pin system: the pin is per-player,
+and is dismissed from Factorio's own UI rather than by Quidquid.
 
 ### Calculator
 

@@ -175,13 +175,19 @@ function ResourceSource.on_resource_depleted(event)
   enqueue(entity.surface_index, math.floor(entity.position.x / 32), math.floor(entity.position.y / 32))
 end
 
---- Re-scans the chunk a scripted resource was placed in.
+--- Re-scans the chunk a resource entity was added to or removed from by script.
 ---
---- Mods place resources after a chunk has been charted and scanned; without this the
---- cache would never learn about them. Registered with a type filter so the handler is
---- not called for ordinary building.
----@param event table  on_built_entity, on_robot_built_entity or script_raised_built
-function ResourceSource.on_built_entity(event)
+--- Mods place or remove resources after a chunk has been charted and scanned; without
+--- this the cache would never learn about either change. A destroyed entity raises
+--- neither on_resource_depleted (that only fires for exhaustion) nor on_chunk_charted
+--- (the chunk was already charted), so script_raised_destroy is the only signal the
+--- cache gets -- confirmed against a live server that `event.entity` is still valid,
+--- with a readable position and surface_index, at the time this handler runs.
+--- Registered with a type filter so the handler is not called for ordinary building or
+--- destruction.
+---@param event table  on_built_entity, on_robot_built_entity, script_raised_built or
+--- script_raised_destroy
+function ResourceSource.on_resource_entity_changed(event)
   local entity = event.entity
   if state() == nil or entity == nil or not entity.valid or entity.type ~= "resource" then
     return
@@ -202,10 +208,24 @@ local function collect_resources()
   return resources
 end
 
+-- Built fresh per search rather than cached: prototypes never change within a session,
+-- but this is a handful of entries and the cache lookup would cost more than rebuilding.
+local function collect_localised_names()
+  local localised_names = {}
+  for _, prototype in ipairs(collect_resources()) do
+    localised_names[prototype.name] = prototype.localised_name
+  end
+  return localised_names
+end
+
 local function visible_clusters(player)
   local clusters = {}
+  local resources = state()
+  if resources == nil then
+    return clusters
+  end
   local force = player.force
-  for surface_index, store in pairs(state().surfaces) do
+  for surface_index, store in pairs(resources.surfaces) do
     local surface = game.get_surface(surface_index)
     if surface ~= nil and surface.platform == nil then
       for _, cluster in ipairs(ResourceClustering.all(store)) do
@@ -283,7 +303,13 @@ local function search(query, player_index)
     return {}
   end
   local translated_names = flib_dictionary.get(player_index, NAMESPACE) or {}
-  local candidates = ResourceLogic.build_candidates(query, visible_clusters(player), player.locale, translated_names)
+  local candidates = ResourceLogic.build_candidates(
+    query,
+    visible_clusters(player),
+    player.locale,
+    translated_names,
+    collect_localised_names()
+  )
   local ok, err = pcall(apply_annotations, candidates)
   if not ok then
     log(("quidquid: source 'resources' annotation failed: %s"):format(tostring(err)))
