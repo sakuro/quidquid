@@ -205,7 +205,8 @@ during that window does not mean the resource isn't there.
 
 A patch that already has a mining drill working it is marked on the line
 below, right after its surface and coordinates; an unoccupied patch shows no
-such marker there.
+such marker there. Any force's drill counts, not just your own — the same way
+Factorio's own map search treats a patch.
 
 Each result's name is followed by its remaining amount, taken from a cache
 rather than counted afresh. A chunk is re-scanned when one of its entities is
