@@ -1,4 +1,5 @@
--- Check the function doc-comment convention on public functions in lib/.
+-- Check the function doc-comment convention on public functions in the mod's
+-- own Lua source.
 -- The convention itself is documented in CONTRIBUTING.md "Comment conventions".
 --
 -- Usage:
@@ -230,7 +231,7 @@ end
 if write_baseline then
   -- The header goes in the output so the regeneration command below is the
   -- whole story -- no hand-restored preamble.
-  print("# Public functions in lib/ that predate the doc-comment convention")
+  print("# Public functions that predate the doc-comment convention")
   print('# (CONTRIBUTING.md "Comment conventions"). `mise run doc-check` suppresses')
   print("# these and reports any entry that is now documented or gone, so the list")
   print("# can only shrink. Regenerate with:")

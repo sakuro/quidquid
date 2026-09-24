@@ -31,7 +31,7 @@ Root-level Lua files are limited to the Factorio stage entry points (`settings.l
 
 ## Comments
 
-Public functions in `lib/` carry a `---` doc comment: a one-line summary, an
+Public functions carry a `---` doc comment: a one-line summary, an
 optional rationale paragraph (*why*, not *what*), `---@param` per declared
 parameter in declaration order, and `---@return` per returned value.
 `mise run doc-check` enforces that shape, suppressing the pre-existing backlog

@@ -25,8 +25,8 @@ When opening a pull request:
 
 ## Comment conventions
 
-Public functions in `lib/` — `function Module.name(...)` and
-`function Module:name(...)` — carry a doc comment in three layers:
+Public functions — `function Module.name(...)` and `function Module:name(...)` —
+carry a doc comment in three layers:
 
 ```lua
 --- Rounds value up to the next multiple of size.
@@ -71,7 +71,11 @@ function Module.round_up(value, size)
 `mise run doc-check` enforces the mechanical half of this: a `---` block with a
 summary line, one `---@param` per declared parameter in the right order, and a
 `---@return` on any function that returns a value. It does not check types or
-prose.
+prose. It reads every Lua file the mod loads — `lib/`, `prototypes/`, and the
+stage entry points at the root. Today every public function lives in `lib/`,
+since `prototypes/` is declarative and the entry points hold only closures, but
+one added elsewhere is checked the same way. `spec/` is test code and `tools/`
+holds standalone dev scripts, so neither is in scope.
 
 Public functions written before this convention are listed in
 `.doc-check-baseline`, which suppresses them. The list can only shrink:

@@ -1,4 +1,4 @@
-# Public functions in lib/ that predate the doc-comment convention
+# Public functions that predate the doc-comment convention
 # (CONTRIBUTING.md "Comment conventions"). `mise run doc-check` suppresses
 # these and reports any entry that is now documented or gone, so the list
 # can only shrink. Regenerate with:
