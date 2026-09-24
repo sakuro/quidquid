@@ -29,6 +29,16 @@ Root-level Lua files are limited to the Factorio stage entry points (`settings.l
 
 `lib/api.lua` is the one module other mods are invited to `require` (see EXTENDING.md "Scoring"). Its signatures are public: changing them breaks dependents silently, since Factorio has no version negotiation for a required file. Everything else under `lib/` is internal.
 
+## Comments
+
+Public functions in `lib/` carry a `---` doc comment: a one-line summary, an
+optional rationale paragraph (*why*, not *what*), `---@param` per declared
+parameter in declaration order, and `---@return` per returned value.
+`mise run doc-check` enforces that shape, suppressing the pre-existing backlog
+listed in `.doc-check-baseline`; when you document one of those functions, delete
+its line. A comment explaining a single line stays inside the body. The full
+convention is CONTRIBUTING.md "Comment conventions".
+
 ## Tests
 
 `spec/` holds busted unit tests; run them with `mise run test`.
@@ -59,9 +69,10 @@ Do not create a section for the next release version directly — version bumpin
 # Document Map
 
 - README.md: Project overview
-- CONTRIBUTING.md: Development setup and pull request guidelines
+- CONTRIBUTING.md: Development setup, pull request guidelines, and the function doc-comment convention enforced by `mise run doc-check` (see "Comment conventions")
 - EXTENDING.md: Remote-interface contract for mods adding sources/actions (linked from README.md)
 - .scaffold-sync.json / .scaffold-sync.paths: scaffold-drift sync state and tracked-path list; do not delete (see CONTRIBUTING.md "Scaffold drift")
+- .doc-check-baseline: public functions in `lib/` that predate the doc-comment convention; shrinks as they are documented (see CONTRIBUTING.md "Comment conventions")
 
 # External References
 

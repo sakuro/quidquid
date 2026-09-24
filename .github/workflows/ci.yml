@@ -35,6 +35,12 @@ jobs:
     - name: Lint Lua code
       run: mise run lint
 
+    - name: Check function doc comments
+      run: mise run doc-check
+
+    - name: Run the doc-check fixture test
+      run: bash tools/doc_check_test.sh
+
   # Regression coverage for the scaffold-drift merge script. The runner has
   # bash 5, so merge.sh's bash-4 features actually run here. Not a required
   # status check.

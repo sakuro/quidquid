@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+#MISE description="Check function doc comments in lib/"
+set -euo pipefail
+
+# Extra arguments are passed through, so the baseline can be regenerated with
+#   mise run doc-check -- --write-baseline > .doc-check-baseline
+find lib -name '*.lua' | sort | xargs lua tools/doc_check.lua --baseline .doc-check-baseline "$@"

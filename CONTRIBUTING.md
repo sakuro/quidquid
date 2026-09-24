@@ -23,6 +23,67 @@ When opening a pull request:
 - Do not change the version in `info.json`. Version bumping is handled by the release workflow.
 - Document any user-visible change in `changelog.txt` (see below).
 
+## Comment conventions
+
+Public functions in `lib/` — `function Module.name(...)` and
+`function Module:name(...)` — carry a doc comment in three layers:
+
+```lua
+--- Rounds value up to the next multiple of size.
+---
+--- Pressing "+1 Stack" always adds at least one full stack, so the result is
+--- strictly greater than value even when value is already an exact multiple.
+---@param value number
+---@param size number
+---@return number
+function Module.round_up(value, size)
+```
+
+- The **summary** is one line, required, and starts with a verb in the present
+  tense (`Decides ...`, `True when ...`). It is not a restatement of the
+  function's name.
+- The **rationale paragraph** is optional and says *why*, not *what*: behavior
+  confirmed over RCON, a Factorio quirk being worked around, why the caller
+  passes a value already extracted from the runtime. What the function does is
+  the summary's and the tags' job, so it is not repeated here. This is why one
+  function has a three-line comment and another fifteen: the difference is how
+  much rationale there is to record, not how carefully it was documented.
+- **`---@param`** appears once per declared parameter, in declaration order.
+  Obvious ones carry only a type; ones with a contract carry a note
+  (`---@param filters LuaLogisticPoint.filters  plain array, already extracted by the caller`).
+  `self` is implicit in a `:` declaration and is not documented. Varargs are
+  `---@param ... <type>`.
+- **`---@return`** appears once per returned value, in order, and includes
+  `|nil` when nil is a possible result (`---@return LuaTechnology|nil`). A
+  function that returns nothing gets no tag.
+- Type names use the Factorio API's own spelling (`LuaPlayer`, `LuaLogisticPoint`,
+  `uint`) or plain Lua types (`string`, `number`, `boolean`, `table`). Nothing
+  reads these as types — no language server runs here — so they are documentation
+  for human readers, and a `table` whose shape matters is better described by the
+  API name it mirrors plus a note.
+- Comments **inside** a function body stay there. A comment explaining why one
+  line is the way it is belongs next to that line; only the description of the
+  function itself belongs above it.
+- Local functions are the author's judgement call: document the ones that are not
+  obvious from their name and a few lines of body. A local exported by assignment
+  (`Module.name = name`) is documented at its definition.
+
+`mise run doc-check` enforces the mechanical half of this: a `---` block with a
+summary line, one `---@param` per declared parameter in the right order, and a
+`---@return` on any function that returns a value. It does not check types or
+prose.
+
+Public functions written before this convention are listed in
+`.doc-check-baseline`, which suppresses them. The list can only shrink:
+`doc-check` also fails on an entry whose function is now documented, or gone.
+Regenerate it with `mise run doc-check -- --write-baseline > .doc-check-baseline`
+— but as a rule, delete the lines you fixed rather than regenerating, so an
+accidental regression cannot be absorbed into the baseline.
+
+`tools/doc_check_test.sh` is the checker's own fixture test; CI runs it. A doc
+checker that silently passes everything would make the baseline a lie, so changes
+to `tools/doc_check.lua` belong with a case in that test.
+
 ## Changelog
 
 `changelog.txt` uses Factorio's changelog format. On top of that, this project
