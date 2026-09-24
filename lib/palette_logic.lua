@@ -1,5 +1,15 @@
 local PaletteLogic = {}
 
+--- Merges every source's candidates into one ranked list, capped at limit.
+---
+--- Ties are broken by the order the candidates arrived, which is source
+--- registration order -- so a tie is resolved deterministically rather than by
+--- pairs(). A candidate without a numeric search_score raises here rather than
+--- sorting unpredictably: EXTENDING.md states that this aborts the whole search, not
+--- just that candidate.
+---@param results table  one array of { candidate = ... } entries per searched source
+---@param limit number
+---@return table  the top entries, highest search_score first
 function PaletteLogic.merge_candidates(results, limit)
   local scored = {}
   local order = 0
@@ -27,6 +37,14 @@ function PaletteLogic.merge_candidates(results, limit)
   return merged
 end
 
+--- The next selected row when the player moves the selection, wrapping at both ends.
+---
+--- With nothing selected yet, a downward move starts at the first row and an upward
+--- one at the last, so the first keypress lands on a row either way.
+---@param current_index number|nil
+---@param count number  rows available
+---@param direction number  +1 down, -1 up
+---@return number|nil  nil when there is nothing to select
 function PaletteLogic.move_index(current_index, count, direction)
   if count == 0 then
     return nil

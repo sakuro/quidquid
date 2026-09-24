@@ -10,6 +10,19 @@ local function field_key(field, locale)
   return field .. "\0" .. (locale or "")
 end
 
+--- The normalized form of one entry's field, computing it on a miss.
+---
+--- The cache stores the raw value it normalized, the locale, and the normalization
+--- rule version, and compares all three on every read -- so a renamed prototype, a
+--- locale switch, or a rule change invalidates its own entry with no explicit
+--- purge. Only an entry that disappears needs clear().
+---@param namespace string
+---@param candidate_id any  keyed by type and value, so 1 and "1" do not collide
+---@param field string  "display" or "internal"
+---@param locale string|nil
+---@param raw_value string  returned as-is, with an empty map, when not a string
+---@return string  the normalized value
+---@return table|nil  position map, as lib.search_normalization returns it
 local function get(namespace, candidate_id, field, locale, raw_value)
   if type(raw_value) ~= "string" then
     return raw_value, {}
@@ -49,9 +62,14 @@ local function get(namespace, candidate_id, field, locale, raw_value)
   return value, position_map
 end
 
--- clear(): drop the whole cache. clear(namespace): drop one namespace.
--- clear(namespace, candidate_id): drop just that candidate's entries, e.g. when
--- a surface is destroyed and its "surface" namespace entry becomes unreachable.
+--- Drops cached entries: one candidate's with both arguments, a whole namespace
+--- with only the first, everything with neither.
+---
+--- Only reachability makes this necessary -- stale content invalidates itself on
+--- read. An entry that can no longer be reached (a destroyed surface's, say) never
+--- gets that read, so its keys would sit there for the rest of the session.
+---@param namespace string|nil
+---@param candidate_id any|nil
 local function clear(namespace, candidate_id)
   if namespace == nil then
     cache = {}

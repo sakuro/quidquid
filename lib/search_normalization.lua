@@ -374,6 +374,19 @@ local function map_codepoint(codepoint, locale)
   return values
 end
 
+--- Folds a value into the form searches match against, with a map back to the
+--- original bytes.
+---
+--- The position map is what lets a match be highlighted in the value the player
+--- reads: one normalized code point can come from several original bytes, or from
+--- none. `field_kind` picks the rules -- an internal name is locale-independent, so
+--- locale-specific folding applies to display names only. A value that is not valid
+--- UTF-8 comes back unchanged with no map rather than being rejected.
+---@param value string  returned as-is, with an empty map, when not a string
+---@param field_kind string  "display" or "internal"
+---@param locale string|nil  ignored for "internal"
+---@return string  the normalized value
+---@return table|nil  position map, or nil when the value would not decode
 local function normalize(value, field_kind, locale)
   if type(value) ~= "string" then
     return value, {}

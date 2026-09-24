@@ -18,7 +18,8 @@ local ActionRunner = {}
 ---@param player_index uint
 ---@param resolve_fn function  (candidate, player) -> payload|nil, locale_key|nil
 ---@param apply_fn function  (payload, candidate, player), run for a non-nil payload
----@param fallback_locale_key string|nil  shown when resolve_fn returns no locale key of its own
+---@param fallback_locale_key string|nil  shown when resolve_fn returns no locale
+---  key of its own
 function ActionRunner.run(candidate, player_index, resolve_fn, apply_fn, fallback_locale_key)
   local player = game.get_player(player_index)
   if player == nil then

@@ -12,9 +12,12 @@
 -- the file can only shrink. --write-baseline prints the entries for every
 -- currently-violating function to stdout instead of checking.
 --
--- Only `function Module.name(...)` / `function Module:name(...)` definitions are
--- checked. Locals are the author's judgement call, and a local exported by
--- assignment (`Module.name = name`) is documented at its definition.
+-- "Public" means reachable from outside the module, whichever syntax gets it
+-- there: a `function Module.name(...)` / `function Module:name(...)` definition, or
+-- a `local function` the module hands out through its final `return` (bare or in a
+-- table) or an assignment onto the module table. An exported local is checked at
+-- its own definition, which is where its doc comment belongs. Locals that stay
+-- inside the module are the author's judgement call.
 
 local OPENERS = { ["function"] = true, ["do"] = true, ["if"] = true, ["repeat"] = true }
 local CLOSERS = { ["end"] = true, ["until"] = true }
@@ -169,12 +172,51 @@ local function problems_for(lines, index)
   return problems
 end
 
+-- The names the module makes reachable from outside: a bare `return name`, the
+-- values of a final `return { key = name }` table, and `Module.key = name`
+-- assignments. Only names that are local functions in this file matter; a
+-- `Module.__index = Module` assignment names a table, not a function, so it drops
+-- out here.
+local function exported_names(lines)
+  local names = {}
+  local in_return_table = false
+  for _, line in ipairs(lines) do
+    local code = code_only(line)
+    local bare = code:match("^return ([%w_]+)%s*$")
+    local assigned = code:match("^[%w_]+%.[%w_]+%s*=%s*([%w_]+)%s*$")
+    if bare ~= nil then
+      names[bare] = true
+    elseif assigned ~= nil then
+      names[assigned] = true
+    elseif code:match("^return%s*{") then
+      in_return_table = true
+    end
+    if in_return_table then
+      local value = code:match("[%w_]+%s*=%s*([%w_]+)")
+      if value ~= nil then
+        names[value] = true
+      end
+      if code:match("}") then
+        in_return_table = false
+      end
+    end
+  end
+  return names
+end
+
 local function check_file(path, found)
   local lines = read_lines(path)
+  local exported = exported_names(lines)
   for index, line in ipairs(lines) do
     local module, separator, name = line:match("^function ([%w_]+)([.:])([%w_]+)%s*%(")
+    local exported_local = line:match("^local function ([%w_]+)%s*%(")
+    local qualified = nil
     if module ~= nil then
-      local qualified = module .. separator .. name
+      qualified = module .. separator .. name
+    elseif exported_local ~= nil and exported[exported_local] then
+      qualified = exported_local
+    end
+    if qualified ~= nil then
       table.insert(found, {
         path = path,
         line = index,

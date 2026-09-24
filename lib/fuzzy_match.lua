@@ -130,6 +130,16 @@ local function compute(needle, haystack)
   return scores, best
 end
 
+--- Scores a query against one target, both already normalized.
+---
+--- Both arguments are code-point sequences from lib.search_normalization, never raw
+--- prototype names: the caller normalizes once and matches many times. Targets over
+--- MATCH_MAX_LENGTH code points are refused rather than scored, since the scoring
+--- table is quadratic in the two lengths.
+---@param normalized_query string
+---@param normalized_target string
+---@return number|nil  the score, or nil when the query does not match at all
+---@return table|nil  matched positions in the target's code-point index space
 local function fuzzy_match(normalized_query, normalized_target)
   if
     type(normalized_query) ~= "string"

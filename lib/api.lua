@@ -38,7 +38,8 @@ end
 ---@param namespace string
 ---@param id string
 ---@param fields table  { display = string|nil, internal = string|nil }; either may be omitted
----@return table|nil  { score, display_ranges, internal_ranges } in the shape candidate fields expect
+---@return table|nil  { score, display_ranges, internal_ranges }, already in the
+---  shape candidate fields expect
 function Matcher:match(namespace, id, fields)
   local best_field = nil
   local best = field_match(namespace, id, "display", self.locale, self.display_query, fields.display)

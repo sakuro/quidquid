@@ -74,4 +74,13 @@ function Good.join(
     .. fifth_component_name
 end
 
+--- A local the module hands out by assignment, documented at its definition.
+---@param value string
+---@return string
+local function assigned_export(value)
+  return value
+end
+
+Good.assigned_export = assigned_export
+
 return Good

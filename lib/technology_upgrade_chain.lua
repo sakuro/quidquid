@@ -43,11 +43,14 @@ local function find_previous(name, prerequisites, upgrades)
   return nil
 end
 
--- `technologies` is anything pairs() yields prototypes from: the array
--- TechnologySource collects in production, a plain list in a spec. Only the
--- keys of a prototype's `prerequisites` are read, never the prototypes they
--- map to. Prototypes don't change while a save runs, so the result is worth
--- caching for the session -- but in a module upvalue, never in `storage`.
+--- Links every `upgrade = true` technology to its neighbours in its chain.
+---
+--- Only the keys of a prototype's `prerequisites` are read, never the prototypes they
+--- map to. Prototypes don't change while a save runs, so the result is worth caching
+--- for the session -- but in a module upvalue, never in `storage`.
+---@param technologies table  anything pairs() yields prototypes from: the array
+---  TechnologySource collects in production, a plain list in a spec
+---@return table  name -> { previous = name|nil, next = name|nil } for chain members only
 function TechnologyUpgradeChain.build_links(technologies)
   local upgrades = {}
   for _, technology in pairs(technologies) do
@@ -81,16 +84,20 @@ function TechnologyUpgradeChain.build_links(technologies)
   return links
 end
 
--- Whether the technology screen would show `name` as its own tile.
--- `researched` and `queued` are name sets covering one force.
---
---   * a technology outside any upgrade chain is always shown
---   * a researched level is collapsed away once the level above it is
---     researched, so only the topmost researched level of a chain survives; a
---     merely queued level above does not collapse it
---   * an unresearched level appears once the level below it is researched or
---     queued -- one level past the frontier, no further. A chain head has no
---     level below it and is always shown.
+--- Whether the technology screen would show `name` as its own tile.
+---
+---   * a technology outside any upgrade chain is always shown
+---   * a researched level is collapsed away once the level above it is researched, so
+---     only the topmost researched level of a chain survives; a merely queued level
+---     above does not collapse it
+---   * an unresearched level appears once the level below it is researched or queued
+---     -- one level past the frontier, no further. A chain head has no level below it
+---     and is always shown.
+---@param name string
+---@param links table  as returned by build_links
+---@param researched table  name set covering one force
+---@param queued table  name set covering one force
+---@return boolean
 function TechnologyUpgradeChain.is_visible(name, links, researched, queued)
   local link = links[name]
   if link == nil then
