@@ -171,8 +171,13 @@ script.on_event(defines.events.on_chunk_charted, ResourceSource.on_chunk_charted
 script.on_event(defines.events.on_chunk_deleted, ResourceSource.on_chunk_deleted)
 script.on_event(defines.events.on_surface_cleared, ResourceSource.on_surface_removed)
 script.on_event(defines.events.on_resource_depleted, ResourceSource.on_resource_depleted)
-script.on_event(
-  { defines.events.on_built_entity, defines.events.on_robot_built_entity, defines.events.script_raised_built },
-  ResourceSource.on_built_entity,
-  { { filter = "type", type = "resource" } }
-)
+
+-- LuaBootstrap.on_event's filters parameter only applies "when registering for
+-- individual events" (confirmed against runtime-api.json and empirically: passing it
+-- alongside an array of events raises "Filters can only be used when registering single
+-- non custom-input events"), so the same filter is repeated across three registrations
+-- rather than one call with an event array.
+local RESOURCE_ENTITY_FILTER = { { filter = "type", type = "resource" } }
+script.on_event(defines.events.on_built_entity, ResourceSource.on_built_entity, RESOURCE_ENTITY_FILTER)
+script.on_event(defines.events.on_robot_built_entity, ResourceSource.on_built_entity, RESOURCE_ENTITY_FILTER)
+script.on_event(defines.events.script_raised_built, ResourceSource.on_built_entity, RESOURCE_ENTITY_FILTER)
