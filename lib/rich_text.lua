@@ -1,5 +1,11 @@
--- Replace rich-text tags with spaces while preserving their byte length. This keeps
--- normalized position maps aligned with the original value used for display.
+--- Replaces rich-text tags with spaces, preserving their byte length.
+---
+--- Equal length is the whole point: a masked value is what gets normalized and
+--- matched, while the original is what gets displayed, so the position map only
+--- lines up if masking moves no byte. Spaces rather than removal, for the same
+--- reason.
+---@param value string  returned unchanged when not a string
+---@return string
 local function mask_tags(value)
   if type(value) ~= "string" then
     return value
@@ -22,16 +28,20 @@ local function mask_tags(value)
   return table.concat(result)
 end
 
--- Builds a plain-text, separator-joined list of rich-text tags (via icon_fn
--- per item), capped at `limit` entries with a trailing "N more" locale
--- entry (more_locale_key) when there are more. `separator` defaults to ", ".
--- Every entry is an untranslated rich-text tag, so the list itself is built
--- as a single concatenated string -- not a LocalisedString array -- meaning
--- it costs exactly one parameter in whatever LocalisedString it's embedded
--- into, regardless of how many items it lists. (A LocalisedString array used
--- to be built here directly at each call site; Factorio's hard
--- 20-parameters-per-array limit was hit in production once an item list grew
--- past ~10 entries.)
+--- Builds a capped, separator-joined list of rich-text icons as a LocalisedString.
+---
+--- Every entry is an untranslated rich-text tag, so the list is concatenated into a
+--- single string rather than built as a LocalisedString array. That makes it cost
+--- exactly one parameter in whatever LocalisedString it is embedded into, however
+--- many items it lists. Each call site used to build the array itself, and
+--- Factorio's hard 20-parameters-per-array limit was hit in production once an item
+--- list grew past ~10 entries.
+---@param items table
+---@param icon_fn function  (item) -> rich-text tag string
+---@param limit number  entries shown before the "N more" entry takes over
+---@param more_locale_key string  takes the remaining count as its one parameter
+---@param separator string|nil  defaults to ", "
+---@return table  a LocalisedString
 local function icon_list_caption(items, icon_fn, limit, more_locale_key, separator)
   separator = separator or ", "
   local truncated = #items > limit

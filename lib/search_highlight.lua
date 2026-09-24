@@ -1,6 +1,14 @@
 local DEFAULT_NORMAL_FONT = "default-large"
 local DEFAULT_BOLD_FONT = "default-large-bold"
 
+--- Turns matched code-point positions into byte ranges in the original value.
+---
+--- A position with no entry in the map is dropped rather than guessed at: it came
+--- from a normalization step that added a code point the original value has no
+--- bytes for (see lib.search_normalization).
+---@param position_map table|nil
+---@param positions table|nil
+---@return table  array of { start_byte, end_byte }, empty when nothing maps
 local function positions_to_ranges(position_map, positions)
   local ranges = {}
   for _, position in ipairs(positions or {}) do
@@ -37,6 +45,17 @@ local function sorted_merged_ranges(ranges, value_length)
   return merged
 end
 
+--- Wraps a value in font tags, bolding the matched ranges.
+---
+--- The whole value is wrapped, not just the matches: a label with no tags at all
+--- would render in the style's own font and jump in size next to a highlighted one.
+--- Ranges are clamped, sorted and merged first, so overlapping or out-of-bounds
+--- input from a source cannot produce interleaved tags.
+---@param value string  returned unchanged when not a string
+---@param ranges table|nil  byte ranges to bold; nil or empty bolds nothing
+---@param normal_font string|nil  defaults to default-large
+---@param bold_font string|nil  defaults to default-large-bold
+---@return string
 local function highlight(value, ranges, normal_font, bold_font)
   if type(value) ~= "string" or ranges == nil or #ranges == 0 then
     if type(value) ~= "string" then

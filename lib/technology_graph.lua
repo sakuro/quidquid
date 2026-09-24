@@ -1,18 +1,20 @@
 local TechnologyGraph = {}
 
--- A plain-Lua mirror of a force's technology graph, holding the fields the
--- prerequisite traversal and TechnologySource.annotate read off a
--- LuaTechnology. Building it costs one pass over the collection; every
--- traversal afterwards is plain table lookups instead of crossings of
--- Factorio's C++ boundary, which a prerequisite walk otherwise pays once per
--- (node, ancestor-candidate) pair.
---
--- Not usable with TechnologyPrerequisites.technology_name or .is_multi_level:
--- they read .localised_name, .level and .prototype.max_level, none of which
--- this snapshot copies.
---
--- `technologies` is anything pairs() yields name -> technology from: a
--- LuaCustomTable in production, a plain table in a spec.
+--- A plain-Lua mirror of a force's technology graph, with prerequisites linked as
+--- node references.
+---
+--- It holds the fields the prerequisite traversal and TechnologySource.annotate read
+--- off a LuaTechnology. Building it costs one pass over the collection; every
+--- traversal afterwards is plain table lookups instead of crossings of Factorio's C++
+--- boundary, which a prerequisite walk otherwise pays once per (node,
+--- ancestor-candidate) pair.
+---
+--- Not usable with TechnologyPrerequisites.technology_name or .is_multi_level: they
+--- read .localised_name, .level and .prototype.max_level, none of which this snapshot
+--- copies.
+---@param technologies table  anything pairs() yields name -> technology from: a
+---  LuaCustomTable in production, a plain table in a spec
+---@return table  name -> node { name, researched, saved_progress, prototype, prerequisites }
 function TechnologyGraph.build(technologies)
   local nodes = {}
   for name, technology in pairs(technologies) do

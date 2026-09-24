@@ -3,18 +3,30 @@ local rich_text = require("lib.rich_text")
 
 local SurfaceLogic = {}
 
--- Descriptors contain only plain values, extracted for the current player's force.
+--- True when a surface should appear in search results at all.
+---
+--- A planet always qualifies; a platform only if it is the force's own or a
+--- friendly one. Descriptors carry plain values only, extracted by the caller for
+--- the current player's force.
+---@param descriptor table  { kind, own, friendly, hidden, ... }
+---@param include_hidden boolean  the player's include-hidden setting
+---@return boolean
 function SurfaceLogic.is_visible(descriptor, include_hidden)
   local accessible = descriptor.kind == "planet"
     or descriptor.kind == "platform" and (descriptor.own or descriptor.friendly)
   return not not (accessible and (include_hidden or not descriptor.hidden))
 end
 
--- Returns true, or false plus a locale key explaining why remote view isn't
--- available: not yet visited (never generated), or -- for a planet specifically --
--- not unlocked by the force. nil for a surface that isn't independently visible in
--- the first place (own/friendly/hidden rules); that state shouldn't be reachable
--- from a search result at all, so it's not worth a message.
+--- Whether remote view can open this surface, and why not when it can't.
+---
+--- "Not unlocked" is checked before "not visited": a locked planet is necessarily
+--- unvisited too, and not being unlocked is the more actionable reason to report.
+--- An invisible surface gets no locale key at all -- it shouldn't be reachable from
+--- a search result in the first place, so it isn't worth a message.
+---@param descriptor table  { kind, unlocked, generated, ... }
+---@param include_hidden boolean
+---@return boolean
+---@return string|nil  locale key explaining a false, nil when none is worth showing
 function SurfaceLogic.remote_view_availability(descriptor, include_hidden)
   if not SurfaceLogic.is_visible(descriptor, include_hidden) then
     return false, nil
@@ -30,6 +42,15 @@ function SurfaceLogic.remote_view_availability(descriptor, include_hidden)
   return true, nil
 end
 
+--- Builds the surface source's candidates for one query.
+---
+--- Scored through lib.api like any other source, so surfaces rank against items and
+--- recipes on the same scale.
+---@param query string
+---@param descriptors table  array of plain-value surface descriptors
+---@param include_hidden boolean
+---@param locale string|nil  the player's locale, for display-name normalization
+---@return table  candidates, sorted by id; see EXTENDING.md "Candidates"
 function SurfaceLogic.build_candidates(query, descriptors, include_hidden, locale)
   local candidates = {}
   local matcher = api.matcher(query, locale)

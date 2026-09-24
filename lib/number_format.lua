@@ -8,11 +8,14 @@ local DISPLAY_TIERS = {
   { divisor = 1e12, suffix = "T" },
 }
 
--- Compact form of a value: one decimal digit per tier, except that the k tier
--- drops it from 10k up (the digit adds little there), and values under 1000 are
--- whole numbers. Digits beyond the shown precision are truncated toward zero, never
--- rounded, so a value never displays as more than it is (999999 is "999k", not
--- "1.0M"); this also means a value cannot carry into the next tier.
+--- Compact form of a value: one decimal digit per tier, except that the k tier
+--- drops it from 10k up, and values under 1000 are whole numbers.
+---
+--- Digits beyond the shown precision are truncated toward zero, never rounded, so a
+--- value never displays as more than it is (999999 is "999k", not "1.0M"); this also
+--- means a value cannot carry into the next tier.
+---@param value number
+---@return string
 function NumberFormat.suffixed(value)
   local magnitude = math.abs(value)
   local tier_index

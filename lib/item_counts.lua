@@ -1,12 +1,15 @@
 local ItemCounts = {}
 
--- Each argument is a `get_contents()`-shaped array ({name=, quality=, count=}),
--- already fetched by the caller from whatever real inventories or logistic network
--- are relevant (e.g. main inventory, cursor stack, ammo, guns -- confirmed over RCON
--- that `character.get_item_count` alone doesn't cover all of those uniformly across
--- quality, so callers fetch each source's get_contents() and merge them here
--- instead). Matching name/quality entries across arguments are summed, not
--- overwritten, so passing several inventories' contents combines them into one index.
+--- Combines any number of contents arrays into one name -> quality -> count index.
+---
+--- Each argument is already fetched by the caller from whatever real inventories or
+--- logistic network are relevant (main inventory, cursor stack, ammo, guns).
+--- Confirmed over RCON that `character.get_item_count` alone doesn't cover all of
+--- those uniformly across quality, so callers fetch each source's get_contents() and
+--- merge them here instead. Matching name/quality entries across arguments are
+--- summed, not overwritten.
+---@param ... table  `get_contents()`-shaped arrays of { name, quality, count }
+---@return table  name -> quality -> count
 function ItemCounts.merge(...)
   local index = {}
   for _, contents in ipairs({ ... }) do
@@ -22,8 +25,12 @@ function ItemCounts.merge(...)
   return index
 end
 
--- Sums an item's count across every quality -- the row's headline number, which
--- doesn't distinguish quality.
+--- Sums an item's count across every quality.
+---
+--- The row's headline number, which doesn't distinguish quality.
+---@param index table  as returned by merge
+---@param name string
+---@return number  0 for an item the index doesn't hold
 function ItemCounts.total(index, name)
   local by_quality = index[name]
   if by_quality == nil then
@@ -36,17 +43,21 @@ function ItemCounts.total(index, name)
   return total
 end
 
--- The per-quality breakdown for the tooltip. Callers decide whether it's worth
--- showing (e.g. only when more than one quality is present).
---
--- quality_order, when given, is a {quality_name = tier_level} lookup (e.g. built
--- from prototypes.quality[name].level by the caller -- this stays pure and
--- testable by taking the lookup as plain data instead of reading prototypes
--- itself) sorting low tier to high tier instead of alphabetically. Confirmed over
--- RCON that quality levels aren't contiguous (normal=0, uncommon=1, rare=2,
--- epic=3, legendary=5) and that a level can repeat (quality-unknown=0, same as
--- normal), so ties -- including an omitted quality_order entry, treated as tying
--- at level 0 -- fall back to quality name for a stable order.
+--- The per-quality breakdown for the tooltip, lowest tier first.
+---
+--- Callers decide whether it's worth showing (e.g. only when more than one quality
+--- is present). The tier lookup is taken as plain data rather than read from
+--- `prototypes` here, which is what keeps this module free of the runtime.
+---
+--- Confirmed over RCON that quality levels aren't contiguous (normal=0, uncommon=1,
+--- rare=2, epic=3, legendary=5) and that a level can repeat (quality-unknown=0, same
+--- as normal), so ties -- including an omitted quality_order entry, treated as tying
+--- at level 0 -- fall back to quality name for a stable order.
+---@param index table  as returned by merge
+---@param name string
+---@param quality_order table|nil  quality name -> tier level, e.g. from
+---  prototypes.quality[name].level; nil sorts alphabetically instead
+---@return table  array of { quality, count }, empty for an item the index doesn't hold
 function ItemCounts.breakdown(index, name, quality_order)
   local by_quality = index[name]
   if by_quality == nil then
