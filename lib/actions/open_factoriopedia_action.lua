@@ -31,6 +31,8 @@ function OpenFactoriopediaAction.resolve_prototype(candidate, player)
     return prototypes.fluid[candidate.id]
   elseif candidate.type == "recipe" then
     return prototypes.recipe[candidate.id]
+  elseif candidate.type == "resource" then
+    return prototypes.entity[candidate.resource_name]
   elseif candidate.type == "surface" then
     local surface = SurfaceAccess.resolve(candidate, player)
     if surface ~= nil then
@@ -68,7 +70,7 @@ function OpenFactoriopediaAction.register()
   remote.call("quidquid", "register_action", {
     contract_version = 1,
     id = "open-factoriopedia",
-    types = { "item", "fluid", "recipe", "surface" },
+    types = { "item", "fluid", "recipe", "surface", "resource" },
     label = { "quidquid.action-open-factoriopedia" },
     input_name = "quidquid-open-factoriopedia",
     interface = "quidquid.open-factoriopedia-action",
