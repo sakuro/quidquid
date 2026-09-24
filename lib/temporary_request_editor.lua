@@ -221,6 +221,14 @@ local function recipe_caption(target, quality)
   return tag_with_quality("recipe", target.name, quality)
 end
 
+--- Opens the editor for a candidate, prefilled from the player's existing request.
+---
+--- Closes any editor already open first, so the frame is never built twice. The target
+--- and the chosen quality live in the content element's tags rather than in `storage`:
+--- the editor is a transient GUI, and the frame going away is exactly when this state
+--- should stop existing.
+---@param player LuaPlayer
+---@param selected_candidate table  an item or recipe candidate
 function TemporaryRequestEditor.open(player, selected_candidate)
   local target = { type = selected_candidate.type, name = selected_candidate.id }
 
@@ -371,6 +379,8 @@ function TemporaryRequestEditor.open(player, selected_candidate)
   quantity_row_of(content)[TEXTFIELD_NAME].focus()
 end
 
+--- Destroys the editor frame if it is open. Safe to call when it is not.
+---@param player LuaPlayer
 function TemporaryRequestEditor.close(player)
   local frame = get_frame(player)
   if frame ~= nil then
@@ -417,6 +427,17 @@ local function clear_ingredient_requests(section, existing, ingredients)
   return cleared
 end
 
+--- Applies what the player entered: sets, or removes, the temporary request.
+---
+--- Does nothing at all for an unparseable or negative quantity, which is the same
+--- signal the textfield's error background already gives -- no message, because the
+--- player is mid-edit rather than mistaken. A quantity of 0, or one the player already
+--- holds, removes the request instead of setting it; the decision itself is
+--- TemporaryRequestEditorLogic's, which knows nothing about the GUI.
+---
+--- The frame closes before the section is touched, so the player sees the editor
+--- dismiss even if writing the slots then finds no requester point.
+---@param player LuaPlayer
 function TemporaryRequestEditor.confirm(player)
   local content = content_of(player)
   if content == nil then
@@ -547,6 +568,12 @@ function TemporaryRequestEditor.confirm(player)
   player.create_local_flying_text({ text = message, create_at_cursor = true })
 end
 
+--- Dispatches a click inside the editor: a quality button, the +/- buttons, or Confirm.
+---
+--- A quality button is identified by its tag rather than its name, since one exists per
+--- unlocked quality; the others by name.
+---@param event table  on_gui_click; event.element's name and tags are what select the
+---  branch
 function TemporaryRequestEditor.on_gui_click(event)
   local element = event.element
   if element == nil or not element.valid then
@@ -582,6 +609,9 @@ function TemporaryRequestEditor.on_gui_click(event)
   end
 end
 
+--- Re-evaluates the entered quantity as the player types, updating the error
+--- background and Confirm's enabled state.
+---@param event table  on_gui_text_changed; ignored unless it is the editor's textfield
 function TemporaryRequestEditor.on_gui_text_changed(event)
   local element = event.element
   if element == nil or not element.valid or element.name ~= TEXTFIELD_NAME then
@@ -594,6 +624,9 @@ function TemporaryRequestEditor.on_gui_text_changed(event)
   end
 end
 
+--- Destroys the frame when Factorio closes it, e.g. on Escape or when another GUI
+--- takes over `player.opened`.
+---@param event table  on_gui_closed; ignored unless it is this editor's frame
 function TemporaryRequestEditor.on_gui_closed(event)
   if event.element == nil or not event.element.valid or event.element.name ~= FRAME_NAME then
     return
@@ -604,6 +637,8 @@ function TemporaryRequestEditor.on_gui_closed(event)
   end
 end
 
+--- Confirms on the keyboard shortcut, so Enter works without clicking Confirm.
+---@param event table  the custom-input event
 function TemporaryRequestEditor.on_confirm_key(event)
   local player = game.get_player(event.player_index)
   if player ~= nil then
@@ -611,6 +646,11 @@ function TemporaryRequestEditor.on_confirm_key(event)
   end
 end
 
+--- Closes the editor from its titlebar close button.
+---
+--- Identified by tag rather than name: the button is built from the same helper the
+--- palette's own close button uses.
+---@param event table  on_gui_click; ignored unless the element carries the cancel tag
 function TemporaryRequestEditor.on_cancel_button(event)
   local element = event.element
   if element == nil or not element.valid or element.tags.quidquid_temporary_request_editor_cancel == nil then

@@ -9,9 +9,10 @@ set -euo pipefail
 # and tools/ holds standalone dev scripts, including this checker's
 # intentionally-malformed fixtures, so both stay out.
 #
-# Extra arguments are passed through, so the baseline can be regenerated with
+# Extra arguments are passed through, so a future backlog can be captured with
 #   mise run doc-check -- --write-baseline > .doc-check-baseline
+# and suppressed by adding `--baseline .doc-check-baseline` below.
 {
   find lib prototypes -name '*.lua'
   find . -maxdepth 1 -name '*.lua'
-} | sed 's|^\./||' | sort | xargs lua tools/doc_check.lua --baseline .doc-check-baseline "$@"
+} | sed 's|^\./||' | sort | xargs lua tools/doc_check.lua "$@"
