@@ -6,6 +6,9 @@ Registry.__index = Registry
 
 local function noop_logger(_) end
 
+--- A registry of the sources and actions registered through the remote interface.
+---@param logger function|nil  called with one message per rejection; defaults to a no-op
+---@return Registry
 function Registry.new(logger)
   return setmetatable({
     sources = {},
@@ -17,6 +20,15 @@ function Registry.new(logger)
   }, Registry)
 end
 
+--- Registers a source, or rejects it and says why in the log.
+---
+--- Rejection is a return value and a log line, never an error: a source registers
+--- from its own control.lua, where raising would take down the registering mod for
+--- a mistake in its definition table. A prefix already taken is skipped while the
+--- rest of the registration succeeds -- the source is still reachable, just not
+--- under that prefix. See EXTENDING.md "Rejections and failures".
+---@param definition table  see EXTENDING.md "Sources"; contract_version must be 1
+---@return boolean  false when the definition was rejected outright
 function Registry:register_source(definition)
   if definition.contract_version ~= SOURCE_CONTRACT_VERSION then
     self.logger(
@@ -68,6 +80,8 @@ function Registry:register_source(definition)
   return true
 end
 
+--- The sources taking part in an unlocked search, in registration order.
+---@return table  the source definitions with in_default_search set
 function Registry:default_search_sources()
   local selected = {}
   for _, source in ipairs(self.sources) do
@@ -78,10 +92,20 @@ function Registry:default_search_sources()
   return selected
 end
 
+--- The source a prefix word locks the palette to.
+---@param prefix string
+---@return table|nil  nil when no source claimed that prefix
 function Registry:source_for_prefix(prefix)
   return self.prefix_owners[prefix]
 end
 
+--- Registers an action, or rejects it and says why in the log.
+---
+--- Same contract as register_source: a rejection is a return value and a log line.
+--- A type/input_name pair already taken is skipped while the rest of the
+--- registration succeeds, so the action still applies to its other types.
+---@param definition table  see EXTENDING.md "Actions"; contract_version must be 1
+---@return boolean  false when the definition was rejected outright
 function Registry:register_action(definition)
   if definition.contract_version ~= ACTION_CONTRACT_VERSION then
     self.logger(
@@ -120,6 +144,14 @@ function Registry:register_action(definition)
   return true
 end
 
+--- The actions offered for one candidate right now, keyed by input_name.
+---
+--- An is_available that raises counts as unavailable and is logged, rather than
+--- taking the whole palette down with it (EXTENDING.md "Rejections and failures").
+---@param selected_candidate table  only its `type` is read
+---@param player_index uint
+---@param caller RemoteCaller
+---@return table  input_name -> action definition; empty when nothing applies
 function Registry:resolve_actions(selected_candidate, player_index, caller)
   local slots = self.action_slots[selected_candidate.type]
   local resolved = {}
