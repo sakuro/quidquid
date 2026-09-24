@@ -20,13 +20,18 @@ end
 -- the three forms runtime-api.json's EntityID union accepts for LuaPlayer.add_pin's
 -- resource parameter; its description ("The resource prototype to add an entire
 -- resource patch with") confirms this pins the whole patch rather than one entity.
+--
+-- The label comes from search_display_name, not from the candidate's label: add_pin
+-- declares label as a plain string, while the label is a LocalisedString until flib's
+-- dictionary has translated this resource. Handing it the table raises, and the
+-- palette's outer pcall would turn that into a log line and a pin that never appears.
 local function execute(candidate, player_index)
   ActionRunner.run(candidate, player_index, resolve, function(surface, selected_candidate, player)
     player.add_pin({
       surface = surface,
       position = selected_candidate.position,
       resource = selected_candidate.resource_name,
-      label = selected_candidate.label,
+      label = selected_candidate.search_display_name or selected_candidate.resource_name,
       preview_distance = PREVIEW_DISTANCE,
     })
   end, "quidquid.action-pin-resource-unavailable")
