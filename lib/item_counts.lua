@@ -1,13 +1,12 @@
 local ItemCounts = {}
 
--- pure, testable: each argument is a `get_contents()`-shaped array
--- ({name=, quality=, count=}), already fetched by the caller from whatever real
--- inventories or logistic network are relevant (e.g. main inventory, cursor stack,
--- ammo, guns -- confirmed over RCON that `character.get_item_count` alone doesn't
--- cover all of those uniformly across quality, so callers fetch each source's
--- get_contents() and merge them here instead). Matching name/quality entries across
--- arguments are summed, not overwritten, so passing several inventories' contents
--- combines them into one index.
+-- Each argument is a `get_contents()`-shaped array ({name=, quality=, count=}),
+-- already fetched by the caller from whatever real inventories or logistic network
+-- are relevant (e.g. main inventory, cursor stack, ammo, guns -- confirmed over RCON
+-- that `character.get_item_count` alone doesn't cover all of those uniformly across
+-- quality, so callers fetch each source's get_contents() and merge them here
+-- instead). Matching name/quality entries across arguments are summed, not
+-- overwritten, so passing several inventories' contents combines them into one index.
 function ItemCounts.merge(...)
   local index = {}
   for _, contents in ipairs({ ... }) do

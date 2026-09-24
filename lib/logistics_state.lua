@@ -1,7 +1,7 @@
 local LogisticsState = {}
 
--- pure, testable: `requester_point` is shaped like LuaLogisticPoint (only the
--- `logistic_network` field is read), already extracted by the caller (e.g.
+-- `requester_point` is shaped like LuaLogisticPoint (only the `logistic_network` field
+-- is read), already extracted by the caller (e.g.
 -- TemporaryRequestAction.requester_point_for). Distinguishes four states:
 --
 -- - no_character: no player.character to request from at all (god mode, editor, ...)
