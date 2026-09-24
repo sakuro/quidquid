@@ -203,16 +203,23 @@ the world a few chunks per tick, so the list fills in gradually over the
 following minutes rather than all at once — an empty or partial result
 during that window does not mean the resource isn't there.
 
-Each result's name is followed by its remaining amount. A patch that already
-has a mining drill working it is marked on the line below instead, right
-after its surface and coordinates; an unoccupied patch shows no such marker
-there. A finite resource's amount
-stays accurate because each entity exhausted to nothing raises an event that
-re-scans its chunk. Infinite resources — crude oil, sulfuric acid geysers —
-raise that event at most once, as they decay toward their minimum yield, so
-an oil field's shown amount can stay at its chart-time value indefinitely.
-Pinning a patch uses Factorio's own map-pin system: the pin is per-player,
-and is dismissed from Factorio's own UI rather than by Quidquid.
+A patch that already has a mining drill working it is marked on the line
+below, right after its surface and coordinates; an unoccupied patch shows no
+such marker there.
+
+Each result's name is followed by its remaining amount, taken from a cache
+rather than counted afresh. A chunk is re-scanned when one of its entities is
+exhausted to nothing, so a finite patch's figure falls in steps as it is
+mined, lagging behind the drills rather than tracking them. Infinite
+resources — crude oil, sulfuric acid geysers — raise that event at most once,
+as they decay toward their minimum yield, so an oil field's figure can sit at
+its chart-time value indefinitely.
+
+Pin a patch and Factorio tracks it properly: pinning uses the game's own
+map-pin system, and the pin holds the patch's own entities and recomputes the
+amount continuously. So the list is for choosing a patch and the pin is for
+watching one. The pin is per-player, and is dismissed from Factorio's own UI
+rather than by Quidquid.
 
 ### Calculator
 
