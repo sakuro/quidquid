@@ -13,19 +13,24 @@ local DECIMAL_PLACES = 4
 -- game's own circuit network signal count entry treats them.
 local SUFFIX_VARIABLES = { k = 1e3, K = 1e3, m = 1e6, M = 1e6 }
 
--- Rounds to DECIMAL_PLACES, then trims trailing zeros and a bare trailing "."
--- so an integer result reads "3", not "3.0000".
+--- The result as the player should read it: rounded to DECIMAL_PLACES, with trailing
+--- zeros and a bare trailing "." trimmed so an integer reads "3", not "3.0000".
+---@param value number
+---@return string
 function CalculatorSource.format_result(value)
   local formatted = ("%." .. DECIMAL_PLACES .. "f"):format(value)
   formatted = formatted:gsub("(%..-)0+$", "%1"):gsub("%.$", "")
   return formatted
 end
 
--- Takes a pcall(helpers.evaluate_expression, query, SUFFIX_VARIABLES) result pair.
--- Returns the numeric value on success, or nil for a parse/eval error, a non-number
--- result, or a non-finite one (NaN, +-inf -- e.g. "1/0") -- there is no meaningful
--- "result" to show for any of these, so they're all folded into the same "no
--- candidate" outcome from the caller's perspective.
+--- The usable number out of an expression evaluation, or nil when there isn't one.
+---
+--- A parse/eval error, a non-number result, and a non-finite one (NaN, +-inf -- e.g.
+--- "1/0") all fold into nil: none of them has a meaningful result to show, so the
+--- caller treats them identically.
+---@param ok boolean  the pcall status
+---@param result any  the pcall value
+---@return number|nil
 function CalculatorSource.valid_value(ok, result)
   if not ok or type(result) ~= "number" then
     return nil
@@ -36,6 +41,9 @@ function CalculatorSource.valid_value(ok, result)
   return result
 end
 
+--- The single candidate for an evaluated expression.
+---@param value number
+---@return table  a candidate; see EXTENDING.md "Candidates"
 function CalculatorSource.build_candidate(value)
   return {
     type = "calculation",
@@ -69,6 +77,10 @@ local function is_query_valid(query, _player_index)
   return CalculatorSource.valid_value(pcall(helpers.evaluate_expression, query, SUFFIX_VARIABLES)) ~= nil
 end
 
+--- Adds this source's remote interface and registers it with Quidquid.
+---
+--- Registered with the "=" prefix and out of the default search: every query would
+--- otherwise be handed to the expression evaluator.
 function CalculatorSource.register()
   remote.add_interface("quidquid.calculator-source", { search = search, is_query_valid = is_query_valid })
   remote.call("quidquid", "register_source", {

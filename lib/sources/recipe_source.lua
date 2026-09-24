@@ -14,6 +14,10 @@ local function collect_recipes()
   return recipes
 end
 
+--- Registers the recipe-name dictionary with flib, for translated-name search.
+---
+--- Must run from on_init/on_configuration_changed, before the first on_tick -- see
+--- control.lua and EXTENDING.md "Translated names".
 function RecipeSource.register_dictionary()
   flib_dictionary.new(NAMESPACE)
   for _, recipe in ipairs(collect_recipes()) do
@@ -21,6 +25,13 @@ function RecipeSource.register_dictionary()
   end
 end
 
+--- Builds this source's candidates for one query.
+---@param query string
+---@param recipes table  array of recipe prototypes
+---@param locale string|nil
+---@param translated_names table  prototype name -> translated name
+---@param include_hidden boolean
+---@return table  candidates; see EXTENDING.md "Candidates"
 function RecipeSource.build_candidates(query, recipes, locale, translated_names, include_hidden)
   return build_candidates("recipe", "recipe", query, recipes, locale, translated_names, include_hidden)
 end
@@ -35,6 +46,7 @@ local function search(query, player_index)
   return RecipeSource.build_candidates(query, collect_recipes(), player.locale, translated_names, include_hidden)
 end
 
+--- Adds this source's remote interface and registers it with Quidquid.
 function RecipeSource.register()
   remote.add_interface("quidquid.recipe-source", { search = search })
   remote.call("quidquid", "register_source", {

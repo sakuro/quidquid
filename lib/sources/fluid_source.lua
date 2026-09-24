@@ -14,6 +14,10 @@ local function collect_fluids()
   return fluids
 end
 
+--- Registers the fluid-name dictionary with flib, for translated-name search.
+---
+--- Must run from on_init/on_configuration_changed, before the first on_tick -- see
+--- control.lua and EXTENDING.md "Translated names".
 function FluidSource.register_dictionary()
   flib_dictionary.new(NAMESPACE)
   for _, fluid in ipairs(collect_fluids()) do
@@ -21,6 +25,13 @@ function FluidSource.register_dictionary()
   end
 end
 
+--- Builds this source's candidates for one query.
+---@param query string
+---@param fluids table  array of fluid prototypes
+---@param locale string|nil
+---@param translated_names table  prototype name -> translated name
+---@param include_hidden boolean
+---@return table  candidates; see EXTENDING.md "Candidates"
 function FluidSource.build_candidates(query, fluids, locale, translated_names, include_hidden)
   return build_candidates("fluid", "fluid", query, fluids, locale, translated_names, include_hidden)
 end
@@ -35,6 +46,7 @@ local function search(query, player_index)
   return FluidSource.build_candidates(query, collect_fluids(), player.locale, translated_names, include_hidden)
 end
 
+--- Adds this source's remote interface and registers it with Quidquid.
 function FluidSource.register()
   remote.add_interface("quidquid.fluid-source", { search = search })
   remote.call("quidquid", "register_source", {

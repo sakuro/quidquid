@@ -16,6 +16,9 @@ local STATE_CAPTIONS = {
   researched = { text_key = "quidquid.technology-state-researched", color = "green" },
 }
 
+--- The colored state text for a technology's row.
+---@param state string  as TechnologyPrerequisites.classify_state returns
+---@return table  a LocalisedString
 function TechnologySource.build_caption(state)
   local spec = STATE_CAPTIONS[state]
   return { "", "[color=" .. spec.color .. "]", { spec.text_key }, "[/color]" }
@@ -33,10 +36,14 @@ local function entity_icon(entity_name)
   return "[entity=" .. entity_name .. "]"
 end
 
--- Maps a research_trigger to core's own [technology-trigger] locale wording
--- (core.cfg) instead of inventing new text. Returns nil for craft-fluid (no
--- vanilla/Space Age technology uses it and there is no core.cfg key for it
--- yet -- deferred) and for any unrecognized type.
+--- What a trigger technology asks the player to do, in the base game's own wording.
+---
+--- Maps a research_trigger onto core's [technology-trigger] locale keys (core.cfg)
+--- rather than inventing new text, so the palette says what the technology screen
+--- says.
+---@param research_trigger table  LuaTechnologyPrototype.research_trigger
+---@return table|string|nil  nil for craft-fluid (no vanilla or Space Age technology
+---  uses it and core.cfg has no key for it yet) and for an unrecognized type
 function TechnologySource.build_trigger_content(research_trigger)
   local trigger_type = research_trigger.type
   if trigger_type == "craft-item" then
@@ -86,6 +93,17 @@ local function labelled_list_block(label_key, technologies)
   return { label_key, TechnologyPrerequisites.technology_list_caption(technologies) }
 end
 
+--- The row's tooltip: what blocks this technology, and how far it has got.
+---
+--- Each block is included only when it has something to say, and the whole tooltip
+--- collapses to nil when none of them do -- a technology with nothing to explain gets
+--- no tooltip rather than an empty one.
+---@param state string  as TechnologyPrerequisites.classify_state returns
+---@param prerequisites table  array of unresearched, unqueued prerequisites
+---@param triggers table  array of blocking trigger technologies
+---@param progress number  percent, shown only for an "available" technology past 0
+---@param trigger_content table|string|nil  as build_trigger_content returns
+---@return table|nil  a LocalisedString, or nil when there is nothing to show
 function TechnologySource.build_tooltip(state, prerequisites, triggers, progress, trigger_content)
   local tooltip = { "" }
   local has_content = false
@@ -126,6 +144,14 @@ function TechnologySource.build_tooltip(state, prerequisites, triggers, progress
   return tooltip
 end
 
+--- The candidate's annotation: the state caption, plus a tooltip when there is
+--- something to explain.
+---@param state string  as TechnologyPrerequisites.classify_state returns
+---@param prerequisites table
+---@param triggers table
+---@param progress number
+---@param trigger_content table|string|nil
+---@return table  { caption, tooltip }; see EXTENDING.md "Candidates"
 function TechnologySource.build_annotation(state, prerequisites, triggers, progress, trigger_content)
   return {
     caption = TechnologySource.build_caption(state),
@@ -144,6 +170,10 @@ local function collect_technologies()
   return technologies
 end
 
+--- Registers the technology-name dictionary with flib, for translated-name search.
+---
+--- Must run from on_init/on_configuration_changed, before the first on_tick -- see
+--- control.lua and EXTENDING.md "Translated names".
 function TechnologySource.register_dictionary()
   flib_dictionary.new(NAMESPACE)
   for _, technology in ipairs(collect_technologies()) do
@@ -151,6 +181,13 @@ function TechnologySource.register_dictionary()
   end
 end
 
+--- Builds this source's candidates for one query, before filtering and annotation.
+---@param query string
+---@param technologies table  array of technology prototypes
+---@param locale string|nil
+---@param translated_names table  prototype name -> translated name
+---@param include_hidden boolean
+---@return table  candidates; see EXTENDING.md "Candidates"
 function TechnologySource.build_candidates(query, technologies, locale, translated_names, include_hidden)
   return build_candidates("technology", "technology", query, technologies, locale, translated_names, include_hidden)
 end
@@ -168,11 +205,17 @@ local function technology_chain_links()
   return chain_links
 end
 
--- Drops the upgrade-chain levels the technology screen's grid does not draw as
--- their own tile, so a search answers with the levels that grid offers. The tree
--- view lists every level either way, and include-hidden brings them all back
--- here. Only matched candidates are tested, so the cost scales with the result
--- list rather than with the prototype count.
+--- Drops the upgrade-chain levels the technology screen's grid does not draw as their
+--- own tile, so a search answers with the levels that grid offers.
+---
+--- The tree view lists every level either way, and include-hidden brings them all back
+--- here. Only matched candidates are tested, so the cost scales with the result list
+--- rather than with the prototype count.
+---@param candidates table
+---@param links table  as TechnologyUpgradeChain.build_links returns
+---@param researched table  name set covering one force
+---@param queued table  name set covering one force
+---@return table  the candidates the grid would show
 function TechnologySource.filter_visible(candidates, links, researched, queued)
   local visible = {}
   for _, candidate in ipairs(candidates) do
@@ -231,6 +274,14 @@ local function gather_annotation_context(player)
   }
 end
 
+--- Annotates one candidate from a per-player context.
+---
+--- Research state is force-wide, so -- unlike the item source -- there is no character
+--- to check for; a candidate is skipped only when the force has no technology of that
+--- name.
+---@param candidate table  only its `id` is read
+---@param ctx table  as gather_annotation_context builds it
+---@return table|nil  { caption, tooltip }, or nil when the force has no such technology
 function TechnologySource.annotate(candidate, ctx)
   local technology = ctx.graph[candidate.id]
   if technology == nil then
@@ -294,6 +345,7 @@ local function search(query, player_index)
   return refined
 end
 
+--- Adds this source's remote interface and registers it with Quidquid.
 function TechnologySource.register()
   remote.add_interface("quidquid.technology-source", { search = search })
   remote.call("quidquid", "register_source", {
