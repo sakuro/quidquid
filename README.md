@@ -151,6 +151,12 @@ say) aren't searchable, so a platform named with only a tag and no other text
 can't be found by query. Space locations such as Solar System Edge are not
 surfaces and are not included.
 
+A surface a mod creates by script, with no planet prototype behind it, is left
+out too — Space Exploration's zones, Subsurface's underground layers,
+Factorissimo's factory interiors. A mod that adds a planet the Space Age way is
+listed like any other planet. See
+[issue #162](https://github.com/sakuro/quidquid/issues/162).
+
 ### Calculator
 
 Evaluate an arithmetic expression with the `= ` prefix. The calculator is left
