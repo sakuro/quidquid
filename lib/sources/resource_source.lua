@@ -44,12 +44,35 @@ local function scan(surface_index, x, y)
     area = { left_top = { x * 32, y * 32 }, right_bottom = { (x + 1) * 32, (y + 1) * 32 } },
     type = "resource",
   })
-  if #entities == 0 then
+
+  -- find_entities_filtered's area is a closed box, so an entity sitting exactly on a
+  -- shared edge can come back for this chunk and its neighbour both. Keep only the
+  -- entities this chunk actually owns, using the same floor-division on_resource_depleted
+  -- and on_built_entity derive a chunk key from, so all three agree by construction.
+  local owned = {}
+  for _, entity in ipairs(entities) do
+    local position = entity.position
+    if math.floor(position.x / 32) == x and math.floor(position.y / 32) == y then
+      table.insert(owned, entity)
+    end
+  end
+
+  local grouped = ResourceClustering.group_chunk(owned)
+  local existing_store = state().surfaces[surface_index]
+  if next(grouped) == nil and existing_store == nil then
     return
   end
+
   local key = ResourceClustering.chunk_key(x, y)
   local store = store_for(surface_index)
-  for resource_name, entry in pairs(ResourceClustering.group_chunk(entities)) do
+  -- A resource this chunk held before but the rescan no longer finds (depleted to
+  -- nothing, or removed) must be dropped, not just left stale -- see on_resource_depleted.
+  for resource_name in pairs(store.owner) do
+    if grouped[resource_name] == nil then
+      ResourceClustering.remove_chunk(store, resource_name, key)
+    end
+  end
+  for resource_name, entry in pairs(grouped) do
     ResourceClustering.insert(store, surface_index, resource_name, key, entry)
   end
 end
@@ -133,20 +156,20 @@ function ResourceSource.on_surface_removed(event)
   end
 end
 
---- Subtracts an exhausted resource entity from its cluster.
+--- Re-scans the chunk an exhausted resource entity sat in.
+---
+--- `entity.amount` at this point is what's left, not what disappeared -- zero for a
+--- finite resource, the minimum yield for an infinite one -- so subtracting it would
+--- leave the cached amount permanently wrong instead of correcting it. Re-enqueuing
+--- lets the background scan recompute the chunk's entry from what is actually still
+--- there, the same way on_built_entity handles a chunk gaining a resource.
 ---@param event table  on_resource_depleted
 function ResourceSource.on_resource_depleted(event)
   local entity = event.entity
-  if not entity.valid then
+  if state() == nil or not entity.valid then
     return
   end
-  local resources = state()
-  local store = resources and resources.surfaces[entity.surface_index] or nil
-  if store == nil then
-    return
-  end
-  local key = ResourceClustering.chunk_key(math.floor(entity.position.x / 32), math.floor(entity.position.y / 32))
-  ResourceClustering.subtract(store, entity.name, key, entity.amount)
+  enqueue(entity.surface_index, math.floor(entity.position.x / 32), math.floor(entity.position.y / 32))
 end
 
 --- Re-scans the chunk a scripted resource was placed in.
