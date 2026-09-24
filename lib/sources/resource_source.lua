@@ -1,4 +1,5 @@
 local flib_dictionary = require("__flib__.dictionary")
+local NumberFormat = require("lib.number_format")
 local ResourceClustering = require("lib.resource_clustering")
 local ResourceLogic = require("lib.resource_logic")
 
@@ -221,13 +222,73 @@ local function visible_clusters(player)
   return clusters
 end
 
+-- One find_entities_filtered per candidate, with limit = 1 so the engine stops at the
+-- first hit. Annotations run over every candidate the source returns, not just the 30
+-- PaletteLogic.merge_candidates keeps, so the count matters -- see issue #174.
+--
+-- Every link of the chain -- the surface, this surface's store, this cluster -- is
+-- guarded rather than indexed straight through: state() can be nil like every other
+-- entry point here, and a surface's store or a specific cluster can legitimately be
+-- gone by the time this runs (the background scan and the player both mutate it).
+-- Any of those absences means "nothing to report", not a crash worth letting the
+-- caller's pcall swallow for every candidate in the search.
+local function is_occupied(candidate)
+  local surface = game.get_surface(candidate.surface_index)
+  if surface == nil then
+    return false
+  end
+  local resources = state()
+  if resources == nil then
+    return false
+  end
+  local store = resources.surfaces[candidate.surface_index]
+  if store == nil then
+    return false
+  end
+  local cluster = store.clusters[candidate.id]
+  if cluster == nil then
+    return false
+  end
+  local drills = surface.find_entities_filtered({
+    area = {
+      left_top = { cluster.bounds.left, cluster.bounds.top },
+      right_bottom = { cluster.bounds.right, cluster.bounds.bottom },
+    },
+    type = "mining-drill",
+    limit = 1,
+  })
+  return #drills > 0
+end
+
+-- Mutates candidates in place, mirroring item_source's apply_annotations: the caller
+-- runs this inside a pcall so one candidate's failure (an invalid surface mid-search,
+-- say) logs rather than dropping every result this source found.
+local function apply_annotations(candidates)
+  for _, candidate in ipairs(candidates) do
+    local amount = NumberFormat.suffixed(candidate.amount)
+    if is_occupied(candidate) then
+      candidate.annotation = {
+        caption = { "quidquid.resource-amount-occupied", amount },
+        tooltip = { "quidquid.resource-occupied-tooltip" },
+      }
+    else
+      candidate.annotation = { caption = { "quidquid.resource-amount", amount } }
+    end
+  end
+end
+
 local function search(query, player_index)
   local player = game.get_player(player_index)
   if player == nil then
     return {}
   end
   local translated_names = flib_dictionary.get(player_index, NAMESPACE) or {}
-  return ResourceLogic.build_candidates(query, visible_clusters(player), player.locale, translated_names)
+  local candidates = ResourceLogic.build_candidates(query, visible_clusters(player), player.locale, translated_names)
+  local ok, err = pcall(apply_annotations, candidates)
+  if not ok then
+    log(("quidquid: source 'resources' annotation failed: %s"):format(tostring(err)))
+  end
+  return candidates
 end
 
 --- Registers the resource-name dictionary with flib, for translated-name search.
