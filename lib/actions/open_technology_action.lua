@@ -12,6 +12,10 @@ local function execute(selected_candidate, player_index)
   player.open_technology_gui(selected_candidate.id)
 end
 
+--- Adds this action's remote interface and registers it with Quidquid.
+---
+--- Registered on the Factoriopedia input for technology candidates: the technology
+--- screen is the more useful destination for a technology than its Factoriopedia page.
 function OpenTechnologyAction.register()
   remote.add_interface("quidquid.open-technology-action", { execute = execute })
   remote.call("quidquid", "register_action", {

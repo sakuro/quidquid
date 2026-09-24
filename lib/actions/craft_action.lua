@@ -2,18 +2,23 @@ local ActionRunner = require("lib.action_runner")
 
 local CraftAction = {}
 
+-- The force's runtime recipe for a candidate. Both candidate types use the candidate
+-- id as the recipe name: recipe candidates are backed by prototypes.recipe for
+-- searching, but crafting needs the force's own recipe.
 local function resolve_recipe(selected_candidate, player)
-  -- Both candidate types use the candidate id as the recipe name. Recipe
-  -- candidates are backed by prototypes.recipe for searching, but crafting
-  -- requires the force's runtime recipe.
   return player.force.recipes[selected_candidate.id]
 end
 
--- True when character's prototype can hand-craft at least one of recipe's categories.
--- A recipe whose categories are all machine-only (e.g. smelting) can never be
--- hand-crafted, regardless of the force-level get_hand_crafting_disabled_for_recipe
--- flag -- that flag toggles a recipe that otherwise CAN be hand-crafted, it doesn't
--- cover this case.
+--- True when character's prototype can hand-craft at least one of recipe's
+--- categories.
+---
+--- A recipe whose categories are all machine-only (e.g. smelting) can never be
+--- hand-crafted, regardless of the force-level get_hand_crafting_disabled_for_recipe
+--- flag -- that flag toggles a recipe that otherwise CAN be hand-crafted, it doesn't
+--- cover this case.
+---@param recipe LuaRecipe
+---@param character LuaEntity|nil  false when there is no character at all
+---@return boolean
 function CraftAction.is_hand_craftable(recipe, character)
   if character == nil then
     return false
@@ -27,17 +32,21 @@ function CraftAction.is_hand_craftable(recipe, character)
   return false
 end
 
--- Decides whether selected_candidate can be hand-crafted right now. Returns the
--- recipe to craft, or nil plus a locale key explaining why not (nil, nil for a
--- recipe candidate with no matching force recipe -- a near-impossible case not worth
--- a message, since RecipeSource builds candidates from prototypes.recipe directly).
--- Each check here corresponds to a distinct way LuaControl.begin_crafting can fail
--- silently or with one of Factorio's own (iconless, un-attributed) native flying
--- texts -- see project_craft_action_resolve_craftable_gaps memory for how each was
--- found. is_available only gates by candidate type (via this action's registered
--- `types`); per-candidate craftability is a runtime fact about this specific
--- item/recipe, so it's resolved here and reported by execute, not hidden from the
--- tooltip.
+--- Decides whether selected_candidate can be hand-crafted right now.
+---
+--- Each check here corresponds to a distinct way LuaControl.begin_crafting can fail
+--- silently, or with one of Factorio's own iconless, un-attributed native flying
+--- texts.
+---
+--- is_available only gates by candidate type (via this action's registered `types`);
+--- per-candidate craftability is a runtime fact about this specific item/recipe, so
+--- it is resolved here and reported by execute rather than hidden from the tooltip.
+---@param selected_candidate table
+---@param player LuaPlayer
+---@return LuaRecipe|nil  the recipe to craft
+---@return string|nil  locale key explaining a nil recipe; nil for a recipe candidate
+---  with no matching force recipe -- a near-impossible case not worth a message,
+---  since RecipeSource builds candidates from prototypes.recipe directly
 function CraftAction.resolve_craftable(selected_candidate, player)
   local recipe = resolve_recipe(selected_candidate, player)
   if recipe == nil then
@@ -64,14 +73,22 @@ function CraftAction.resolve_craftable(selected_candidate, player)
   return recipe, nil
 end
 
+--- A count_for function that always crafts n, for the Craft 1 and Craft 5 actions.
+---@param n number
+---@return function  (player, recipe) -> number
 function CraftAction.fixed_count(n)
   return function(_player, _recipe)
     return n
   end
 end
 
--- resolve_craftable already rejects a recipe with zero craftable count before this
--- is ever called, so the count here is always positive.
+--- A count_for function for the Craft all action: as many as the ingredients allow.
+---
+--- resolve_craftable already rejects a recipe with zero craftable count before this is
+--- ever called, so the count here is always positive.
+---@param player LuaPlayer
+---@param recipe LuaRecipe
+---@return number
 function CraftAction.max_craftable(player, recipe)
   return player.get_craftable_count(recipe)
 end
@@ -101,6 +118,10 @@ local function register(id, input_name, interface, label, count_for)
   })
 end
 
+--- Adds the three craft actions' remote interfaces and registers them with Quidquid.
+---
+--- Craft 1, Craft 5 and Craft all differ only in how many crafts they start, so they
+--- share one execute path and one resolve step.
 function CraftAction.register()
   register(
     "craft-1",

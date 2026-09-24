@@ -8,6 +8,14 @@ local ResearchQueueAction = {}
 -- in-game if this ever needs to change.
 local MAX_QUEUE_SIZE = 7
 
+--- The level a technology would be researched at if queued now.
+---
+--- Only an infinite technology can appear in the queue more than once, each occurrence
+--- standing for one further level, so for anything else this is just its own level.
+--- Exported for spec/lib/actions/research_queue_action_spec.lua.
+---@param queue table  force.research_queue
+---@param technology LuaTechnology
+---@return number
 local function queued_level(queue, technology)
   local level = technology.level
   if not TechnologyPrerequisites.is_multi_level(technology) then
@@ -44,6 +52,15 @@ local function queued_names(queue)
   return names
 end
 
+--- The research progress to report for a technology, as a whole percent.
+---
+--- force.research_progress is meaningful only for whatever is being researched right
+--- now, which is queue position 1; anything else has its own saved_progress, nonzero
+--- only if it was researched partway and then interrupted.
+---@param force LuaForce
+---@param technology LuaTechnology
+---@param queue_position number
+---@return number  0-100
 function ResearchQueueAction.progress_for(force, technology, queue_position)
   if queue_position == 1 then
     return math.floor(force.research_progress * 100 + 0.5)
@@ -51,6 +68,14 @@ function ResearchQueueAction.progress_for(force, technology, queue_position)
   return math.floor(technology.saved_progress * 100 + 0.5)
 end
 
+--- Where a technology already sits in the queue, if it does.
+---
+--- nil for an infinite technology even when it is queued: each occurrence stands for a
+--- further level, so "already queued" is not a state it can be in. Exported for the
+--- spec.
+---@param queue table  force.research_queue
+---@param technology LuaTechnology
+---@return number|nil
 local function queue_index(queue, technology)
   if TechnologyPrerequisites.is_multi_level(technology) then
     -- Each occurrence represents the next level of an infinite technology.
@@ -66,15 +91,24 @@ end
 
 ResearchQueueAction.queue_index = queue_index
 
--- Decides what happens when candidate's technology is added to force's research
--- queue. Returns the technology, a locale key, and its message args -- plus the new
--- queue to install when the outcome is an actual enqueue (nil when the outcome is only
--- a message, e.g. already queued/researched/full). Returns nil for a candidate with no
--- matching force technology (near-impossible, since TechnologySource builds candidates
--- from force.technologies directly).
--- is_available only gates on state uniform across every candidate (there is none
--- registered for this action); per-candidate queue eligibility is a runtime fact
--- resolved here and reported by execute, not hidden from the tooltip.
+--- Decides what happens when candidate's technology is added to force's research
+--- queue, without changing anything.
+---
+--- Prerequisites are queued along with the technology, so an enqueue can be refused
+--- for needing more slots than the queue has left, which is why the whole new queue
+--- comes back rather than just the one name.
+---
+--- is_available only gates on state uniform across every candidate (this action
+--- registers none); per-candidate queue eligibility is a runtime fact, resolved here
+--- and reported by execute rather than hidden from the tooltip.
+---@param force LuaForce
+---@param candidate table
+---@return LuaTechnology|nil  nil for a candidate with no matching force technology --
+---  near-impossible, since TechnologySource builds candidates from force.technologies
+---@return string|nil  locale key for the message to show
+---@return table|nil  that message's arguments
+---@return table|nil  the queue to install, or nil when the outcome is only a message
+---  (already queued, researched, full, blocked by a trigger)
 function ResearchQueueAction.resolve_enqueue(force, candidate)
   local technology = force.technologies[candidate.id]
   if technology == nil then
@@ -155,6 +189,7 @@ local function execute(candidate, player_index)
   })
 end
 
+--- Adds this action's remote interface and registers it with Quidquid.
 function ResearchQueueAction.register()
   remote.add_interface("quidquid.research-queue-action", { execute = execute })
   remote.call("quidquid", "register_action", {
