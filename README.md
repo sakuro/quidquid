@@ -58,6 +58,10 @@ While locked, typing another recognized prefix switches directly to that
 source. To unlock and search across all sources again, click the × next to
 the source label, or type a space with the search field empty.
 
+A prefix is matched exactly, case included. Only the forms in the table lock
+the search, so `Item ` is an ordinary query even though the search itself
+ignores case.
+
 ## Sources and actions
 
 ### Items
