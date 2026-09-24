@@ -241,8 +241,13 @@ function TemporaryRequestEditor.open(player, selected_candidate)
     name = TITLE_LABEL_NAME,
     style = "frame_title",
     caption = title_caption(target, "normal"),
-    ignored_by_interaction = true,
+    -- The truncated title drops the tail of the name, so the full one lives in a
+    -- tooltip. That needs the label to receive the mouse, which rules out
+    -- ignored_by_interaction -- the label would otherwise let clicks fall through
+    -- to the titlebar flow that drags the frame. It drags the frame itself instead.
+    tooltip = target_prototype(target).localised_name,
   })
+  title_label.drag_target = frame
   title_label.style.maximal_width = TITLE_MAX_WIDTH
   -- The ceiling only truncates while the label stays on one line -- frame_title
   -- already is single-line, but the two belong together, so pin it here rather
