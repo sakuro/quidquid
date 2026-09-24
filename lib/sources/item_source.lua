@@ -15,9 +15,13 @@ local function muted(text)
   return ("[color=%d,%d,%d]%s[/color]"):format(color.r, color.g, color.b, text)
 end
 
--- Muting a zero count, rather than hiding it, is #121's whole point: a candidate the
--- player holds none of still shows a 0, just one that doesn't visually compete with
--- ones they do.
+--- A count as it appears on a row, muted when it is zero.
+---
+--- Muting a zero rather than hiding it is the point: a candidate the player holds none
+--- of still shows a 0, just one that doesn't visually compete with the rows they do
+--- hold something of.
+---@param value number
+---@return string  rich text, so it carries its own color
 function ItemSource.format_count(value)
   local text = NumberFormat.suffixed(value)
   if value == 0 then
@@ -35,9 +39,15 @@ local SEPARATOR = "·"
 -- mark on every row while the player is out of range.
 local OUT_OF_RANGE_TEXT = "—"
 
--- The row's headline: just the inventory count while locked (there's nothing to pair
--- it with yet), otherwise inventory SEPARATOR network, with network replaced by the
--- muted dash when the player is outside any network's range.
+--- The row's headline count.
+---
+--- Just the inventory count while locked -- there is nothing to pair it with yet --
+--- otherwise inventory, separator, network, with the network figure replaced by a
+--- muted dash when the player is outside any network's range.
+---@param state string  as LogisticsState.classify returns
+---@param inventory_total number
+---@param network_total number  ignored unless state is "connected"
+---@return string  rich text
 function ItemSource.build_caption(state, inventory_total, network_total)
   local inventory_text = ItemSource.format_count(inventory_total)
   if state == "locked" then
@@ -72,10 +82,22 @@ local function count_line(label_key, total, breakdown)
   return { "", line, " (", list, ")" }
 end
 
--- delivering_total/picking_up_total are what robots currently carry to/from the
--- player -- not a shortfall -- and only mean anything once connected; a request
--- can be set while out of range (see LogisticsState.classify), but nothing can be
--- in transit until a network actually has the player in range.
+--- The row's tooltip: the inventory line, plus network and in-transit lines once
+--- connected.
+---
+--- delivering_total/picking_up_total are what robots currently carry to and from the
+--- player -- not a shortfall -- and only mean anything once connected: a request can
+--- be set while out of range (see LogisticsState.classify), but nothing can be in
+--- transit until a network actually has the player in range.
+---@param state string  as LogisticsState.classify returns
+---@param inventory_total number
+---@param inventory_breakdown table  as ItemCounts.breakdown returns; listed only
+---  when it has more than one quality
+---@param network_total number
+---@param network_breakdown table
+---@param delivering_total number|nil  omitted from the tooltip when nil or 0
+---@param picking_up_total number|nil  omitted from the tooltip when nil or 0
+---@return table  a LocalisedString
 function ItemSource.build_tooltip(
   state,
   inventory_total,
@@ -104,9 +126,19 @@ function ItemSource.build_tooltip(
   return tooltip
 end
 
--- The per-candidate result an `ItemSource.annotate` call returns (see #121): nil
--- for no_character, since nothing about personal logistics is shown at all in
--- that state; otherwise the row caption and tooltip built from the same figures.
+--- The candidate's annotation: the row caption and tooltip built from one set of
+--- figures.
+---
+--- nil for no_character, since nothing about personal logistics is shown at all in
+--- that state.
+---@param state string  as LogisticsState.classify returns
+---@param inventory_total number
+---@param inventory_breakdown table
+---@param network_total number
+---@param network_breakdown table
+---@param delivering_total number|nil
+---@param picking_up_total number|nil
+---@return table|nil  { caption, tooltip }; see EXTENDING.md "Candidates"
 function ItemSource.build_annotation(
   state,
   inventory_total,
@@ -133,9 +165,14 @@ function ItemSource.build_annotation(
   }
 end
 
--- Pure over plain values: ctx holds everything per-player (state and the merged
--- count indexes), gathered once per search, so this stays a function of the
--- candidate alone and can be spec'd without a Factorio runtime.
+--- Annotates one candidate from a per-player context.
+---
+--- ctx holds everything per-player -- the logistics state and the merged count indexes
+--- -- gathered once per search, which is what keeps this a function of the candidate
+--- alone and spec-able without a Factorio runtime.
+---@param candidate table  only its `id` is read
+---@param ctx table  as gather_annotation_context builds it
+---@return table|nil  { caption, tooltip }, or nil when there is nothing to show
 function ItemSource.annotate(candidate, ctx)
   return ItemSource.build_annotation(
     ctx.state,
@@ -159,6 +196,10 @@ local function collect_items()
   return items
 end
 
+--- Registers the item-name dictionary with flib, for translated-name search.
+---
+--- Must run from on_init/on_configuration_changed, before the first on_tick -- see
+--- control.lua and EXTENDING.md "Translated names".
 function ItemSource.register_dictionary()
   flib_dictionary.new(NAMESPACE)
   for _, item in ipairs(collect_items()) do
@@ -166,6 +207,13 @@ function ItemSource.register_dictionary()
   end
 end
 
+--- Builds this source's candidates for one query, before annotation.
+---@param query string
+---@param items table  array of item prototypes
+---@param locale string|nil
+---@param translated_names table  prototype name -> translated name
+---@param include_hidden boolean
+---@return table  candidates; see EXTENDING.md "Candidates"
 function ItemSource.build_candidates(query, items, locale, translated_names, include_hidden)
   return build_candidates("item", "item", query, items, locale, translated_names, include_hidden)
 end
@@ -266,6 +314,7 @@ local function search(query, player_index)
   return candidates
 end
 
+--- Adds this source's remote interface and registers it with Quidquid.
 function ItemSource.register()
   remote.add_interface("quidquid.item-source", { search = search })
   remote.call("quidquid", "register_source", {

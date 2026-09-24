@@ -16,6 +16,12 @@ local function collect_planets()
   return planets
 end
 
+--- Registers the planet-name dictionary with flib, for translated-name search.
+---
+--- Prototype names are translated, not the dynamic list of generated surfaces, so a
+--- newly generated planet is searchable immediately off the existing cache. Must run
+--- from on_init/on_configuration_changed, before the first on_tick -- see control.lua
+--- and EXTENDING.md "Translated names".
 function SurfaceSource.register_dictionary()
   flib_dictionary.new(NAMESPACE)
   for _, planet in ipairs(collect_planets()) do
@@ -69,6 +75,7 @@ local function search(query, player_index)
   )
 end
 
+--- Adds this source's remote interface and registers it with Quidquid.
 function SurfaceSource.register()
   remote.add_interface("quidquid.surface-source", { search = search })
   remote.call("quidquid", "register_source", {
