@@ -48,4 +48,64 @@ describe("ResourceClustering", function()
       assert.are.same({}, ResourceClustering.group_chunk({}))
     end)
   end)
+
+  describe(".insert", function()
+    local function entry(amount, x, y)
+      return { amount = amount, tiles = 1, left = x, top = y, right = x, bottom = y }
+    end
+
+    it("creates a cluster for a chunk with no charted neighbour", function()
+      local store = ResourceClustering.new_store()
+
+      local cluster = ResourceClustering.insert(store, 1, "iron-ore", "0,0", entry(100, 5, 5))
+
+      assert.are.equal("iron-ore:0,0", cluster.id)
+      assert.are.equal(1, cluster.surface_index)
+      assert.are.equal(100, cluster.amount)
+      assert.are.equal(1, #ResourceClustering.all(store))
+    end)
+
+    it("merges a chunk into a cluster that owns a neighbouring chunk", function()
+      local store = ResourceClustering.new_store()
+      ResourceClustering.insert(store, 1, "iron-ore", "0,0", entry(100, 5, 5))
+
+      local cluster = ResourceClustering.insert(store, 1, "iron-ore", "1,0", entry(50, 40, 5))
+
+      assert.are.equal("iron-ore:0,0", cluster.id)
+      assert.are.equal(150, cluster.amount)
+      assert.are.same({ left = 5, top = 5, right = 40, bottom = 5 }, cluster.bounds)
+      assert.are.equal(1, #ResourceClustering.all(store))
+    end)
+
+    it("keeps a different resource in the same chunk separate", function()
+      local store = ResourceClustering.new_store()
+      ResourceClustering.insert(store, 1, "iron-ore", "0,0", entry(100, 5, 5))
+
+      ResourceClustering.insert(store, 1, "copper-ore", "0,0", entry(70, 6, 6))
+
+      assert.are.equal(2, #ResourceClustering.all(store))
+    end)
+
+    it("joins two clusters when a chunk bridges them", function()
+      local store = ResourceClustering.new_store()
+      ResourceClustering.insert(store, 1, "iron-ore", "0,0", entry(100, 5, 5))
+      ResourceClustering.insert(store, 1, "iron-ore", "2,0", entry(100, 70, 5))
+      assert.are.equal(2, #ResourceClustering.all(store))
+
+      local cluster = ResourceClustering.insert(store, 1, "iron-ore", "1,0", entry(10, 40, 5))
+
+      assert.are.equal(1, #ResourceClustering.all(store))
+      assert.are.equal(210, cluster.amount)
+    end)
+
+    it("replaces the entry when the same chunk is inserted twice", function()
+      local store = ResourceClustering.new_store()
+      ResourceClustering.insert(store, 1, "iron-ore", "0,0", entry(100, 5, 5))
+
+      local cluster = ResourceClustering.insert(store, 1, "iron-ore", "0,0", entry(60, 5, 5))
+
+      assert.are.equal(60, cluster.amount)
+      assert.are.equal(1, #ResourceClustering.all(store))
+    end)
+  end)
 end)
