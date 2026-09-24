@@ -16,6 +16,14 @@ local function surface_prototype(surface)
   return nil
 end
 
+--- The prototype whose Factoriopedia page a candidate should open.
+---
+--- A surface candidate is the awkward one: a generated surface resolves through its
+--- LuaSurface, while an ungenerated planet has only its prototype to offer.
+---@param candidate table
+---@param player LuaPlayer
+---@return LuaPrototypeBase|nil  nil for a candidate type with no page, or one that no
+---  longer resolves
 function OpenFactoriopediaAction.resolve_prototype(candidate, player)
   if candidate.type == "item" then
     return prototypes.item[candidate.id]
@@ -54,6 +62,7 @@ local function execute(selected_candidate, player_index)
   end)
 end
 
+--- Adds this action's remote interface and registers it with Quidquid.
 function OpenFactoriopediaAction.register()
   remote.add_interface("quidquid.open-factoriopedia-action", { execute = execute })
   remote.call("quidquid", "register_action", {

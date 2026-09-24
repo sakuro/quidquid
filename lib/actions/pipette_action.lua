@@ -2,14 +2,19 @@ local ActionRunner = require("lib.action_runner")
 
 local PipetteAction = {}
 
--- Resolves the one item a recipe candidate's pipette should target: either its sole
--- product (when that's an item, not a fluid) or its main_product when the recipe has
--- several but names an unambiguous item one. main_product is nil both when a recipe
--- has multiple products with no declared main one (e.g. uranium-processing, which
--- splits into uranium-235/uranium-238 by probability) and when a single-product
--- recipe explicitly opts out of the auto-inferred main product via main_product = ""
--- (e.g. kovarex-enrichment-process, for tooltip/icon reasons unrelated to pipetting)
--- -- both cases fall through to nil here, same as any other genuinely ambiguous recipe.
+--- The one item a recipe candidate's pipette should target.
+---
+--- Either the recipe's sole product, when that is an item rather than a fluid, or its
+--- main_product when it has several but names an unambiguous item one.
+---
+--- main_product is nil both when a recipe has multiple products with no declared main
+--- one (e.g. uranium-processing, which splits into uranium-235/uranium-238 by
+--- probability) and when a single-product recipe explicitly opts out of the
+--- auto-inferred main product via main_product = "" (e.g. kovarex-enrichment-process,
+--- for tooltip/icon reasons unrelated to pipetting). Both fall through to nil here,
+--- same as any other genuinely ambiguous recipe.
+---@param recipe LuaRecipePrototype
+---@return LuaItemPrototype|nil  nil when the recipe names no unambiguous item product
 function PipetteAction.resolve_item_prototype(recipe)
   local products = recipe.products
   if #products == 1 and products[1].type == "item" then
@@ -46,6 +51,7 @@ local function execute(selected_candidate, player_index)
   end)
 end
 
+--- Adds this action's remote interface and registers it with Quidquid.
 function PipetteAction.register()
   remote.add_interface("quidquid.pipette-action", { execute = execute })
   remote.call("quidquid", "register_action", {
