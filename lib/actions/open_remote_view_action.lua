@@ -41,17 +41,45 @@ function OpenRemoteViewAction.on_player_removed(event)
   history()[event.player_index] = nil
 end
 
+-- A resource candidate opens at the patch's own coordinates: the position is
+-- exactly what makes a patch worth finding, so it never falls back to something
+-- remembered. A surface candidate opens where the player last stood on that
+-- surface, since a surface has no patch-like "there" of its own.
+local function resolve(candidate, player)
+  if candidate.type == "resource" then
+    local surface = game.get_surface(candidate.surface_index)
+    if surface == nil then
+      return nil, "quidquid.action-open-remote-view-unavailable"
+    end
+    return { surface = surface, position = candidate.position }, nil
+  end
+
+  local surface, locale_key = SurfaceAccess.resolve_remote_view(candidate, player)
+  if surface == nil then
+    return nil, locale_key
+  end
+  -- Recorded before the read below so a jump back onto the surface the player is
+  -- already remote-viewing lands on them: without this, the read would return
+  -- whatever was remembered before this visit (stale, or the platform/spawn
+  -- fallback), throwing the camera somewhere the player is not currently standing.
+  remember(player)
+  local platform = surface.platform
+  local fallback = platform and platform.hub and platform.hub.position or player.force.get_spawn_position(surface)
+  return { surface = surface, position = History.get(history(), player.index, surface.index, fallback) }, nil
+end
+
 -- is_available only gates by candidate type (via this action's registered `types`);
 -- whether remote view actually works for this specific surface (generated, unlocked
 -- -- see README "Surfaces") is a per-candidate runtime fact, so it's resolved here
 -- and reported by execute, not hidden from the tooltip.
 local function execute(candidate, player_index)
-  ActionRunner.run(candidate, player_index, SurfaceAccess.resolve_remote_view, function(surface, _candidate, player)
+  ActionRunner.run(candidate, player_index, resolve, function(target, _candidate, player)
     remember(player)
-    local platform = surface.platform
-    local fallback = platform and platform.hub and platform.hub.position or player.force.get_spawn_position(surface)
-    local position = History.get(history(), player.index, surface.index, fallback)
-    player.set_controller({ type = defines.controllers.remote, surface = surface, position = position })
+    player.set_controller({ type = defines.controllers.remote, surface = target.surface, position = target.position })
+    -- Recorded again after landing, at the jump's own destination -- for a resource
+    -- candidate that means the patch's coordinates, not anywhere the player has
+    -- actually stood. That's intentional: a later plain surface jump back to this
+    -- surface should pick up from here, not from wherever the player was before.
     remember(player)
   end, "quidquid.action-open-remote-view-unavailable")
 end
@@ -65,7 +93,7 @@ function OpenRemoteViewAction.register()
   remote.call("quidquid", "register_action", {
     contract_version = 1,
     id = "open-remote-view",
-    types = { "surface" },
+    types = { "surface", "resource" },
     label = { "quidquid.action-open-remote-view" },
     input_name = "quidquid-open-remote-view",
     interface = "quidquid.open-remote-view-action",

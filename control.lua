@@ -6,12 +6,14 @@ local RecipeSource = require("lib.sources.recipe_source")
 local TechnologySource = require("lib.sources.technology_source")
 local SurfaceSource = require("lib.sources.surface_source")
 local CalculatorSource = require("lib.sources.calculator_source")
+local ResourceSource = require("lib.sources.resource_source")
 local OpenRemoteViewAction = require("lib.actions.open_remote_view_action")
 local OpenFactoriopediaAction = require("lib.actions.open_factoriopedia_action")
 local OpenTechnologyAction = require("lib.actions.open_technology_action")
 local ResearchQueueAction = require("lib.actions.research_queue_action")
 local CraftAction = require("lib.actions.craft_action")
 local PipetteAction = require("lib.actions.pipette_action")
+local PinResourceAction = require("lib.actions.pin_resource_action")
 local TemporaryRequestAction = require("lib.actions.temporary_request_action")
 local TemporaryRequestEditor = require("lib.temporary_request_editor")
 local Palette = require("lib.palette")
@@ -35,7 +37,7 @@ remote.add_interface("quidquid", {
   end,
 })
 
-local dictionary_sources = { ItemSource, FluidSource, RecipeSource, TechnologySource, SurfaceSource }
+local dictionary_sources = { ItemSource, FluidSource, RecipeSource, TechnologySource, SurfaceSource, ResourceSource }
 
 -- flib_dictionary.new/.add may only run before flib's internal init_ran flag flips true,
 -- which happens on the first on_tick -- so dictionaries must be (re-)registered from
@@ -52,10 +54,12 @@ end
 script.on_init(function()
   flib_dictionary.on_init()
   register_dictionaries()
+  ResourceSource.ensure_storage()
 end)
 script.on_configuration_changed(function()
   flib_dictionary.on_configuration_changed()
   register_dictionaries()
+  ResourceSource.ensure_storage()
 end)
 
 -- remote.call is only valid inside an event, never at control.lua's top level (confirmed
@@ -82,9 +86,12 @@ script.on_event(defines.events.on_tick, function()
     ResearchQueueAction.register()
     CraftAction.register()
     PipetteAction.register()
+    PinResourceAction.register()
     TemporaryRequestAction.register()
+    ResourceSource.register()
   end
   flib_dictionary.on_tick()
+  ResourceSource.on_tick()
 end)
 
 script.on_event(defines.events.on_string_translated, flib_dictionary.on_string_translated)
@@ -148,6 +155,7 @@ script.on_event(defines.events.on_pre_surface_deleted, function(event)
   if surface ~= nil then
     api.forget("surface", surface.name)
   end
+  ResourceSource.on_surface_removed(event)
 end)
 
 -- Palette also keys a small per-player table (pin state) by player_index, which needs
@@ -156,3 +164,26 @@ script.on_event(defines.events.on_player_removed, function(event)
   OpenRemoteViewAction.on_player_removed(event)
   Palette.on_player_removed(event)
 end)
+
+-- The resource cluster cache is derived from the world, so every event that changes
+-- which resources exist, or which chunks hold them, has to reach it. There is no event
+-- for un-charting: LuaForce.clear_chart raises nothing, so visibility is filtered per
+-- force at search time rather than tracked here.
+script.on_event(defines.events.on_chunk_charted, ResourceSource.on_chunk_charted)
+script.on_event(defines.events.on_chunk_deleted, ResourceSource.on_chunk_deleted)
+script.on_event(defines.events.on_surface_cleared, ResourceSource.on_surface_removed)
+script.on_event(defines.events.on_surface_deleted, ResourceSource.on_surface_removed)
+script.on_event(defines.events.on_resource_depleted, ResourceSource.on_resource_depleted)
+
+-- LuaBootstrap.on_event's filters parameter only applies "when registering for
+-- individual events" (confirmed against runtime-api.json and empirically: passing it
+-- alongside an array of events raises "Filters can only be used when registering single
+-- non custom-input events"), so the same filter is repeated across four registrations
+-- rather than one call with an event array. Addition and removal share a handler because
+-- both boil down to the same correction: re-enqueue the chunk and let the background
+-- scan recompute it from what is actually there now.
+local RESOURCE_ENTITY_FILTER = { { filter = "type", type = "resource" } }
+script.on_event(defines.events.on_built_entity, ResourceSource.on_resource_entity_changed, RESOURCE_ENTITY_FILTER)
+script.on_event(defines.events.on_robot_built_entity, ResourceSource.on_resource_entity_changed, RESOURCE_ENTITY_FILTER)
+script.on_event(defines.events.script_raised_built, ResourceSource.on_resource_entity_changed, RESOURCE_ENTITY_FILTER)
+script.on_event(defines.events.script_raised_destroy, ResourceSource.on_resource_entity_changed, RESOURCE_ENTITY_FILTER)

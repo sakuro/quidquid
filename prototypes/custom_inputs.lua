@@ -40,6 +40,16 @@ data:extend({
     key_sequence = "COMMAND + mouse-button-1",
   },
   {
+    -- Same sequence as quidquid-temporary-request. Two custom-inputs may share one
+    -- sequence: both fire, and Registry:resolve_actions keys by (candidate type,
+    -- input_name), so only the action registered for the candidate under the cursor
+    -- runs. The two never apply to the same candidate type -- resources have no
+    -- logistics request, items have no patch to pin.
+    type = "custom-input",
+    name = "quidquid-pin-resource",
+    key_sequence = "COMMAND + mouse-button-1",
+  },
+  {
     -- Not a SHIFT combo: SHIFT is Factorio's own reserved "place as ghost" modifier
     -- while holding a real item, and a SHIFT-bound key here showed that mode's ghost
     -- icon for as long as SHIFT stayed held after triggering this action, even

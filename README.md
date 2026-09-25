@@ -10,6 +10,8 @@ result offers the actions that apply to it. Open it with `Ctrl/Cmd + K`.
 
 - `Ctrl/Cmd + K` palette that searches items, fluids, recipes, technologies,
   planets, and accessible space platforms together
+- A resource-patch search, reached with the `resource ` / `R ` prefix, for
+  jumping to and pinning ore patches in charted territory
 - Source-specific actions on the selected result
 - Source prefixes to restrict a search to one category
 - Temporary personal logistics requests for items and recipe ingredients,
@@ -52,6 +54,7 @@ source accepts a one-letter abbreviation as well as its full name:
 | `r ` / `recipe ` | Recipes |
 | `t ` / `technology ` | Technologies |
 | `s ` / `surface ` | Surfaces |
+| `R ` / `resource ` | Resources |
 | `= ` | Calculator |
 
 While locked, typing another recognized prefix switches directly to that
@@ -169,6 +172,55 @@ out too — Space Exploration's zones, Subsurface's underground layers,
 Factorissimo's factory interiors. A mod that adds a planet the Space Age way is
 listed like any other planet. See
 [issue #162](https://github.com/sakuro/quidquid/issues/162).
+
+### Resources
+
+Search for resource patches your force has charted.
+
+| Key | Action |
+| --- | --- |
+| Left click | Open in remote view |
+| `Ctrl/Cmd` + left click | Pin the patch |
+| `Alt` + left click | Open in Factoriopedia |
+
+Resources are left out of the unlocked search; `resource ` or `R ` reaches
+them — uppercase, since lowercase `r` is already the recipe prefix.
+
+A patch is every chunk holding a resource that touches another such chunk,
+including diagonally, merged with no check that the ore actually reaches
+across the seam. Two patches within a chunk of each other therefore read as
+one. This merging never undoes itself: a patch never splits once found, so
+mining out or deleting the chunks in the middle leaves the rest as a single
+patch, not two.
+
+A patch is listed once any one of its chunks is charted, checked per force at
+search time — it then reports its full extent and total amount, including
+whatever part still sits under fog of war. Space platforms are skipped; they
+hold no resources.
+
+When the mod is added to an existing save, a background scan works through
+the world a few chunks per tick, so the list fills in gradually over the
+following minutes rather than all at once — an empty or partial result
+during that window does not mean the resource isn't there.
+
+A patch that already has a mining drill working it is marked on the line
+below, right after its surface and coordinates; an unoccupied patch shows no
+such marker there. Any force's drill counts, not just your own — the same way
+Factorio's own map search treats a patch.
+
+Each result's name is followed by its remaining amount, taken from a cache
+rather than counted afresh. A chunk is re-scanned when one of its entities is
+exhausted to nothing, so a finite patch's figure falls in steps as it is
+mined, lagging behind the drills rather than tracking them. Infinite
+resources — crude oil, sulfuric acid geysers — raise that event at most once,
+as they decay toward their minimum yield, so an oil field's figure can sit at
+its chart-time value indefinitely.
+
+Pin a patch and Factorio tracks it properly: pinning uses the game's own
+map-pin system, and the pin holds the patch's own entities and recomputes the
+amount continuously. So the list is for choosing a patch and the pin is for
+watching one. The pin is per-player, and is dismissed from Factorio's own UI
+rather than by Quidquid.
 
 ### Calculator
 
