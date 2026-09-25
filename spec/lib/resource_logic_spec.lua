@@ -343,7 +343,7 @@ describe("ResourceLogic", function()
 
       local label, search_display_name = ResourceLogic.occupied_label(untranslated_label, nil)
 
-      assert.are.same({ "", { "entity-name.iron-ore" }, " ", "4.2M", " ", { "quidquid.resource-occupied" } }, label)
+      assert.are.same({ "", { "entity-name.iron-ore" }, " ", "4.2M", " ", { "gui.occupied", "" } }, label)
       assert.is_nil(search_display_name)
     end)
 
@@ -359,7 +359,7 @@ describe("ResourceLogic", function()
 
         local label, search_display_name = ResourceLogic.occupied_label(untranslated_label, "(occupied)")
 
-        assert.are.same({ "", { "entity-name.iron-ore" }, " ", "4.2M", " ", { "quidquid.resource-occupied" } }, label)
+        assert.are.same({ "", { "entity-name.iron-ore" }, " ", "4.2M", " ", { "gui.occupied", "" } }, label)
         assert.is_nil(search_display_name)
       end
     )
@@ -369,9 +369,20 @@ describe("ResourceLogic", function()
       function()
         local label, search_display_name = ResourceLogic.occupied_label("Iron ore 4.2M", nil)
 
-        assert.are.same({ "", "Iron ore 4.2M", " ", { "quidquid.resource-occupied" } }, label)
+        assert.are.same({ "", "Iron ore 4.2M", " ", { "gui.occupied", "" } }, label)
         assert.is_nil(search_display_name)
       end
     )
+
+    it("trims surrounding whitespace off the marker before splicing in its own single space", function()
+      -- gui.occupied resolved with an empty __1__ yields its fixed part on its own --
+      -- " (occupied)" in English, leading space and all. occupied_label must not just
+      -- concatenate that verbatim (which would double the space); it trims both ends
+      -- first and supplies exactly one separating space itself.
+      local label, search_display_name = ResourceLogic.occupied_label("Iron ore 4.2M", "  (occupied)  ")
+
+      assert.are.equal("Iron ore 4.2M (occupied)", label)
+      assert.are.equal("Iron ore 4.2M (occupied)", search_display_name)
+    end)
   end)
 end)

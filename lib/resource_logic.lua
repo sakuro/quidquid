@@ -68,24 +68,32 @@ end
 --- A plain-string label with no translated marker yet falls back to the LocalisedString
 --- form rather than rendering nothing or the raw dictionary key: losing highlighting for
 --- the short window before the marker's own translation arrives is preferable to either.
+---
+--- `occupied_marker` is base game's `{ "gui.occupied", "" }` resolved with an empty
+--- `__1__` (see resource_source.lua's `register_dictionary`), which yields the fixed
+--- part on its own -- `" (occupied)"` in English, with a leading space -- so it is
+--- trimmed on both ends here before splicing in this function's own single separating
+--- space, rather than trusting it to arrive bare.
 ---@param label string|table  the candidate's own label, as build_candidates set it
 ---@param occupied_marker string|nil  the marker's own translated plain string, from
 --- flib's dictionary under resource_source.lua's sentinel key and carried on the
---- candidate as `occupied_marker`; nil when not yet translated
+--- candidate as `occupied_marker`; nil when not yet translated. May carry leading or
+--- trailing whitespace; trimmed before use.
 ---@return string|table  the new label, marker appended or spliced in
 ---@return string|nil  the new search_display_name -- the new label itself when it is
 --- still a plain string, nil otherwise
 function ResourceLogic.occupied_label(label, occupied_marker)
   if type(label) == "string" and occupied_marker ~= nil then
-    local marked = label .. " " .. occupied_marker
+    local trimmed_marker = occupied_marker:match("^%s*(.-)%s*$")
+    local marked = label .. " " .. trimmed_marker
     return marked, marked
   end
   if type(label) == "string" then
-    return { "", label, " ", { "quidquid.resource-occupied" } }, nil
+    return { "", label, " ", { "gui.occupied", "" } }, nil
   end
   local spliced = { table.unpack(label) }
   table.insert(spliced, " ")
-  table.insert(spliced, { "quidquid.resource-occupied" })
+  table.insert(spliced, { "gui.occupied", "" })
   return spliced, nil
 end
 

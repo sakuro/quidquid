@@ -364,12 +364,29 @@ end
 --- same dictionary, under OCCUPIED_MARKER_KEY, so `search` gets its translated form
 --- from the same `flib_dictionary.get` call as every resource name, rather than
 --- standing up a second dictionary for one entry.
+---
+--- The marker's value is base game's own `[gui]occupied` (`{ "gui.occupied", "" }`),
+--- not a locale entry this mod maintains -- passing an empty `__1__` yields the fixed
+--- part on its own (`" (occupied)"`, leading space and all; ResourceLogic.occupied_label
+--- trims it). Verified by reading every shipped `core/locale/*/core.cfg`: of the 50
+--- locales the game ships, 32 define `gui.occupied` and 31 of those order it
+--- `__1__ (...)`. So borrowing the key is a strict gain for 31 languages that get only
+--- English from a two-language mod entry, neutral for the 18 that leave the key
+--- undefined and fall back to English either way, and a word-order compromise for one.
+--- It also removes the risk of hand-copied text drifting from the game's own wording.
+--- The one exception is Hebrew (`he`), which orders it `(occupied) __1__` -- marker
+--- first -- so extracting the fixed part and appending it reverses the intended order
+--- there. Not an RTL problem: of the three RTL locales shipped, only Hebrew defines the
+--- key at all, and its ordering is its translator's choice. Accepted rather than worked
+--- around, because Hebrew already fell back to the English "(occupied)" under the old
+--- mod-owned entry, so this is not a regression, and a placeholder's position cannot be
+--- recovered from a string it has already been resolved out of.
 function ResourceSource.register_dictionary()
   flib_dictionary.new(NAMESPACE)
   for _, prototype in ipairs(collect_resources()) do
     flib_dictionary.add(NAMESPACE, prototype.name, prototype.localised_name)
   end
-  flib_dictionary.add(NAMESPACE, OCCUPIED_MARKER_KEY, { "quidquid.resource-occupied" })
+  flib_dictionary.add(NAMESPACE, OCCUPIED_MARKER_KEY, { "gui.occupied", "" })
 end
 
 --- Adds this source's remote interface and registers it with Quidquid.
