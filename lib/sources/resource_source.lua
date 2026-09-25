@@ -209,6 +209,11 @@ end
 
 local SOURCE_LABEL = { "quidquid.source-resources" }
 local NAMESPACE = "resources"
+-- flib's dictionary is one flat table of resource-prototype-name -> translated name;
+-- prototype names are kebab-case, so this sentinel (double-underscore, never valid
+-- kebab-case) cannot collide with one and shares the same table for the occupied
+-- marker's own translation.
+local OCCUPIED_MARKER_KEY = "__occupied__"
 
 local function collect_resources()
   local resources = {}
@@ -312,20 +317,19 @@ end
 -- Mutates candidates in place, mirroring item_source's apply_annotations: the caller
 -- runs this inside a pcall so one candidate's failure (an invalid surface mid-search,
 -- say) logs rather than dropping every result this source found. This no longer sets
--- an `annotation` -- the occupied marker moved onto the muted second line instead (see
--- lib/resource_logic.lua), freeing the row's right end entirely. An unoccupied
--- candidate's secondary_text, built by ResourceLogic.build_candidates, is left as-is.
+-- an `annotation`, nor rewrites secondary_text -- the occupied marker now lands on the
+-- name line instead, matching where Factorio's own map search puts it (see
+-- lib/resource_logic.lua's `.occupied_label`). An unoccupied candidate's label and
+-- secondary_text, both built by ResourceLogic.build_candidates, are left as-is.
 --
--- Rebuilding that second line here needs the same surface token and position
--- build_candidates used. `position` is already a candidate field read elsewhere (the
--- pin and remote-view actions); `surface_token` is a plain private field alongside it,
--- carried by build_candidates for exactly this reader -- one more field costs nothing
--- next to the `resource_name`/`surface_index`/`amount`/`position` this source's own
--- candidates already carry outside EXTENDING.md's documented contract.
+-- Rebuilding the name here needs only the candidate's own `label` and
+-- `occupied_marker`, both already carried by build_candidates -- the same pattern
+-- `surface_token` and `position` follow for the second line built there.
 local function mark_occupied(candidates)
   for _, candidate in ipairs(candidates) do
     if is_occupied(candidate) then
-      candidate.secondary_text = ResourceLogic.secondary_text(candidate.surface_token, candidate.position, true)
+      candidate.label, candidate.search_display_name =
+        ResourceLogic.occupied_label(candidate.label, candidate.occupied_marker)
     end
   end
 end
@@ -343,7 +347,8 @@ local function search(query, player_index)
     player.locale,
     translated_names,
     collect_localised_names(),
-    surface_tokens
+    surface_tokens,
+    translated_names[OCCUPIED_MARKER_KEY]
   )
   local ok, err = pcall(mark_occupied, candidates)
   if not ok then
@@ -355,12 +360,16 @@ end
 --- Registers the resource-name dictionary with flib, for translated-name search.
 ---
 --- Must run from on_init/on_configuration_changed, before the first on_tick -- see
---- control.lua and EXTENDING.md "Translated names".
+--- control.lua and EXTENDING.md "Translated names". The occupied marker rides in the
+--- same dictionary, under OCCUPIED_MARKER_KEY, so `search` gets its translated form
+--- from the same `flib_dictionary.get` call as every resource name, rather than
+--- standing up a second dictionary for one entry.
 function ResourceSource.register_dictionary()
   flib_dictionary.new(NAMESPACE)
   for _, prototype in ipairs(collect_resources()) do
     flib_dictionary.add(NAMESPACE, prototype.name, prototype.localised_name)
   end
+  flib_dictionary.add(NAMESPACE, OCCUPIED_MARKER_KEY, { "quidquid.resource-occupied" })
 end
 
 --- Adds this source's remote interface and registers it with Quidquid.

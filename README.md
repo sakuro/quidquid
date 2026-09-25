@@ -205,10 +205,10 @@ during that window does not mean the resource isn't there. Quidquid says so
 in chat once that scan finishes, so there is no need to guess when the list
 can be trusted.
 
-A patch that already has a mining drill working it is marked on the line
-below, right after its surface and coordinates; an unoccupied patch shows no
-such marker there. Any force's drill counts, not just your own — the same way
-Factorio's own map search treats a patch.
+A patch that already has a mining drill working it is marked right after its
+name and amount, on the same line; an unoccupied patch shows no such marker.
+Any force's drill counts, not just your own — the same way Factorio's own
+map search treats a patch.
 
 Each result's name is followed by its remaining amount, taken from a cache
 rather than counted afresh. A chunk is re-scanned when one of its entities is
