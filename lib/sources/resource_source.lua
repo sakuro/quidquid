@@ -125,13 +125,7 @@ function ResourceSource.on_tick()
     -- one case where adding the mod says nothing.
     if resources.initial_scan_pending then
       resources.initial_scan_pending = nil
-      game.print({
-        "",
-        "[virtual-signal=signal-Q] ",
-        { "mod-name.quidquid" },
-        ": ",
-        { "quidquid.resource-scan-complete" },
-      })
+      game.print({ "", { "mod-name.quidquid" }, ": ", { "quidquid.resource-scan-complete" } })
     end
   end
 end
