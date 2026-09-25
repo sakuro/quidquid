@@ -1,3 +1,9 @@
+-- luacheck: no self
+--
+-- RemoteCaller is a stateless namespace module: its methods use `:` syntax only
+-- to match RemoteCaller:has/:call call sites, not because they read or write
+-- instance state via `self`.
+
 local RemoteCaller = {}
 
 --- True when that interface exists and declares that function.
