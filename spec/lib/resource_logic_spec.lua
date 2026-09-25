@@ -13,37 +13,28 @@ end
 
 describe("ResourceLogic", function()
   describe(".secondary_text", function()
-    it("returns the plain string when occupied is false", function()
-      local text = ResourceLogic.secondary_text("[planet=nauvis]", { x = -137.5, y = -330.1 }, false)
+    it("returns the plain string, floored coordinates and all", function()
+      local text = ResourceLogic.secondary_text("[planet=nauvis]", { x = -137.5, y = -330.1 })
 
       assert.are.equal("[planet=nauvis] (-138, -331)", text)
     end)
 
-    it("returns the plain string when occupied is omitted", function()
+    it("returns the plain string when position is already whole", function()
       local text = ResourceLogic.secondary_text("[planet=nauvis]", { x = -137, y = -330 })
 
       assert.are.equal("[planet=nauvis] (-137, -330)", text)
     end)
 
-    it(
-      "returns a LocalisedString carrying the token, the floored coordinates, the occupied key and the "
-        .. "plain second line's own font wrapper, when occupied is true",
-      function()
-        local text = ResourceLogic.secondary_text("[planet=nauvis]", { x = -137.5, y = -330.1 }, true)
+    -- The occupied marker moved to the name line (see .occupied_label below), so the
+    -- second line is a plain string unconditionally now -- there is no third argument
+    -- left to flip it into a LocalisedString, and no font-wrapper form to lose the
+    -- highlight for. This replaces the old "occupied is true" case above, which
+    -- asserted the marker landed here.
+    it("never includes the occupied marker, even a stray extra argument is ignored", function()
+      local text = ResourceLogic.secondary_text("[planet=nauvis]", { x = -137.5, y = -330.1 }, true)
 
-        -- lib/search_highlight.lua's highlight(value, nil, "default", "default-bold") --
-        -- what Palette.internal_caption calls for a plain secondary_text -- wraps a
-        -- plain string as "[font=default]" .. value .. "[/font]" when there are no
-        -- ranges to bold. A non-string value skips that wrapper entirely (highlight
-        -- returns it unchanged), so this LocalisedString must carry the identical
-        -- "[font=default]"/"[/font]" tags itself, or an occupied row's second line
-        -- would render in a different font from every other row's.
-        assert.are.same(
-          { "", "[font=default]", "[planet=nauvis] (-138, -331) ", { "quidquid.resource-occupied" }, "[/font]" },
-          text
-        )
-      end
-    )
+      assert.are.equal("[planet=nauvis] (-138, -331)", text)
+    end)
   end)
 
   describe(".build_candidates", function()
@@ -268,7 +259,12 @@ describe("ResourceLogic", function()
     it("falls back to a usable secondary_text when the surface has no token in the map", function()
       -- surface_tokens is deliberately empty: a caller that did not describe this
       -- cluster's surface (or omitted the map entirely) must not crash or render
-      -- a literal "nil" on the second line.
+      -- a literal "nil" on the second line. This is also the only remaining coverage
+      -- of the surface-index fallback -- there used to be a second, near-identical
+      -- test asserting it through a candidate.surface_token field, but that field had
+      -- no reader left once mark_occupied stopped rebuilding secondary_text from it,
+      -- so it (and the now-duplicate test) were dropped rather than kept as dead
+      -- weight.
       local candidates = ResourceLogic.build_candidates("copper", clusters, "en", translated, localised_names, {})
 
       assert.are.equal("1 (-5, -5)", candidates[1].secondary_text)
@@ -287,23 +283,106 @@ describe("ResourceLogic", function()
       assert.is_nil(candidates[1].annotation)
     end)
 
-    it("carries the surface token on the candidate, for the runtime source to recompose secondary_text with", function()
-      -- lib/sources/resource_source.lua rewrites secondary_text when a patch turns out
-      -- to be occupied (a runtime fact this pure module never learns), and needs the
-      -- same surface token this function used to build the plain second line.
-      -- Carrying it as its own field keeps that a plain field read, not a parse of
-      -- secondary_text's rendered text.
-      local surface_tokens = { [1] = "[planet=nauvis]" }
-      local candidates =
-        ResourceLogic.build_candidates("copper", clusters, "en", translated, localised_names, surface_tokens)
+    it(
+      "carries the translated occupied marker on the candidate, for the runtime source to rebuild the name with",
+      function()
+        -- lib/sources/resource_source.lua's mark_occupied only learns whether a patch is
+        -- occupied after build_candidates has already run (occupancy is a runtime fact,
+        -- checked by find_entities_filtered against a live surface). Carrying the
+        -- translated marker on the candidate, the same way surface_token is carried, lets
+        -- that later step call ResourceLogic.occupied_label without threading the
+        -- dictionary lookup back through here.
+        local candidates =
+          ResourceLogic.build_candidates("copper", clusters, "en", translated, localised_names, {}, "(occupied)")
 
-      assert.are.equal("[planet=nauvis]", candidates[1].surface_token)
+        assert.are.equal("(occupied)", candidates[1].occupied_marker)
+      end
+    )
+
+    it("leaves occupied_marker nil when the caller passes none", function()
+      local candidates = ResourceLogic.build_candidates("copper", clusters, "en", translated, localised_names)
+
+      assert.is_nil(candidates[1].occupied_marker)
+    end)
+  end)
+
+  describe(".occupied_label", function()
+    it("appends the translated marker to a plain-string label, keeping it a plain string", function()
+      local label, search_display_name = ResourceLogic.occupied_label("Iron ore 4.2M", "(occupied)")
+
+      assert.are.equal("Iron ore 4.2M (occupied)", label)
+      assert.are.equal("Iron ore 4.2M (occupied)", search_display_name)
     end)
 
-    it("falls back to the surface index as surface_token when the surface has no token in the map", function()
-      local candidates = ResourceLogic.build_candidates("copper", clusters, "en", translated, localised_names, {})
+    it("keeps the match inside the name portion once the marker is appended to a translated label", function()
+      -- Mirrors what mark_occupied actually does: take a real build_candidates label
+      -- and append the marker, then confirm search_display_ranges (unmodified by
+      -- occupied_label) still lands inside the name prefix.
+      local clusters = {
+        cluster("copper-ore:0,0", "copper-ore", 100, { left = -10, top = -10, right = 0, bottom = 0 }, {
+          ["0,0"] = { amount = 100, left = -10, top = -10, right = 0, bottom = 0, anchor = { x = -5, y = -5 } },
+        }),
+      }
+      local translated = { ["copper-ore"] = "Copper ore" }
+      local localised_names = { ["copper-ore"] = { "entity-name.copper-ore" } }
+      local candidates = ResourceLogic.build_candidates("copper", clusters, "en", translated, localised_names)
+      local candidate = candidates[1]
 
-      assert.are.equal("1", candidates[1].surface_token)
+      candidate.label, candidate.search_display_name = ResourceLogic.occupied_label(candidate.label, "(occupied)")
+
+      assert.are.equal("Copper ore 100 (occupied)", candidate.search_display_name)
+      local name_length = #"Copper ore"
+      assert.is_true(#candidate.search_display_ranges > 0)
+      for _, range in ipairs(candidate.search_display_ranges) do
+        assert.is_true(range.end_byte <= name_length)
+      end
+    end)
+
+    it("splices the marker into a LocalisedString label when the name itself is not yet translated", function()
+      local untranslated_label = { "", { "entity-name.iron-ore" }, " ", "4.2M" }
+
+      local label, search_display_name = ResourceLogic.occupied_label(untranslated_label, nil)
+
+      assert.are.same({ "", { "entity-name.iron-ore" }, " ", "4.2M", " ", { "gui.occupied", "" } }, label)
+      assert.is_nil(search_display_name)
+    end)
+
+    it(
+      "splices the marker into a LocalisedString label when the name is untranslated, even if the marker "
+        .. "itself happens to already be translated",
+      function()
+        -- The marker's own translation status is irrelevant once the name is not a
+        -- plain string: there is no highlighting left to protect in this branch, so
+        -- the LocalisedString form is used either way, keyed by locale key rather than
+        -- embedding the already-translated plain text.
+        local untranslated_label = { "", { "entity-name.iron-ore" }, " ", "4.2M" }
+
+        local label, search_display_name = ResourceLogic.occupied_label(untranslated_label, "(occupied)")
+
+        assert.are.same({ "", { "entity-name.iron-ore" }, " ", "4.2M", " ", { "gui.occupied", "" } }, label)
+        assert.is_nil(search_display_name)
+      end
+    )
+
+    it(
+      "falls back to the LocalisedString form, not a sentinel key or nil, when the marker is not yet translated",
+      function()
+        local label, search_display_name = ResourceLogic.occupied_label("Iron ore 4.2M", nil)
+
+        assert.are.same({ "", "Iron ore 4.2M", " ", { "gui.occupied", "" } }, label)
+        assert.is_nil(search_display_name)
+      end
+    )
+
+    it("trims surrounding whitespace off the marker before splicing in its own single space", function()
+      -- gui.occupied resolved with an empty __1__ yields its fixed part on its own --
+      -- " (occupied)" in English, leading space and all. occupied_label must not just
+      -- concatenate that verbatim (which would double the space); it trims both ends
+      -- first and supplies exactly one separating space itself.
+      local label, search_display_name = ResourceLogic.occupied_label("Iron ore 4.2M", "  (occupied)  ")
+
+      assert.are.equal("Iron ore 4.2M (occupied)", label)
+      assert.are.equal("Iron ore 4.2M (occupied)", search_display_name)
     end)
   end)
 end)

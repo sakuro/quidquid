@@ -40,26 +40,61 @@ end
 ---
 --- A patch already worked by a mining drill is occupied -- a runtime fact this pure
 --- module never learns on its own (see lib/sources/resource_source.lua, which calls
---- back in with `occupied` once it knows). The marker used to be a separate
---- `annotation` at the row's right end; it now lives here instead, right after the
---- coordinates, freeing the annotation area entirely. `search_highlight.highlight`
---- (lib/search_highlight.lua) wraps a plain second line in "[font=default]...[/font]",
---- but skips that wrapper for any value that is not a plain string -- so the occupied
---- form has to carry the identical font tags itself, as a LocalisedString, or an
---- occupied row's second line would render in a different font from every other
---- row's.
+--- back in once it knows). The marker lives on the name line instead (see
+--- `.occupied_label`), matching where Factorio's own map search puts it, so this
+--- second line stays a plain string doing exactly one job: where the patch is.
 ---@param surface_token string  the surface's display token, "[planet=x]" or a plain name
 ---@param position table  { x, y }, the candidate's own position
----@param occupied boolean|nil  true when a mining drill already works this patch;
---- false or nil for the plain, unoccupied form
----@return string|table  the plain string when unoccupied; a LocalisedString, already
---- carrying the plain form's own font wrapper, when occupied
-function ResourceLogic.secondary_text(surface_token, position, occupied)
-  local plain = ("%s (%d, %d)"):format(surface_token, math.floor(position.x), math.floor(position.y))
-  if not occupied then
-    return plain
+---@return string  the surface token and the floored coordinates
+function ResourceLogic.secondary_text(surface_token, position)
+  return ("%s (%d, %d)"):format(surface_token, math.floor(position.x), math.floor(position.y))
+end
+
+--- Splices the occupied marker onto a candidate's name-line label.
+---
+--- Called by lib/sources/resource_source.lua's mark_occupied once it has learned, at
+--- search time, that a mining drill already works this patch -- a runtime fact
+--- build_candidates cannot know when it first builds the label. Two label shapes come
+--- in, both needing the marker appended so the occupied form matches Factorio's own map
+--- search:
+---
+--- - A plain string (`"<name> <amount>"`, once the name itself is translated) stays a
+---   plain string when the marker is too, by appending it directly -- keeping
+---   search_display_ranges, which point into the name prefix, valid for highlighting.
+--- - A LocalisedString (`{ "", localised_name, " ", amount }`, while the name is still
+---   untranslated) has no highlighting to protect, so the marker is spliced in as its
+---   own LocalisedString regardless of whether the marker itself has been translated.
+---
+--- A plain-string label with no translated marker yet falls back to the LocalisedString
+--- form rather than rendering nothing or the raw dictionary key: losing highlighting for
+--- the short window before the marker's own translation arrives is preferable to either.
+---
+--- `occupied_marker` is base game's `{ "gui.occupied", "" }` resolved with an empty
+--- `__1__` (see resource_source.lua's `register_dictionary`), which yields the fixed
+--- part on its own -- `" (occupied)"` in English, with a leading space -- so it is
+--- trimmed on both ends here before splicing in this function's own single separating
+--- space, rather than trusting it to arrive bare.
+---@param label string|table  the candidate's own label, as build_candidates set it
+---@param occupied_marker string|nil  the marker's own translated plain string, from
+--- flib's dictionary under resource_source.lua's sentinel key and carried on the
+--- candidate as `occupied_marker`; nil when not yet translated. May carry leading or
+--- trailing whitespace; trimmed before use.
+---@return string|table  the new label, marker appended or spliced in
+---@return string|nil  the new search_display_name -- the new label itself when it is
+--- still a plain string, nil otherwise
+function ResourceLogic.occupied_label(label, occupied_marker)
+  if type(label) == "string" and occupied_marker ~= nil then
+    local trimmed_marker = occupied_marker:match("^%s*(.-)%s*$")
+    local marked = label .. " " .. trimmed_marker
+    return marked, marked
   end
-  return { "", "[font=default]", plain .. " ", { "quidquid.resource-occupied" }, "[/font]" }
+  if type(label) == "string" then
+    return { "", label, " ", { "gui.occupied", "" } }, nil
+  end
+  local spliced = { table.unpack(label) }
+  table.insert(spliced, " ")
+  table.insert(spliced, { "gui.occupied", "" })
+  return spliced, nil
 end
 
 --- Builds the resource source's candidates for one query.
@@ -77,8 +112,20 @@ end
 ---@param surface_tokens table  surface_index -> display token ("[planet=x]" or a plain
 --- surface name), built by the caller from the LuaSurface it already has in hand; a
 --- cluster whose surface has no entry falls back to the surface index itself
+---@param occupied_marker string|nil  the occupied marker's own translated plain string,
+--- from flib's dictionary; carried onto every candidate as `occupied_marker` for
+--- lib/sources/resource_source.lua's mark_occupied to pass to `.occupied_label` once it
+--- learns, at search time, which candidates are actually occupied
 ---@return table  candidates, richest first; see EXTENDING.md "Candidates"
-function ResourceLogic.build_candidates(query, clusters, locale, translated_names, localised_names, surface_tokens)
+function ResourceLogic.build_candidates(
+  query,
+  clusters,
+  locale,
+  translated_names,
+  localised_names,
+  surface_tokens,
+  occupied_marker
+)
   local candidates = {}
   local matcher = api.matcher(query, locale)
   surface_tokens = surface_tokens or {}
@@ -108,12 +155,12 @@ function ResourceLogic.build_candidates(query, clusters, locale, translated_name
         id = cluster.id,
         resource_name = cluster.resource_name,
         surface_index = cluster.surface_index,
-        surface_token = surface_token,
         amount = cluster.amount,
         position = position,
         label = label,
         icon = "entity/" .. cluster.resource_name,
         search_display_name = search_display_name,
+        occupied_marker = occupied_marker,
         secondary_text = ResourceLogic.secondary_text(surface_token, position),
         search_display_ranges = match.display_ranges,
         search_score = match.score,
