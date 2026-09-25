@@ -89,7 +89,8 @@ function ResourceSource.ensure_storage()
   if resources ~= nil and resources.version == SCHEMA_VERSION then
     return
   end
-  storage.resources = { version = SCHEMA_VERSION, surfaces = {}, queue = {}, queue_head = 1 }
+  storage.resources =
+    { version = SCHEMA_VERSION, surfaces = {}, queue = {}, queue_head = 1, initial_scan_pending = true }
   enqueue_everything()
 end
 
@@ -111,9 +112,21 @@ function ResourceSource.on_tick()
     scan(chunk.surface_index, chunk.x, chunk.y)
     scanned = scanned + 1
   end
-  if resources.queue_head > #resources.queue and #resources.queue > 0 then
-    resources.queue = {}
-    resources.queue_head = 1
+  if resources.queue_head > #resources.queue then
+    if #resources.queue > 0 then
+      resources.queue = {}
+      resources.queue_head = 1
+    end
+    -- Announced once, when the batch ensure_storage queued is through. The queue drains
+    -- again and again in ordinary play -- every newly charted chunk and every exhausted
+    -- entity refills it -- so the flag, not an empty queue, is what marks the end of the
+    -- initial scan. It is checked outside the `#queue > 0` guard above because a brand
+    -- new game can have nothing to scan at all, and staying silent there would be the
+    -- one case where adding the mod says nothing.
+    if resources.initial_scan_pending then
+      resources.initial_scan_pending = nil
+      game.print({ "", { "mod-name.quidquid" }, ": ", { "quidquid.resource-scan-complete" } })
+    end
   end
 end
 
