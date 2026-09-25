@@ -201,7 +201,9 @@ hold no resources.
 When the mod is added to an existing save, a background scan works through
 the world a few chunks per tick, so the list fills in gradually over the
 following minutes rather than all at once — an empty or partial result
-during that window does not mean the resource isn't there.
+during that window does not mean the resource isn't there. Quidquid says so
+in chat once that scan finishes, so there is no need to guess when the list
+can be trusted.
 
 A patch that already has a mining drill working it is marked on the line
 below, right after its surface and coordinates; an unoccupied patch shows no
