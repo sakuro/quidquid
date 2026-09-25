@@ -24,7 +24,7 @@ end
 -- No label is passed, deliberately. Given surface, position and resource, the engine
 -- resolves the whole patch and holds a reference to every entity in it -- confirmed in
 -- game: a pin made here and one made by Factorio's own map-search pin button come back
--- with the same 1096 targets and the same centre. It renders the name and the remaining
+-- with the same targets and the same centre. It renders the name and the remaining
 -- amount from those entities, so the figure follows the patch as it is mined. Any label
 -- we passed would be a frozen copy of that figure sitting beside the live one.
 local function execute(candidate, player_index)
