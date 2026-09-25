@@ -323,8 +323,8 @@ end
 -- secondary_text, both built by ResourceLogic.build_candidates, are left as-is.
 --
 -- Rebuilding the name here needs only the candidate's own `label` and
--- `occupied_marker`, both already carried by build_candidates -- the same pattern
--- `surface_token` and `position` follow for the second line built there.
+-- `occupied_marker`; both are plain fields build_candidates already sets on every
+-- candidate for exactly this reader, so nothing needs deriving from scratch here.
 local function mark_occupied(candidates)
   for _, candidate in ipairs(candidates) do
     if is_occupied(candidate) then

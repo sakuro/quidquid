@@ -259,7 +259,12 @@ describe("ResourceLogic", function()
     it("falls back to a usable secondary_text when the surface has no token in the map", function()
       -- surface_tokens is deliberately empty: a caller that did not describe this
       -- cluster's surface (or omitted the map entirely) must not crash or render
-      -- a literal "nil" on the second line.
+      -- a literal "nil" on the second line. This is also the only remaining coverage
+      -- of the surface-index fallback -- there used to be a second, near-identical
+      -- test asserting it through a candidate.surface_token field, but that field had
+      -- no reader left once mark_occupied stopped rebuilding secondary_text from it,
+      -- so it (and the now-duplicate test) were dropped rather than kept as dead
+      -- weight.
       local candidates = ResourceLogic.build_candidates("copper", clusters, "en", translated, localised_names, {})
 
       assert.are.equal("1 (-5, -5)", candidates[1].secondary_text)
@@ -276,25 +281,6 @@ describe("ResourceLogic", function()
 
       assert.are.equal("[planet=nauvis] (-5, -5)", candidates[1].secondary_text)
       assert.is_nil(candidates[1].annotation)
-    end)
-
-    it(
-      "carries the surface token on the candidate, alongside the other plain fields the runtime source reads",
-      function()
-        -- Carrying it as its own field keeps it a plain field read for any runtime
-        -- consumer, not a parse of rendered text.
-        local surface_tokens = { [1] = "[planet=nauvis]" }
-        local candidates =
-          ResourceLogic.build_candidates("copper", clusters, "en", translated, localised_names, surface_tokens)
-
-        assert.are.equal("[planet=nauvis]", candidates[1].surface_token)
-      end
-    )
-
-    it("falls back to the surface index as surface_token when the surface has no token in the map", function()
-      local candidates = ResourceLogic.build_candidates("copper", clusters, "en", translated, localised_names, {})
-
-      assert.are.equal("1", candidates[1].surface_token)
     end)
 
     it(
