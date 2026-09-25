@@ -97,9 +97,47 @@ A source with neither `prefixes` nor `in_default_search` cannot be reached at al
 | --- | --- | --- |
 | `search(query, player_index)` | yes | Returns an array of candidates. `query` is already whitespace-trimmed and may be empty. |
 | `is_query_valid(query, player_index)` | no | Return `false` to mark the palette input as invalid for this query. Every searched source is asked; one `false` is enough. Omitted, every query is valid. |
+| `decorate(candidates, player_index)` | no | Refines the candidates that survived the merge and trim, described below. |
 
 Results from all searched sources are merged by `search_score` (higher first,
 ties broken by source registration order) and the top 30 rows are shown.
+
+### Refining displayed candidates
+
+`search` runs over every match; `decorate` runs only over the rows about to be shown,
+after the merge and the trim to 30. Set a candidate's presentational fields
+(`annotation`, `label`, `search_display_name`, ...) directly in `search` when computing
+them is cheap per match. Implement `decorate` instead when the per-candidate cost scales
+with the match count rather than with what's displayed — for example, a check that walks
+world state or runs a spatial query, where a query with hundreds of matches would
+otherwise pay that cost hundreds of times to show 30 rows.
+
+```
+decorate(candidates, player_index) -> decorations
+```
+
+- Called once per source per render, with only that source's displayed candidates —
+  the same batching `is_query_valid` and `search` get, not once per row.
+- Detected with `RemoteCaller:has(interface, "decorate")`, so it is optional and needs
+  no `contract_version` bump.
+- `candidates` is the array of this source's own candidates among the rows about to be
+  shown, in display order. Returns an array of the same length: element `i` is either
+  `nil` (leave candidate `i` alone) or a table of fields to merge into it.
+- Every key in a returned table is merged into the candidate **except** `type`, `id`
+  and `search_score` — those are silently ignored, even if present, since they are
+  identity and ranking rather than presentation: actions resolve on `type` and `id`,
+  and `search_score` has already been used to order the rows on screen.
+- `decorate` runs after `search`, so a field it sets wins over whatever `search` put
+  there for that candidate.
+- A source whose `decorate` call raises is logged and its candidates are left exactly
+  as `search` produced them, the same as a broken `is_query_valid` or `search`.
+
+See `lib/sources/resource_source.lua`'s `decorate`, which moves a per-candidate
+`find_entities_filtered` occupancy check out of `search` for exactly this reason: it
+scales with matching resource patches, not with the 30 shown, and typing more of a
+resource's name does not shrink the match count the way it does for items or
+technologies (there are only a handful of resource prototypes, but potentially hundreds
+of patches sharing one).
 
 ### Candidates
 
@@ -309,6 +347,6 @@ them.
 | [`lib/sources/calculator_source.lua`](lib/sources/calculator_source.lua) | The smallest source, plus `is_query_valid` and `secondary_text` |
 | [`lib/sources/fluid_source.lua`](lib/sources/fluid_source.lua) | A prototype-backed source with a translation dictionary |
 | [`lib/sources/item_source.lua`](lib/sources/item_source.lua) | Per-candidate `annotation` |
-| [`lib/sources/resource_source.lua`](lib/sources/resource_source.lua) | A source that builds candidates from world state rather than prototypes, and keeps a `storage` cache |
+| [`lib/sources/resource_source.lua`](lib/sources/resource_source.lua) | A source that builds candidates from world state rather than prototypes, keeps a `storage` cache, and uses `decorate` |
 | [`lib/actions/open_factoriopedia_action.lua`](lib/actions/open_factoriopedia_action.lua) | The smallest action, acting on several types |
 | [`lib/actions/temporary_request_action.lua`](lib/actions/temporary_request_action.lua) | `is_available` against player state |

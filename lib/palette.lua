@@ -205,6 +205,52 @@ function Palette.is_query_valid(query, player_index, locked_source)
   return true
 end
 
+--- Refines the candidates about to be shown, once the trim has already picked them.
+---
+--- Batches every displayed candidate from the same source into one `decorate` call --
+--- called after PaletteLogic.merge_candidates truncation, never over a source's full
+--- match list, which is the whole point: a source whose per-candidate presentational
+--- work scales with match count (e.g. the resource source's occupancy check) now pays
+--- that cost only for the rows on screen. `decorate` is optional, so a source that
+--- implements neither it nor anything else here costs one `RemoteCaller:has` check and
+--- is otherwise untouched. `decorate` runs after `search`, so its result -- merged onto
+--- each candidate through PaletteLogic.apply_decoration -- wins over whatever `search`
+--- already put there. A source whose call fails is logged and its candidates left as
+--- `search` produced them, matching how `is_query_valid` and the old `annotate_candidates`
+--- handled a broken source.
+---@param merged table  candidates already trimmed to DISPLAY_LIMIT, as
+---  Palette.search_all_sources returns; mutated in place
+---@param player_index uint
+function Palette.decorate_candidates(merged, player_index)
+  local groups = {}
+  local group_order = {}
+  for _, wrapped in ipairs(merged) do
+    local group = groups[wrapped.source_interface]
+    if group == nil then
+      group = { entries = {}, candidates = {} }
+      groups[wrapped.source_interface] = group
+      table.insert(group_order, wrapped.source_interface)
+    end
+    table.insert(group.entries, wrapped)
+    table.insert(group.candidates, wrapped.candidate)
+  end
+
+  for _, interface in ipairs(group_order) do
+    if RemoteCaller:has(interface, "decorate") then
+      local group = groups[interface]
+      local ok, decorations =
+        pcall(RemoteCaller.call, RemoteCaller, interface, "decorate", group.candidates, player_index)
+      if ok then
+        for index, wrapped in ipairs(group.entries) do
+          PaletteLogic.apply_decoration(wrapped.candidate, decorations[index])
+        end
+      else
+        log(("quidquid: source '%s' decorate failed: %s"):format(interface, tostring(decorations)))
+      end
+    end
+  end
+end
+
 --- A row's name, with the matched part bolded.
 ---
 --- Only a plain string can carry highlighting, so a candidate that supplied no
@@ -447,6 +493,7 @@ local function refresh_candidates(player, text, locked_source)
     return
   end
   local candidates = Palette.search_all_sources(text, player.index, locked_source)
+  Palette.decorate_candidates(candidates, player.index)
   render_candidates(player, candidates)
 end
 

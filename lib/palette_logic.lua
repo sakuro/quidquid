@@ -37,6 +37,29 @@ function PaletteLogic.merge_candidates(results, limit)
   return merged
 end
 
+--- Merges a source's decoration onto the candidate it was computed for.
+---
+--- `decorate` runs after `search` and after the merge/trim, on only the rows about to be
+--- shown, so any field it sets here wins over whatever `search` already put on that
+--- candidate. `type`, `id` and `search_score` are excluded even when the decoration table
+--- sets them: the first two are what actions resolve on and the third has already ordered
+--- the rows the player is looking at, so letting a source rewrite any of them after the
+--- fact would break dispatch or contradict the ranking on screen. They are silently
+--- dropped rather than raising, matching how a broken `decorate` is merely logged and
+--- ignored by its caller.
+---@param candidate table  mutated in place
+---@param decoration table|nil  fields to merge in; nil leaves the candidate untouched
+function PaletteLogic.apply_decoration(candidate, decoration)
+  if decoration == nil then
+    return
+  end
+  for key, value in pairs(decoration) do
+    if key ~= "type" and key ~= "id" and key ~= "search_score" then
+      candidate[key] = value
+    end
+  end
+end
+
 --- The next selected row when the player moves the selection, wrapping at both ends.
 ---
 --- With nothing selected yet, a downward move starts at the first row and an upward

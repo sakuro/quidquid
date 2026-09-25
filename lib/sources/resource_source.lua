@@ -275,8 +275,14 @@ local function visible_clusters(player)
 end
 
 -- One find_entities_filtered per candidate, with limit = 1 so the engine stops at the
--- first hit. Occupancy is checked over every candidate the source returns, not just
--- the 30 PaletteLogic.merge_candidates keeps, so the count matters -- see issue #174.
+-- first hit. Measured on a disposable headless server with 1400 mining drills present:
+-- ~45us per call for a patch with no drill on it, the common case -- the engine must
+-- scan the whole bbox and find nothing. `search` used to run this over every matching
+-- patch, not just the DISPLAY_LIMIT PaletteLogic.merge_candidates keeps, which at a few
+-- hundred matching patches roughly doubled a keystroke's cost; unlike items or
+-- technologies, typing more of a resource's name does not shrink the match count, since
+-- there are only a handful of resource prototypes but potentially hundreds of patches
+-- each. `decorate` (below) now calls this only on the candidates about to be shown.
 --
 -- Every link of the chain -- the surface, this surface's store, this cluster -- is
 -- guarded rather than indexed straight through: state() can be nil like every other
@@ -312,26 +318,6 @@ local function is_occupied(candidate)
   return #drills > 0
 end
 
--- Mutates candidates in place, mirroring item_source's apply_annotations: the caller
--- runs this inside a pcall so one candidate's failure (an invalid surface mid-search,
--- say) logs rather than dropping every result this source found. This no longer sets
--- an `annotation`, nor rewrites secondary_text -- the occupied marker now lands on the
--- name line instead, matching where Factorio's own map search puts it (see
--- lib/resource_logic.lua's `.occupied_label`). An unoccupied candidate's label and
--- secondary_text, both built by ResourceLogic.build_candidates, are left as-is.
---
--- Rebuilding the name here needs only the candidate's own `label` and
--- `occupied_marker`; both are plain fields build_candidates already sets on every
--- candidate for exactly this reader, so nothing needs deriving from scratch here.
-local function mark_occupied(candidates)
-  for _, candidate in ipairs(candidates) do
-    if is_occupied(candidate) then
-      candidate.label, candidate.search_display_name =
-        ResourceLogic.occupied_label(candidate.label, candidate.occupied_marker)
-    end
-  end
-end
-
 local function search(query, player_index)
   local player = game.get_player(player_index)
   if player == nil then
@@ -339,7 +325,7 @@ local function search(query, player_index)
   end
   local translated_names = flib_dictionary.get(player_index, NAMESPACE) or {}
   local clusters, surface_tokens = visible_clusters(player)
-  local candidates = ResourceLogic.build_candidates(
+  return ResourceLogic.build_candidates(
     query,
     clusters,
     player.locale,
@@ -348,11 +334,24 @@ local function search(query, player_index)
     surface_tokens,
     translated_names[OCCUPIED_MARKER_KEY]
   )
-  local ok, err = pcall(mark_occupied, candidates)
-  if not ok then
-    log(("quidquid: source 'resources' occupancy marking failed: %s"):format(tostring(err)))
+end
+
+-- Registered as this source's `decorate`, called by lib/palette.lua only on the
+-- candidates that survived PaletteLogic.merge_candidates' trim -- see the comment above
+-- is_occupied for why that bound is the point of this hook. Building the occupied form
+-- needs only the candidate's own `label` and `occupied_marker`, both plain fields
+-- build_candidates already sets on every candidate for exactly this reader, so nothing
+-- needs deriving from scratch here. An unoccupied candidate gets no entry: nil tells
+-- lib/palette_logic.lua's apply_decoration to leave it exactly as `search` produced it.
+local function decorate(candidates, _player_index)
+  local decorations = {}
+  for index, candidate in ipairs(candidates) do
+    if is_occupied(candidate) then
+      local label, search_display_name = ResourceLogic.occupied_label(candidate.label, candidate.occupied_marker)
+      decorations[index] = { label = label, search_display_name = search_display_name }
+    end
   end
-  return candidates
+  return decorations
 end
 
 --- Registers the resource-name dictionary with flib, for translated-name search.
@@ -389,7 +388,7 @@ end
 
 --- Adds this source's remote interface and registers it with Quidquid.
 function ResourceSource.register()
-  remote.add_interface("quidquid.resource-source", { search = search })
+  remote.add_interface("quidquid.resource-source", { search = search, decorate = decorate })
   remote.call("quidquid", "register_source", {
     contract_version = 1,
     id = "resources",
