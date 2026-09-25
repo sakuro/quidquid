@@ -1,10 +1,11 @@
 local flib_dictionary = require("__flib__.dictionary")
 local ResourceClustering = require("lib.resource_clustering")
 local ResourceLogic = require("lib.resource_logic")
+local ScanQueue = require("lib.scan_queue")
 
 local ResourceSource = {}
 
-local SCHEMA_VERSION = 2
+local SCHEMA_VERSION = 3
 local SCAN_CHUNKS_PER_TICK = 8
 
 -- Every handler starts from here and returns early on nil. ensure_storage runs from
@@ -26,7 +27,7 @@ local function store_for(surface_index)
 end
 
 local function enqueue(surface_index, x, y)
-  table.insert(state().queue, { surface_index = surface_index, x = x, y = y })
+  ScanQueue.enqueue(state().queue, surface_index, x, y)
 end
 
 local function enqueue_everything()
@@ -89,8 +90,7 @@ function ResourceSource.ensure_storage()
   if resources ~= nil and resources.version == SCHEMA_VERSION then
     return
   end
-  storage.resources =
-    { version = SCHEMA_VERSION, surfaces = {}, queue = {}, queue_head = 1, initial_scan_pending = true }
+  storage.resources = { version = SCHEMA_VERSION, surfaces = {}, queue = ScanQueue.new(), initial_scan_pending = true }
   enqueue_everything()
 end
 
@@ -106,23 +106,21 @@ function ResourceSource.on_tick()
     return
   end
   local scanned = 0
-  while scanned < SCAN_CHUNKS_PER_TICK and resources.queue_head <= #resources.queue do
-    local chunk = resources.queue[resources.queue_head]
-    resources.queue_head = resources.queue_head + 1
+  while scanned < SCAN_CHUNKS_PER_TICK do
+    local chunk = ScanQueue.dequeue(resources.queue)
+    if chunk == nil then
+      break
+    end
     scan(chunk.surface_index, chunk.x, chunk.y)
     scanned = scanned + 1
   end
-  if resources.queue_head > #resources.queue then
-    if #resources.queue > 0 then
-      resources.queue = {}
-      resources.queue_head = 1
-    end
+  if ScanQueue.is_empty(resources.queue) then
     -- Announced once, when the batch ensure_storage queued is through. The queue drains
     -- again and again in ordinary play -- every newly charted chunk and every exhausted
     -- entity refills it -- so the flag, not an empty queue, is what marks the end of the
-    -- initial scan. It is checked outside the `#queue > 0` guard above because a brand
-    -- new game can have nothing to scan at all, and staying silent there would be the
-    -- one case where adding the mod says nothing.
+    -- initial scan. This runs even when the queue was already empty going in, because a
+    -- brand new game can have nothing to scan at all, and staying silent there would be
+    -- the one case where adding the mod says nothing.
     if resources.initial_scan_pending then
       resources.initial_scan_pending = nil
       game.print({ "", { "mod-name.quidquid" }, ": ", { "quidquid.resource-scan-complete" } })
