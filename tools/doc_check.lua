@@ -33,8 +33,8 @@ local function read_lines(path)
 end
 
 -- Strips comments and string literals so keyword counting can't be fooled by
--- the word "end" inside a message. lib/ uses neither long strings nor long
--- comments, so single-line quoting is all this has to cover.
+-- the word "end" inside a message. Long strings and long comments (`[[...]]`)
+-- are not handled; no MOD source uses them yet.
 local function code_only(line)
   local stripped = line:gsub('"[^"]*"', '""'):gsub("'[^']*'", "''")
   return (stripped:gsub("%-%-.*$", ""))

@@ -87,22 +87,21 @@ function Module.round_up(value, size)
 summary line, one `---@param` per declared parameter in the right order, and a
 `---@return` on any function that returns a value. It does not check types or
 prose. It reads every Lua file the mod loads — `lib/`, `prototypes/`, and the
-stage entry points at the root. Today every public function lives in `lib/`,
-since `prototypes/` is declarative and the entry points hold only closures, but
-one added elsewhere is checked the same way. `spec/` is test code and `tools/`
-holds standalone dev scripts, so neither is in scope.
+stage entry points at the root. `spec/` is test code and `tools/` holds
+standalone dev scripts, so neither is in scope. CI runs it in the `lint` job.
 
-Every public function is documented, so `doc-check` runs against nothing
-suppressed. Should a batch of undocumented code ever arrive at once — a large
-import, say — `mise run doc-check -- --write-baseline > .doc-check-baseline` captures
-it and `--baseline .doc-check-baseline` in `tasks/doc-check` suppresses it while it
-is worked through. Such a list can only shrink: `doc-check` fails on an entry whose
+Should a batch of undocumented code arrive at once — a large import, say —
+`mise run doc-check -- --write-baseline > .doc-check-baseline` captures it and
+`--baseline .doc-check-baseline` in `tasks/doc-check` suppresses it while it is
+worked through. Such a list can only shrink: `doc-check` fails on an entry whose
 function is now documented or gone, and on a baseline with no entries left, which is
-how the last one got deleted.
+how the last one gets deleted.
 
-`tools/doc_check_test.sh` is the checker's own fixture test; CI runs it. A doc
-checker that silently passes everything would make the baseline a lie, so changes
-to `tools/doc_check.lua` belong with a case in that test.
+`tools/doc_check_test.sh` is the checker's own fixture test. CI does not run it,
+since every MOD's copy matches the scaffold's; after changing `tools/doc_check.lua`,
+run `bash tools/doc_check_test.sh` locally. A doc checker that silently passes
+everything would make the baseline a lie, so such a change belongs with a case in
+that test.
 
 ## Changelog
 
