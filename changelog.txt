@@ -1,5 +1,6 @@
 ---------------------------------------------------------------------------------------------------
-Version: Unreleased
+Version: 0.5.1
+Date: 2026-09-26
   Changes:
     - Resource search no longer joins two ore patches that merely sit in neighbouring chunks; a patch now spans a chunk border only where its tiles touch across it
     - Mention resource patches in the mod description

@@ -3,8 +3,9 @@
 [![Downloads](https://img.shields.io/badge/dynamic/json.svg?label=Downloads&url=https%3A%2F%2Fmods.factorio.com%2Fapi%2Fmods%2Fquidquid&query=%24.downloads_count)](https://mods.factorio.com/mod/quidquid)
 
 Quidquid is a general-purpose palette with incremental search for Factorio.
-Items, fluids, recipes, technologies and surfaces are searched together, and each
-result offers the actions that apply to it. Open it with `Ctrl/Cmd + K`.
+Items, fluids, recipes, technologies, surfaces and resource patches are
+searchable, and each result offers the actions that apply to it. Open it with
+`Ctrl/Cmd + K`.
 
 ## Features
 
