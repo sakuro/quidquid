@@ -366,11 +366,19 @@ local function candidate_tooltip(wrapped, player_index)
   return Palette.build_tooltip(resolved, annotation_tooltip)
 end
 
+-- The whole row is the action target: it carries the candidate, and handlers climb to it
+-- from whatever element the cursor was over. Leaf labels are ignored_by_interaction so the
+-- row (or the column flow holding them) is what the cursor hits there. The button stays
+-- interactive, as the element on_gui_confirmed focuses, so it needs its own tooltip and
+-- hover events; so does the name column, which shows through beside a short second line.
 local function build_candidate_row(pane, wrapped, index, player_index)
+  local tooltip = candidate_tooltip(wrapped, player_index)
   local row = pane.add({
     type = "flow",
     direction = "horizontal",
-    tags = { quidquid_candidate_index = index },
+    tooltip = tooltip,
+    tags = { quidquid_candidate = wrapped.candidate, quidquid_candidate_index = index },
+    raise_hover_events = true,
   })
   row.style.horizontally_stretchable = true
   row.style.maximal_width = ROW_WIDTH
@@ -378,10 +386,19 @@ local function build_candidate_row(pane, wrapped, index, player_index)
   row.style.horizontal_spacing = 4
   row.style.vertical_align = "center"
 
-  local icon = row.add({ type = "label", caption = Palette.icon_caption(wrapped.candidate) })
+  local icon = row.add({
+    type = "label",
+    caption = Palette.icon_caption(wrapped.candidate),
+    ignored_by_interaction = true,
+  })
   icon.style.vertical_align = "center"
 
-  local names = row.add({ type = "flow", direction = "vertical" })
+  local names = row.add({
+    type = "flow",
+    direction = "vertical",
+    tooltip = tooltip,
+    raise_hover_events = true,
+  })
   names.style.width = NAME_COLUMN_WIDTH
   names.style.maximal_width = NAME_COLUMN_WIDTH
   names.style.horizontally_squashable = true
@@ -395,8 +412,7 @@ local function build_candidate_row(pane, wrapped, index, player_index)
     type = "button",
     style = "transparent_button",
     caption = Palette.row_caption(wrapped.candidate),
-    tooltip = candidate_tooltip(wrapped, player_index),
-    tags = { quidquid_candidate = wrapped.candidate, quidquid_candidate_index = index },
+    tooltip = tooltip,
     raise_hover_events = true,
   })
   button.style.maximal_width = NAME_COLUMN_WIDTH
@@ -410,7 +426,7 @@ local function build_candidate_row(pane, wrapped, index, player_index)
 
   local internal_caption = Palette.internal_caption(wrapped.candidate)
   if internal_caption ~= nil then
-    local internal_label = names.add({ type = "label", caption = internal_caption })
+    local internal_label = names.add({ type = "label", caption = internal_caption, ignored_by_interaction = true })
     internal_label.style.maximal_width = NAME_COLUMN_WIDTH
     internal_label.style.horizontally_squashable = true
     internal_label.style.font_color = MUTED_FONT_COLOR
@@ -419,7 +435,7 @@ local function build_candidate_row(pane, wrapped, index, player_index)
   -- label doesn't support horizontally_stretchable (confirmed: setting it had no visible
   -- effect), so an empty-widget spacer absorbs the row's leftover width instead, pushing
   -- the right end flush against the row's right edge.
-  local spacer = row.add({ type = "empty-widget" })
+  local spacer = row.add({ type = "empty-widget", ignored_by_interaction = true })
   spacer.style.horizontally_stretchable = true
 
   -- #121: a source's annotation (e.g. an item's inventory/network counts) takes the
@@ -431,17 +447,17 @@ local function build_candidate_row(pane, wrapped, index, player_index)
     -- Not squashable, unlike `names` -- `side` keeps its actual content's
     -- natural size (up to SIDE_COLUMN_WIDTH) so the row squashes `names`
     -- under pressure instead of clipping the annotation.
-    local side = row.add({ type = "flow", direction = "vertical" })
+    local side = row.add({ type = "flow", direction = "vertical", ignored_by_interaction = true })
     side.style.maximal_width = SIDE_COLUMN_WIDTH
     side.style.horizontal_align = "right"
     side.style.vertical_spacing = 0
 
-    local annotation_label = side.add({ type = "label", caption = annotation_caption })
+    local annotation_label = side.add({ type = "label", caption = annotation_caption, ignored_by_interaction = true })
     annotation_label.style.maximal_width = SIDE_COLUMN_WIDTH
     annotation_label.style.single_line = false
     annotation_label.style.horizontal_align = "right"
 
-    local source_label = side.add({ type = "label", caption = wrapped.source_label })
+    local source_label = side.add({ type = "label", caption = wrapped.source_label, ignored_by_interaction = true })
     source_label.style.maximal_width = SIDE_COLUMN_WIDTH
     source_label.style.horizontal_align = "right"
     source_label.style.font_color = MUTED_FONT_COLOR
@@ -449,6 +465,7 @@ local function build_candidate_row(pane, wrapped, index, player_index)
     local source_label = row.add({
       type = "label",
       caption = wrapped.source_label,
+      ignored_by_interaction = true,
     })
     source_label.style.vertical_align = "center"
     source_label.style.font_color = MUTED_FONT_COLOR
@@ -764,7 +781,7 @@ end
 ---
 --- Which actions exist is resolved per candidate at press time, not when the row was
 --- rendered, so a key that no longer applies simply does nothing.
----@param event table  a custom-input event; event.element carries the candidate tag
+---@param event table  a custom-input event; event.element is, or lies inside, a candidate row
 function Palette.on_action_key(event)
   local player = game.get_player(event.player_index)
   if player == nil then
@@ -772,11 +789,16 @@ function Palette.on_action_key(event)
   end
 
   local element = event.element
-  if element == nil or not element.valid or element.tags.quidquid_candidate == nil then
+  if element == nil or not element.valid then
     return
   end
-  set_active_index(player, element.tags.quidquid_candidate_index)
-  dispatch(player, element.tags.quidquid_candidate, event.input_name)
+  local row = PaletteLogic.find_tagged_ancestor(element, "quidquid_candidate")
+  if row == nil then
+    return
+  end
+  local tags = row.tags
+  set_active_index(player, tags.quidquid_candidate_index)
+  dispatch(player, tags.quidquid_candidate, event.input_name)
 end
 
 local function move_active_index(event, direction)
@@ -844,16 +866,17 @@ function Palette.on_gui_confirmed(event)
 end
 
 --- Selects the hovered row, so mouse and keyboard agree on what is active.
----@param event table  on_gui_hover; ignored unless the element carries a candidate index
+---@param event table  on_gui_hover; ignored unless the element is, or lies inside, a candidate row
 function Palette.on_gui_hover(event)
   local element = event.element
   if element == nil or not element.valid then
     return
   end
-  local index = element.tags.quidquid_candidate_index
-  if index == nil then
+  local row = PaletteLogic.find_tagged_ancestor(element, "quidquid_candidate_index")
+  if row == nil then
     return
   end
+  local index = row.tags.quidquid_candidate_index
   local player = game.get_player(event.player_index)
   if player ~= nil then
     set_active_index(player, index)

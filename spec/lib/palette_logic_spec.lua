@@ -108,4 +108,28 @@ describe("PaletteLogic", function()
       assert.is_nil(PaletteLogic.move_index(nil, 0, 1))
     end)
   end)
+
+  describe(".find_tagged_ancestor", function()
+    it("returns the element itself when it carries the tag", function()
+      local element = { tags = { quidquid_candidate_index = 1 } }
+
+      assert.are.equal(element, PaletteLogic.find_tagged_ancestor(element, "quidquid_candidate_index"))
+    end)
+
+    it("climbs to the nearest ancestor carrying the tag", function()
+      local root = { tags = { quidquid_candidate_index = 1 } }
+      local row = { tags = { quidquid_candidate_index = 2 }, parent = root }
+      local column = { tags = {}, parent = row }
+      local button = { tags = {}, parent = column }
+
+      assert.are.equal(row, PaletteLogic.find_tagged_ancestor(button, "quidquid_candidate_index"))
+    end)
+
+    it("returns nil when no ancestor carries the tag", function()
+      local root = { tags = {} }
+      local button = { tags = { other = true }, parent = root }
+
+      assert.is_nil(PaletteLogic.find_tagged_ancestor(button, "quidquid_candidate_index"))
+    end)
+  end)
 end)
