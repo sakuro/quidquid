@@ -10,7 +10,7 @@ searchable, and each result offers the actions that apply to it. Open it with
 ## Features
 
 - `Ctrl/Cmd + K` palette that searches items, fluids, recipes, technologies,
-  planets, and accessible space platforms together
+  planets, accessible space platforms, and resource patches
 - Source-specific actions on the selected result
 - Source prefixes to restrict a search to one category
 - Temporary personal logistics requests for items and recipe ingredients,
