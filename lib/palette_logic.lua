@@ -83,4 +83,23 @@ function PaletteLogic.move_index(current_index, count, direction)
   return index
 end
 
+--- The nearest element carrying tag_name, starting from element itself and climbing.
+---
+--- Factorio GUI events name only the topmost element under the cursor and do not bubble,
+--- so a handler that treats a whole row as one target has to climb from there itself.
+---@param element table  a LuaGuiElement, or any table with its `tags` and `parent`
+---@param tag_name string
+---@return table|nil  nil when neither the element nor any ancestor carries the tag
+function PaletteLogic.find_tagged_ancestor(element, tag_name)
+  local current = element
+  while current ~= nil do
+    local tags = current.tags
+    if tags and tags[tag_name] ~= nil then
+      return current
+    end
+    current = current.parent
+  end
+  return nil
+end
+
 return PaletteLogic
