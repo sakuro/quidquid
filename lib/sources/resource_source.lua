@@ -5,7 +5,7 @@ local ScanQueue = require("lib.scan_queue")
 
 local ResourceSource = {}
 
-local SCHEMA_VERSION = 3
+local SCHEMA_VERSION = 4
 local SCAN_CHUNKS_PER_TICK = 8
 
 -- Every handler starts from here and returns early on nil. ensure_storage runs from
@@ -36,6 +36,20 @@ local function enqueue_everything()
       enqueue(surface.index, chunk.x, chunk.y)
     end
   end
+end
+
+-- Prototypes are fixed for a session, so each resource's answer is computed once. A
+-- plain upvalue rather than storage: it is derived from prototypes alone, so every
+-- peer computes the same value and a save/load only costs recomputing it.
+local loose_by_name = {}
+
+local function is_loose(resource_name)
+  local loose = loose_by_name[resource_name]
+  if loose == nil then
+    loose = ResourceClustering.is_loose(prototypes.entity[resource_name].collision_box)
+    loose_by_name[resource_name] = loose
+  end
+  return loose
 end
 
 local function scan(surface_index, x, y)
@@ -76,7 +90,7 @@ local function scan(surface_index, x, y)
     end
   end
   for resource_name, entry in pairs(grouped) do
-    ResourceClustering.insert(store, surface_index, resource_name, key, entry)
+    ResourceClustering.insert(store, surface_index, resource_name, key, entry, is_loose(resource_name))
   end
 end
 

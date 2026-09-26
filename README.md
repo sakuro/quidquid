@@ -184,10 +184,12 @@ Search for resource patches your force has charted.
 Resources are left out of the unlocked search; `resource ` or `R ` reaches
 them — uppercase, since lowercase `r` is already the recipe prefix.
 
-A patch is every chunk holding a resource that touches another such chunk,
-including diagonally, merged with no check that the ore actually reaches
-across the seam. Two patches within a chunk of each other therefore read as
-one. This merging never undoes itself: a patch never splits once found, so
+A patch is every chunk holding a resource whose tiles touch the same
+resource's tiles in a neighbouring chunk, diagonals included. Resources
+larger than one tile — crude oil, sulfuric acid geysers, fluorine vents,
+lithium brine — are scattered by nature, so for them sharing a chunk border
+is enough. Two patches whose edges fall in the same chunk still read as one.
+This merging never undoes itself: a patch never splits once found, so
 mining out or deleting the chunks in the middle leaves the rest as a single
 patch, not two.
 

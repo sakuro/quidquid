@@ -1,4 +1,8 @@
 ---------------------------------------------------------------------------------------------------
+Version: Unreleased
+  Changes:
+    - Resource search no longer joins two ore patches that merely sit in neighbouring chunks; a patch now spans a chunk border only where its tiles touch across it
+---------------------------------------------------------------------------------------------------
 Version: 0.5.0
 Date: 2026-09-26
   Features:
