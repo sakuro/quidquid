@@ -10,8 +10,6 @@ result offers the actions that apply to it. Open it with `Ctrl/Cmd + K`.
 
 - `Ctrl/Cmd + K` palette that searches items, fluids, recipes, technologies,
   planets, and accessible space platforms together
-- A resource-patch search, reached with the `resource ` / `R ` prefix, for
-  jumping to and pinning ore patches in charted territory
 - Source-specific actions on the selected result
 - Source prefixes to restrict a search to one category
 - Temporary personal logistics requests for items and recipe ingredients,
