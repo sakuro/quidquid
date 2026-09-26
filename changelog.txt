@@ -2,6 +2,9 @@
 Version: Unreleased
   Changes:
     - Resource search no longer joins two ore patches that merely sit in neighbouring chunks; a patch now spans a chunk border only where its tiles touch across it
+    - Mention resource patches in the mod description
+  Locale:
+    - Call resource patches 資源 rather than 資源パッチ in Japanese
 ---------------------------------------------------------------------------------------------------
 Version: 0.5.0
 Date: 2026-09-26
