@@ -19,7 +19,7 @@ end
 --- Such resources -- crude oil, sulfuric acid geysers, fluorine vents, lithium brine --
 --- are placed as scattered 3x3 entities that never touch each other, so testing
 --- whether they reach across a chunk seam would split every field into its wells.
---- They merge on chunk adjacency alone instead, as dqol-resource-monitor does. The
+--- They merge on chunk adjacency alone instead, as Resource Monitor does. The
 --- ores and scrap are one tile. See issue #193.
 ---@param collision_box BoundingBox  with left_top and right_bottom as {x, y} tables
 ---@return boolean
@@ -60,7 +60,7 @@ end
 --- True when one resource's tiles in two neighbouring chunks touch across their seam.
 ---
 --- Tiles touch when they are 8-connected, including across a chunk corner. This is the
---- edge-mask test dqol-resource-monitor merges ore on; see issue #193.
+--- edge-mask test Resource Monitor merges ore on; see issue #193.
 ---@param entry table  as group_chunk produces per resource
 ---@param neighbour table  the same resource's entry in the neighbouring chunk
 ---@param dx integer  the neighbour's chunk x minus this chunk's, -1 to 1
