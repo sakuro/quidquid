@@ -304,10 +304,9 @@ end
 -- default -- confirmed this also works for mod-defined custom-inputs, not only builtin
 -- game controls). Confirmed empirically that this substitution only happens for text
 -- read from an actual locale (.cfg) entry, not for a raw string segment built at
--- runtime and dropped directly into a LocalisedString array -- so each action's hint
--- is its own locale key (`action-<id>-hint`, one per registered action, added
--- alongside that action's own `action-<id>` label), looked up here by id rather than
--- constructed inline. Keys are sorted for a stable, predictable tooltip order.
+-- runtime and dropped directly into a LocalisedString array -- so each action
+-- declares its hint as a LocalisedString naming a locale key, like its label. Input
+-- names are sorted for a stable, predictable tooltip order.
 --
 -- Each action's block is its own nested LocalisedString rather than four entries
 -- flattened into the top-level array: a LocalisedString allows at most 20 parameters
@@ -315,7 +314,7 @@ end
 -- flattened (each action contributing 4 slots plus a separator). Nesting resets the
 -- budget at each level, so the top level only spends one slot per action.
 local function action_hint(definition)
-  return { "", definition.label, " (", { "quidquid.action-" .. definition.id .. "-hint" }, ")" }
+  return { "", definition.label, " (", definition.hint, ")" }
 end
 
 -- A LocalisedString allows at most 20 parameters per nesting level (see the comment

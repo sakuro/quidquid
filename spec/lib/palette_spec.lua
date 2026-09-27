@@ -363,7 +363,7 @@ describe("Palette", function()
 
   describe(".build_tooltip", function()
     local function action(id)
-      return { id = id, label = { "quidquid.action-" .. id } }
+      return { id = id, label = { "quidquid.action-" .. id }, hint = { "quidquid.action-" .. id .. "-hint" } }
     end
 
     it("returns nil when there are no applicable actions", function()
