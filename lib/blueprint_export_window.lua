@@ -58,6 +58,18 @@ function BlueprintExportWindow.open(player, export_string)
   text_box.style.width = TEXT_BOX_WIDTH
   text_box.style.height = TEXT_BOX_HEIGHT
 
+  local button_row = content.add({ type = "flow", direction = "horizontal" })
+  button_row.style.horizontally_stretchable = true
+  local left_spacer = button_row.add({ type = "empty-widget" })
+  left_spacer.style.horizontally_stretchable = true
+  button_row.add({
+    type = "button",
+    caption = { "gui.close" },
+    tags = { quidquid_blueprint_export_close = true },
+  })
+  local right_spacer = button_row.add({ type = "empty-widget" })
+  right_spacer.style.horizontally_stretchable = true
+
   player.opened = frame
   text_box.focus()
   text_box.select_all()
