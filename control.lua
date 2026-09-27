@@ -18,6 +18,7 @@ local PinResourceAction = require("lib.actions.pin_resource_action")
 local TemporaryRequestAction = require("lib.actions.temporary_request_action")
 local BlueprintAction = require("lib.actions.blueprint_action")
 local TemporaryRequestEditor = require("lib.temporary_request_editor")
+local BlueprintExportWindow = require("lib.blueprint_export_window")
 local Palette = require("lib.palette")
 local api = require("lib.api")
 
@@ -25,6 +26,7 @@ local registry = Registry.new(log)
 
 Palette.init(registry)
 TemporaryRequestAction.init(TemporaryRequestEditor)
+BlueprintAction.init(BlueprintExportWindow)
 
 remote.add_interface("quidquid", {
   register_source = function(definition)
@@ -120,6 +122,7 @@ script.on_event(defines.events.on_gui_hover, Palette.on_gui_hover)
 script.on_event(defines.events.on_gui_closed, function(event)
   Palette.on_gui_closed(event)
   TemporaryRequestEditor.on_gui_closed(event)
+  BlueprintExportWindow.on_gui_closed(event)
   local player = game.get_player(event.player_index)
   if player ~= nil then
     Palette.reclaim_opened(player)
@@ -130,6 +133,7 @@ script.on_event(defines.events.on_gui_click, function(event)
   Palette.on_gui_click(event)
   TemporaryRequestEditor.on_gui_click(event)
   TemporaryRequestEditor.on_cancel_button(event)
+  BlueprintExportWindow.on_gui_click(event)
 end)
 script.on_event("quidquid-temporary-request-editor-confirm", TemporaryRequestEditor.on_confirm_key)
 

@@ -5,6 +5,11 @@ local BlueprintAction = {}
 
 local UNAVAILABLE = "quidquid.action-blueprint-unavailable"
 
+-- Injected from control.lua (see BlueprintAction.init) rather than required directly,
+-- the same arrangement TemporaryRequestAction.init uses for its editor: this module
+-- stays loadable without the GUI one.
+local export_window = nil
+
 local function resolve(candidate, player)
   local location, indices = BlueprintLogic.parse_id(candidate.id)
   if location == nil then
@@ -95,6 +100,21 @@ local function copy_to_inventory(candidate, player_index)
   end)
 end
 
+--- Hands in the export window module.
+---
+--- Injected rather than required so this module stays loadable without the GUI one,
+--- the same arrangement TemporaryRequestAction.init uses for its editor.
+---@param window table  lib/blueprint_export_window.lua
+function BlueprintAction.init(window)
+  export_window = window
+end
+
+local function export(candidate, player_index)
+  ActionRunner.run(candidate, player_index, resolve, function(target, _selected_candidate, player)
+    export_window.open(player, export_string(target))
+  end)
+end
+
 local function register(id, input_name, interface, execute)
   remote.add_interface(interface, { execute = execute })
   remote.call("quidquid", "register_action", {
@@ -111,6 +131,7 @@ end
 function BlueprintAction.register()
   register("hold-blueprint", "quidquid-hold-blueprint", "quidquid.hold-blueprint-action", hold)
   register("copy-blueprint", "quidquid-copy-blueprint", "quidquid.copy-blueprint-action", copy_to_inventory)
+  register("export-blueprint", "quidquid-export-blueprint", "quidquid.export-blueprint-action", export)
 end
 
 return BlueprintAction

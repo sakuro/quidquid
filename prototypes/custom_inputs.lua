@@ -87,4 +87,11 @@ data:extend({
     name = "quidquid-copy-blueprint",
     key_sequence = "ALT + mouse-button-2",
   },
+  {
+    -- Shares quidquid-temporary-request's sequence, like quidquid-pin-resource:
+    -- neither of those applies to blueprint records.
+    type = "custom-input",
+    name = "quidquid-export-blueprint",
+    key_sequence = "COMMAND + mouse-button-1",
+  },
 })
