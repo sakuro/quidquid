@@ -3,7 +3,6 @@ local SurfaceAccess = require("lib.surface_access")
 local SurfaceLogic = require("lib.surface_logic")
 
 local SurfaceSource = {}
-local SOURCE_LABEL = { "quidquid.source-surfaces" }
 local NAMESPACE = "surfaces"
 
 -- Translate prototype names, not the dynamic list of generated surfaces. Newly
@@ -75,18 +74,9 @@ local function search(query, player_index)
   )
 end
 
---- Adds this source's remote interface and registers it with Quidquid.
-function SurfaceSource.register()
+--- Adds this source's remote interface, named by its declaration in prototypes/sources.lua.
+function SurfaceSource.add_interface()
   remote.add_interface("quidquid.surface-source", { search = search })
-  remote.call("quidquid", "register_source", {
-    contract_version = 1,
-    id = "surfaces",
-    type = "surface",
-    label = SOURCE_LABEL,
-    prefixes = { "s", "surface" },
-    in_default_search = true,
-    interface = "quidquid.surface-source",
-  })
 end
 
 return SurfaceSource

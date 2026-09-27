@@ -1,4 +1,5 @@
 local flib_dictionary = require("__flib__.dictionary")
+local Declarations = require("lib.declarations")
 local Registry = require("lib.registry")
 local ItemSource = require("lib.sources.item_source")
 local FluidSource = require("lib.sources.fluid_source")
@@ -28,27 +29,42 @@ Palette.init(registry)
 TemporaryRequestAction.init(TemporaryRequestEditor)
 BlueprintAction.init(BlueprintExportWindow)
 
-remote.add_interface("quidquid", {
-  register_source = function(definition)
-    return registry:register_source(definition)
-  end,
-  register_action = function(definition)
-    local ok = registry:register_action(definition)
-    if ok then
-      script.on_event(definition.input_name, Palette.on_action_key)
-    end
-    return ok
-  end,
-})
+-- Registration order decides score ties and first-come prefixes and action slots;
+-- Declarations.collect fixes it by each prototype's order, then name.
+for _, definition in ipairs(Declarations.collect(prototypes.mod_data, Declarations.SOURCE_DATA_TYPE)) do
+  registry:register_source(definition)
+end
+for _, definition in ipairs(Declarations.collect(prototypes.mod_data, Declarations.ACTION_DATA_TYPE)) do
+  if registry:register_action(definition) then
+    script.on_event(definition.input_name, Palette.on_action_key)
+  end
+end
+
+ItemSource.add_interface()
+FluidSource.add_interface()
+RecipeSource.add_interface()
+TechnologySource.add_interface()
+SurfaceSource.add_interface()
+CalculatorSource.add_interface()
+ResourceSource.add_interface()
+BlueprintSource.add_interface()
+OpenRemoteViewAction.add_interface()
+OpenFactoriopediaAction.add_interface()
+OpenTechnologyAction.add_interface()
+ResearchQueueAction.add_interface()
+CraftAction.add_interface()
+PipetteAction.add_interface()
+PinResourceAction.add_interface()
+TemporaryRequestAction.add_interface()
+BlueprintAction.add_interface()
 
 local dictionary_sources = { ItemSource, FluidSource, RecipeSource, TechnologySource, SurfaceSource, ResourceSource }
 
 -- flib_dictionary.new/.add may only run before flib's internal init_ran flag flips true,
 -- which happens on the first on_tick -- so dictionaries must be (re-)registered from
--- on_init/on_configuration_changed, never deferred to on_tick like the remote.call
--- registrations below. Both of those already fully reset storage.__flib.dictionary
--- (flib_dictionary.on_configuration_changed is an alias for .on_init), so re-registering
--- unconditionally here is correct, not redundant.
+-- on_init/on_configuration_changed. Both of those already fully reset
+-- storage.__flib.dictionary (flib_dictionary.on_configuration_changed is an alias for
+-- .on_init), so re-registering unconditionally here is correct, not redundant.
 local function register_dictionaries()
   for _, source in ipairs(dictionary_sources) do
     source.register_dictionary()
@@ -66,36 +82,7 @@ script.on_configuration_changed(function()
   ResourceSource.ensure_storage()
 end)
 
--- remote.call is only valid inside an event, never at control.lua's top level (confirmed
--- in-game: "Attempt to remote call outside of an event"). Neither on_init (only fires for a
--- brand-new save) nor on_configuration_changed (only fires when something actually changed)
--- nor on_load (no game/remote API access at all) covers an ordinary continued load, so
--- each source/action's remote.call runs on the first tick after any load instead. The handler
--- itself stays registered, because flib_dictionary.on_tick has to run every tick to progress
--- translation batching; a flag gates the one-shot part.
-local remote_interfaces_registered = false
-
 script.on_event(defines.events.on_tick, function()
-  if not remote_interfaces_registered then
-    remote_interfaces_registered = true
-    ItemSource.register()
-    FluidSource.register()
-    RecipeSource.register()
-    TechnologySource.register()
-    SurfaceSource.register()
-    CalculatorSource.register()
-    OpenRemoteViewAction.register()
-    OpenFactoriopediaAction.register()
-    OpenTechnologyAction.register()
-    ResearchQueueAction.register()
-    CraftAction.register()
-    PipetteAction.register()
-    PinResourceAction.register()
-    TemporaryRequestAction.register()
-    BlueprintAction.register()
-    ResourceSource.register()
-    BlueprintSource.register()
-  end
   flib_dictionary.on_tick()
   ResourceSource.on_tick()
 end)

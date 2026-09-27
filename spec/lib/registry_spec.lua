@@ -1,4 +1,8 @@
+local Declarations = require("lib.declarations")
 local Registry = require("lib.registry")
+
+local CONTRACT_VERSION = Declarations.CONTRACT_VERSION
+local OTHER_CONTRACT_VERSION = CONTRACT_VERSION - 1
 
 local function spy_logger()
   local messages = {}
@@ -47,7 +51,7 @@ describe("Registry", function()
       local registry = Registry.new()
 
       local ok = registry:register_source({
-        contract_version = 1,
+        contract_version = CONTRACT_VERSION,
         id = "items",
         type = "item",
         prefixes = { "i", "item" },
@@ -62,7 +66,7 @@ describe("Registry", function()
       local registry = Registry.new(logger)
 
       local ok = registry:register_source({
-        contract_version = 2,
+        contract_version = OTHER_CONTRACT_VERSION,
         id = "items",
         type = "item",
         prefixes = { "i" },
@@ -78,7 +82,7 @@ describe("Registry", function()
       local registry = Registry.new(logger)
 
       local ok = registry:register_source({
-        contract_version = 1,
+        contract_version = CONTRACT_VERSION,
         id = "items",
         prefixes = { "i" },
         interface = "my-mod.source-items",
@@ -93,14 +97,14 @@ describe("Registry", function()
       local registry = Registry.new(logger)
 
       registry:register_source({
-        contract_version = 1,
+        contract_version = CONTRACT_VERSION,
         id = "items",
         type = "item",
         prefixes = { "i" },
         interface = "my-mod.source-items",
       })
       registry:register_source({
-        contract_version = 1,
+        contract_version = CONTRACT_VERSION,
         id = "recipes",
         type = "recipe",
         prefixes = { "i" },
@@ -115,7 +119,7 @@ describe("Registry", function()
       local registry = Registry.new(logger)
 
       local first_ok = registry:register_source({
-        contract_version = 1,
+        contract_version = CONTRACT_VERSION,
         id = "items",
         type = "item",
         in_default_search = true,
@@ -123,7 +127,7 @@ describe("Registry", function()
         interface = "my-mod.source-items",
       })
       local second_ok = registry:register_source({
-        contract_version = 1,
+        contract_version = CONTRACT_VERSION,
         id = "duplicate-items",
         type = "item",
         in_default_search = true,
@@ -144,14 +148,14 @@ describe("Registry", function()
       local registry = Registry.new()
 
       local item_ok = registry:register_source({
-        contract_version = 1,
+        contract_version = CONTRACT_VERSION,
         id = "items",
         type = "item",
         prefixes = { "i" },
         interface = "my-mod.source-items",
       })
       local fluid_ok = registry:register_source({
-        contract_version = 1,
+        contract_version = CONTRACT_VERSION,
         id = "fluids",
         type = "fluid",
         prefixes = { "f" },
@@ -167,14 +171,14 @@ describe("Registry", function()
       local registry = Registry.new(logger)
 
       local recipe_ok = registry:register_source({
-        contract_version = 1,
+        contract_version = CONTRACT_VERSION,
         id = "recipes",
         type = "recipe",
         prefixes = { "r" },
         interface = "my-mod.source-recipes",
       })
       local resource_ok = registry:register_source({
-        contract_version = 1,
+        contract_version = CONTRACT_VERSION,
         id = "resources",
         type = "resource",
         prefixes = { "R" },
@@ -193,7 +197,7 @@ describe("Registry", function()
       local registry = Registry.new(logger)
 
       local ok = registry:register_source({
-        contract_version = 1,
+        contract_version = CONTRACT_VERSION,
         id = "items",
         type = "item",
         prefixes = { "i", "" },
@@ -211,7 +215,7 @@ describe("Registry", function()
     it("returns the source definition registered for a prefix", function()
       local registry = Registry.new()
       registry:register_source({
-        contract_version = 1,
+        contract_version = CONTRACT_VERSION,
         id = "items",
         type = "item",
         prefixes = { "i", "item" },
@@ -226,7 +230,7 @@ describe("Registry", function()
     it("does not match a prefix typed in another case", function()
       local registry = Registry.new()
       registry:register_source({
-        contract_version = 1,
+        contract_version = CONTRACT_VERSION,
         id = "items",
         type = "item",
         prefixes = { "i", "item" },
@@ -249,7 +253,7 @@ describe("Registry", function()
       local registry = Registry.new()
 
       local ok = registry:register_action({
-        contract_version = 1,
+        contract_version = CONTRACT_VERSION,
         id = "logistics-request",
         types = { "item" },
         input_name = "confirm",
@@ -264,7 +268,7 @@ describe("Registry", function()
       local registry = Registry.new(logger)
 
       local ok = registry:register_action({
-        contract_version = 2,
+        contract_version = OTHER_CONTRACT_VERSION,
         id = "logistics-request",
         types = { "item" },
         input_name = "confirm",
@@ -280,7 +284,7 @@ describe("Registry", function()
       local registry = Registry.new(logger)
 
       local ok = registry:register_action({
-        contract_version = 1,
+        contract_version = CONTRACT_VERSION,
         id = "logistics-request",
         types = { "item" },
         interface = "my-mod.action-logistics-request",
@@ -295,7 +299,7 @@ describe("Registry", function()
       local registry = Registry.new(logger)
 
       local ok = registry:register_action({
-        contract_version = 1,
+        contract_version = CONTRACT_VERSION,
         id = "logistics-request",
         input_name = "confirm",
         interface = "my-mod.action-logistics-request",
@@ -310,7 +314,7 @@ describe("Registry", function()
     it("returns sources registered with in_default_search = true", function()
       local registry = Registry.new()
       registry:register_source({
-        contract_version = 1,
+        contract_version = CONTRACT_VERSION,
         id = "items",
         type = "item",
         prefixes = { "i" },
@@ -327,7 +331,7 @@ describe("Registry", function()
     it("excludes sources without in_default_search", function()
       local registry = Registry.new()
       registry:register_source({
-        contract_version = 1,
+        contract_version = CONTRACT_VERSION,
         id = "items",
         type = "item",
         prefixes = { "i" },
@@ -360,7 +364,7 @@ describe("Registry", function()
     it("returns an action bound to a type under its registered input_name", function()
       local registry = Registry.new()
       registry:register_action({
-        contract_version = 1,
+        contract_version = CONTRACT_VERSION,
         id = "logistics-request",
         types = { "item" },
         input_name = "confirm",
@@ -376,14 +380,14 @@ describe("Registry", function()
       local logger, messages = spy_logger()
       local registry = Registry.new(logger)
       registry:register_action({
-        contract_version = 1,
+        contract_version = CONTRACT_VERSION,
         id = "logistics-request",
         types = { "item" },
         input_name = "confirm",
         interface = "my-mod.action-logistics-request",
       })
       registry:register_action({
-        contract_version = 1,
+        contract_version = CONTRACT_VERSION,
         id = "duplicate",
         types = { "item" },
         input_name = "confirm",
@@ -399,14 +403,14 @@ describe("Registry", function()
     it("does not let an input_name collision on one type affect another type", function()
       local registry = Registry.new()
       registry:register_action({
-        contract_version = 1,
+        contract_version = CONTRACT_VERSION,
         id = "logistics-request",
         types = { "item" },
         input_name = "confirm",
         interface = "my-mod.action-logistics-request",
       })
       registry:register_action({
-        contract_version = 1,
+        contract_version = CONTRACT_VERSION,
         id = "add-to-crafting-queue",
         types = { "fluid" },
         input_name = "confirm",
@@ -423,7 +427,7 @@ describe("Registry", function()
     it("omits an action whose is_available returns false", function()
       local registry = Registry.new()
       registry:register_action({
-        contract_version = 1,
+        contract_version = CONTRACT_VERSION,
         id = "logistics-request",
         types = { "item" },
         input_name = "confirm",
@@ -439,7 +443,7 @@ describe("Registry", function()
     it("includes an action that has no is_available implementation", function()
       local registry = Registry.new()
       registry:register_action({
-        contract_version = 1,
+        contract_version = CONTRACT_VERSION,
         id = "logistics-request",
         types = { "item" },
         input_name = "confirm",
@@ -455,7 +459,7 @@ describe("Registry", function()
       local logger, messages = spy_logger()
       local registry = Registry.new(logger)
       registry:register_action({
-        contract_version = 1,
+        contract_version = CONTRACT_VERSION,
         id = "logistics-request",
         types = { "item" },
         input_name = "confirm",

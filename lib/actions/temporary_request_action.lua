@@ -219,19 +219,11 @@ function TemporaryRequestAction.on_inventory_changed(event)
   check_and_clear(player)
 end
 
---- Adds this action's remote interface and registers it with Quidquid.
-function TemporaryRequestAction.register()
+--- Adds this action's remote interface, named by its declaration in prototypes/actions.lua.
+function TemporaryRequestAction.add_interface()
   remote.add_interface("quidquid.temporary-request-action", {
     is_available = TemporaryRequestAction.is_available,
     execute = execute,
-  })
-  remote.call("quidquid", "register_action", {
-    contract_version = 1,
-    id = "temporary-request",
-    types = { "item", "recipe" },
-    label = { "quidquid.action-temporary-request" },
-    input_name = "quidquid-temporary-request",
-    interface = "quidquid.temporary-request-action",
   })
 end
 

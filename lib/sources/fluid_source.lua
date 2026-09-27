@@ -3,7 +3,6 @@ local build_candidates = require("lib.sources.prototype_candidate")
 
 local FluidSource = {}
 
-local SOURCE_LABEL = { "quidquid.source-fluids" }
 local NAMESPACE = "fluids"
 
 local function collect_fluids()
@@ -46,18 +45,9 @@ local function search(query, player_index)
   return FluidSource.build_candidates(query, collect_fluids(), player.locale, translated_names, include_hidden)
 end
 
---- Adds this source's remote interface and registers it with Quidquid.
-function FluidSource.register()
+--- Adds this source's remote interface, named by its declaration in prototypes/sources.lua.
+function FluidSource.add_interface()
   remote.add_interface("quidquid.fluid-source", { search = search })
-  remote.call("quidquid", "register_source", {
-    contract_version = 1,
-    id = "fluids",
-    type = "fluid",
-    label = SOURCE_LABEL,
-    prefixes = { "f", "fluid" },
-    in_default_search = true,
-    interface = "quidquid.fluid-source",
-  })
 end
 
 return FluidSource

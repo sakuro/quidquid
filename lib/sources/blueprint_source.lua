@@ -23,18 +23,9 @@ local function search(query, player_index)
   return BlueprintLogic.build_candidates(query, player.locale, locations, is_valid_sprite_path)
 end
 
---- Adds this source's remote interface and registers it with Quidquid.
-function BlueprintSource.register()
+--- Adds this source's remote interface, named by its declaration in prototypes/sources.lua.
+function BlueprintSource.add_interface()
   remote.add_interface("quidquid.blueprint-source", { search = search })
-  remote.call("quidquid", "register_source", {
-    contract_version = 1,
-    id = "blueprints",
-    type = "blueprint",
-    label = { "quidquid.source-blueprints" },
-    prefixes = { "b", "blueprint" },
-    in_default_search = true,
-    interface = "quidquid.blueprint-source",
-  })
 end
 
 return BlueprintSource

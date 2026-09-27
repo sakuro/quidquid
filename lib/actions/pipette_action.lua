@@ -51,17 +51,9 @@ local function execute(selected_candidate, player_index)
   end)
 end
 
---- Adds this action's remote interface and registers it with Quidquid.
-function PipetteAction.register()
+--- Adds this action's remote interface, named by its declaration in prototypes/actions.lua.
+function PipetteAction.add_interface()
   remote.add_interface("quidquid.pipette-action", { execute = execute })
-  remote.call("quidquid", "register_action", {
-    contract_version = 1,
-    id = "pipette",
-    types = { "item", "recipe" },
-    label = { "controls.pipette" },
-    input_name = "quidquid-pipette",
-    interface = "quidquid.pipette-action",
-  })
 end
 
 return PipetteAction

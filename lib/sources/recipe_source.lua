@@ -3,7 +3,6 @@ local build_candidates = require("lib.sources.prototype_candidate")
 
 local RecipeSource = {}
 
-local SOURCE_LABEL = { "quidquid.source-recipes" }
 local NAMESPACE = "recipes"
 
 local function collect_recipes()
@@ -46,18 +45,9 @@ local function search(query, player_index)
   return RecipeSource.build_candidates(query, collect_recipes(), player.locale, translated_names, include_hidden)
 end
 
---- Adds this source's remote interface and registers it with Quidquid.
-function RecipeSource.register()
+--- Adds this source's remote interface, named by its declaration in prototypes/sources.lua.
+function RecipeSource.add_interface()
   remote.add_interface("quidquid.recipe-source", { search = search })
-  remote.call("quidquid", "register_source", {
-    contract_version = 1,
-    id = "recipes",
-    type = "recipe",
-    label = SOURCE_LABEL,
-    prefixes = { "r", "recipe" },
-    in_default_search = true,
-    interface = "quidquid.recipe-source",
-  })
 end
 
 return RecipeSource

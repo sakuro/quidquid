@@ -189,17 +189,9 @@ local function execute(candidate, player_index)
   })
 end
 
---- Adds this action's remote interface and registers it with Quidquid.
-function ResearchQueueAction.register()
+--- Adds this action's remote interface, named by its declaration in prototypes/actions.lua.
+function ResearchQueueAction.add_interface()
   remote.add_interface("quidquid.research-queue-action", { execute = execute })
-  remote.call("quidquid", "register_action", {
-    contract_version = 1,
-    id = "add-to-research-queue",
-    types = { "technology" },
-    label = { "quidquid.action-add-to-research-queue" },
-    input_name = "quidquid-add-to-research-queue",
-    interface = "quidquid.research-queue-action",
-  })
 end
 
 return ResearchQueueAction

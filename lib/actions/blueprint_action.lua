@@ -130,23 +130,12 @@ local function export(candidate, player_index)
   end)
 end
 
-local function register(id, input_name, interface, execute)
-  remote.add_interface(interface, { execute = execute })
-  remote.call("quidquid", "register_action", {
-    contract_version = 1,
-    id = id,
-    types = { "blueprint" },
-    label = { "quidquid.action-" .. id },
-    input_name = input_name,
-    interface = interface,
-  })
-end
-
---- Adds the blueprint actions' remote interfaces and registers them with Quidquid.
-function BlueprintAction.register()
-  register("hold-blueprint", "quidquid-hold-blueprint", "quidquid.hold-blueprint-action", hold)
-  register("copy-blueprint", "quidquid-copy-blueprint", "quidquid.copy-blueprint-action", copy_to_inventory)
-  register("export-blueprint", "quidquid-export-blueprint", "quidquid.export-blueprint-action", export)
+--- Adds the blueprint actions' remote interfaces, named by their declarations in
+--- prototypes/actions.lua.
+function BlueprintAction.add_interface()
+  remote.add_interface("quidquid.hold-blueprint-action", { execute = hold })
+  remote.add_interface("quidquid.copy-blueprint-action", { execute = copy_to_inventory })
+  remote.add_interface("quidquid.export-blueprint-action", { execute = export })
 end
 
 return BlueprintAction

@@ -159,7 +159,6 @@ function TechnologySource.build_annotation(state, prerequisites, triggers, progr
   }
 end
 
-local SOURCE_LABEL = { "quidquid.source-technologies" }
 local NAMESPACE = "technologies"
 
 local function collect_technologies()
@@ -345,18 +344,9 @@ local function search(query, player_index)
   return refined
 end
 
---- Adds this source's remote interface and registers it with Quidquid.
-function TechnologySource.register()
+--- Adds this source's remote interface, named by its declaration in prototypes/sources.lua.
+function TechnologySource.add_interface()
   remote.add_interface("quidquid.technology-source", { search = search })
-  remote.call("quidquid", "register_source", {
-    contract_version = 1,
-    id = "technologies",
-    type = "technology",
-    label = SOURCE_LABEL,
-    prefixes = { "t", "technology" },
-    in_default_search = true,
-    interface = "quidquid.technology-source",
-  })
 end
 
 return TechnologySource

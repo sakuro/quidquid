@@ -84,20 +84,12 @@ local function execute(candidate, player_index)
   end, "quidquid.action-open-remote-view-unavailable")
 end
 
---- Adds this action's remote interface and registers it with Quidquid.
+--- Adds this action's remote interface, named by its declaration in prototypes/actions.lua.
 ---
 --- The event handlers above are registered separately, from control.lua: they have to
 --- run whether or not the palette is ever opened.
-function OpenRemoteViewAction.register()
+function OpenRemoteViewAction.add_interface()
   remote.add_interface("quidquid.open-remote-view-action", { execute = execute })
-  remote.call("quidquid", "register_action", {
-    contract_version = 1,
-    id = "open-remote-view",
-    types = { "surface", "resource" },
-    label = { "quidquid.action-open-remote-view" },
-    input_name = "quidquid-open-remote-view",
-    interface = "quidquid.open-remote-view-action",
-  })
 end
 
 return OpenRemoteViewAction
