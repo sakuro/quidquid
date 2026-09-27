@@ -76,6 +76,9 @@ function BlueprintLogic.parse_id(id)
   end
   local indices = {}
   for part in rest:gmatch("[^/]+") do
+    if not part:match("^[1-9]%d*$") then
+      return nil, nil
+    end
     table.insert(indices, tonumber(part))
   end
   return location, indices
