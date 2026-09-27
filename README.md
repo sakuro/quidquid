@@ -3,14 +3,16 @@
 [![Downloads](https://img.shields.io/badge/dynamic/json.svg?label=Downloads&url=https%3A%2F%2Fmods.factorio.com%2Fapi%2Fmods%2Fquidquid&query=%24.downloads_count)](https://mods.factorio.com/mod/quidquid)
 
 Quidquid is a general-purpose palette with incremental search for Factorio.
-Items, fluids, recipes, technologies, surfaces and resource patches are
-searchable, and each result offers the actions that apply to it. Open it with
+Items, fluids, recipes, technologies, surfaces, resource patches and
+blueprints are searchable, and each result offers the actions that apply to
+it. Open it with
 `Ctrl/Cmd + K`.
 
 ## Features
 
 - `Ctrl/Cmd + K` palette that searches items, fluids, recipes, technologies,
-  planets, accessible space platforms, and resource patches
+  planets, accessible space platforms, resource patches, and blueprint
+  library records
 - Source-specific actions on the selected result
 - Source prefixes to restrict a search to one category
 - Temporary personal logistics requests for items and recipe ingredients,
@@ -53,6 +55,7 @@ source accepts a one-letter abbreviation as well as its full name:
 | `r ` / `recipe ` | Recipes |
 | `t ` / `technology ` | Technologies |
 | `s ` / `surface ` | Surfaces |
+| `b ` / `blueprint ` | Blueprints |
 | `R ` / `resource ` | Resources |
 | `= ` | Calculator |
 
@@ -224,6 +227,32 @@ map-pin system, and the pin holds the patch's own entities and recomputes the
 amount continuously. So the list is for choosing a patch and the pin is for
 watching one. The pin is per-player, and is dismissed from Factorio's own UI
 rather than by Quidquid.
+
+### Blueprints
+
+Search blueprints, blueprint books, deconstruction planners and upgrade
+planners in your main inventory and in the blueprint library, both "My
+blueprints" and "Game blueprints". Books are searched into, at any depth.
+
+| Key | Action |
+| --- | --- |
+| Left click | Hold the blueprint |
+| `Ctrl/Cmd` + left click | Show the export string |
+| `Alt` + right click | Copy into the inventory |
+
+A top-level inventory item is picked up itself and goes back to its slot on
+`Q`; an item inside a book item is taken out of the book instead, with no slot
+to return to. A library entry is held as a copy (no mod can put the entry
+itself in the cursor); clearing the cursor discards the copy, and placing it in
+a slot keeps it. Copying an inventory item into the inventory makes a duplicate.
+The export string is shown selected, ready to copy with `Ctrl/Cmd + C`; a mod
+cannot write to the clipboard itself.
+
+Icons written into a name, such as `[item=rail]`, are searchable by what they
+show (`rail`) but never highlighted. A record without a name is not listed.
+The second line starts with where the entry is -- inventory, My blueprints or
+Game blueprints -- followed by the enclosing books, with all but the nearest
+shortened to its icon or first character; the full path is in the tooltip.
 
 ### Calculator
 

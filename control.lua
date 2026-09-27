@@ -7,6 +7,7 @@ local TechnologySource = require("lib.sources.technology_source")
 local SurfaceSource = require("lib.sources.surface_source")
 local CalculatorSource = require("lib.sources.calculator_source")
 local ResourceSource = require("lib.sources.resource_source")
+local BlueprintSource = require("lib.sources.blueprint_source")
 local OpenRemoteViewAction = require("lib.actions.open_remote_view_action")
 local OpenFactoriopediaAction = require("lib.actions.open_factoriopedia_action")
 local OpenTechnologyAction = require("lib.actions.open_technology_action")
@@ -15,7 +16,9 @@ local CraftAction = require("lib.actions.craft_action")
 local PipetteAction = require("lib.actions.pipette_action")
 local PinResourceAction = require("lib.actions.pin_resource_action")
 local TemporaryRequestAction = require("lib.actions.temporary_request_action")
+local BlueprintAction = require("lib.actions.blueprint_action")
 local TemporaryRequestEditor = require("lib.temporary_request_editor")
+local BlueprintExportWindow = require("lib.blueprint_export_window")
 local Palette = require("lib.palette")
 local api = require("lib.api")
 
@@ -23,6 +26,7 @@ local registry = Registry.new(log)
 
 Palette.init(registry)
 TemporaryRequestAction.init(TemporaryRequestEditor)
+BlueprintAction.init(BlueprintExportWindow)
 
 remote.add_interface("quidquid", {
   register_source = function(definition)
@@ -88,7 +92,9 @@ script.on_event(defines.events.on_tick, function()
     PipetteAction.register()
     PinResourceAction.register()
     TemporaryRequestAction.register()
+    BlueprintAction.register()
     ResourceSource.register()
+    BlueprintSource.register()
   end
   flib_dictionary.on_tick()
   ResourceSource.on_tick()
@@ -116,6 +122,7 @@ script.on_event(defines.events.on_gui_hover, Palette.on_gui_hover)
 script.on_event(defines.events.on_gui_closed, function(event)
   Palette.on_gui_closed(event)
   TemporaryRequestEditor.on_gui_closed(event)
+  BlueprintExportWindow.on_gui_closed(event)
   local player = game.get_player(event.player_index)
   if player ~= nil then
     Palette.reclaim_opened(player)
@@ -126,6 +133,14 @@ script.on_event(defines.events.on_gui_click, function(event)
   Palette.on_gui_click(event)
   TemporaryRequestEditor.on_gui_click(event)
   TemporaryRequestEditor.on_cancel_button(event)
+  BlueprintExportWindow.on_gui_click(event)
+  -- A titlebar close button (the editor's cancel, the export window's own) destroys
+  -- its frame directly rather than raising on_gui_closed, so the on_gui_closed
+  -- handler's reclaim never runs for that path; check here too.
+  local player = game.get_player(event.player_index)
+  if player ~= nil then
+    Palette.reclaim_opened(player)
+  end
 end)
 script.on_event("quidquid-temporary-request-editor-confirm", TemporaryRequestEditor.on_confirm_key)
 

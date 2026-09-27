@@ -75,4 +75,23 @@ data:extend({
     key_sequence = "J",
     consuming = "game-only",
   },
+  {
+    type = "custom-input",
+    name = "quidquid-hold-blueprint",
+    key_sequence = "mouse-button-1",
+  },
+  {
+    -- Shares quidquid-pipette's sequence; see quidquid-pin-resource for why that is
+    -- safe. Pipette applies to items and recipes, never to blueprint candidates.
+    type = "custom-input",
+    name = "quidquid-copy-blueprint",
+    key_sequence = "ALT + mouse-button-2",
+  },
+  {
+    -- Shares quidquid-temporary-request's sequence, like quidquid-pin-resource:
+    -- neither of those applies to blueprint records.
+    type = "custom-input",
+    name = "quidquid-export-blueprint",
+    key_sequence = "COMMAND + mouse-button-1",
+  },
 })

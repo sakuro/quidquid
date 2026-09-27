@@ -69,6 +69,27 @@ describe("Palette", function()
     it("returns nil when neither an internal-name match nor secondary_text exists", function()
       assert.is_nil(Palette.internal_caption({}))
     end)
+
+    it("prefixes the internal-name caption with the candidate's search_internal_prefix", function()
+      local prefix = { "", { "gui.inventory" }, " › " }
+      local candidate = {
+        search_internal_name = "iron-plate",
+        search_internal_ranges = { { start_byte = 6, end_byte = 8 } },
+        search_internal_prefix = prefix,
+      }
+      local unprefixed = Palette.internal_caption({
+        search_internal_name = candidate.search_internal_name,
+        search_internal_ranges = candidate.search_internal_ranges,
+      })
+
+      assert.are.same({ "", prefix, unprefixed }, Palette.internal_caption(candidate))
+    end)
+
+    it("ignores search_internal_prefix without an internal name, keeping secondary_text behaviour", function()
+      local candidate = { secondary_text = "23k", search_internal_prefix = { "", { "gui.inventory" }, " › " } }
+
+      assert.are.equal("[font=default]23k[/font]", Palette.internal_caption(candidate))
+    end)
   end)
 
   describe(".is_palette_input", function()
