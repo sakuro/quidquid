@@ -164,9 +164,9 @@ to be generated; Quidquid says which of the two is missing. Factoriopedia works
 for a locked or ungenerated planet either way.
 
 Space platforms are listed when owned by your force or when their owner
-considers your force a friend. Rich text tags in a platform's name (an icon,
-say) aren't searchable, so a platform named with only a tag and no other text
-can't be found by query. Space locations such as Solar System Edge are not
+considers your force a friend. An icon written into a platform's name, such
+as `[item=rocket-part]`, is searchable by what it shows (`rocket-part`) but
+never highlighted. Space locations such as Solar System Edge are not
 surfaces and are not included.
 
 A surface a mod creates by script, with no planet prototype behind it, is left

@@ -2,6 +2,8 @@
 Version: Unreleased
   Features:
     - Search blueprints, books, deconstruction planners and upgrade planners in the inventory and the blueprint library; hold one, copy it into the inventory, or show its export string
+  Changes:
+    - Space platform names are searchable by the icons written into them
 ---------------------------------------------------------------------------------------------------
 Version: 0.5.1
 Date: 2026-09-26

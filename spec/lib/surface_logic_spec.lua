@@ -159,10 +159,26 @@ describe("SurfaceLogic", function()
     assert.are.equal(1, #candidates)
   end)
 
-  it("does not search inside rich-text tags in platform names", function()
+  it("finds a platform by a rich-text tag in its name without highlighting the tag", function()
     local rich_name = "[item=iron-plate] Cargo Express"
 
-    assert.are.same({}, SurfaceLogic.build_candidates("iron", { platform({ search_name = rich_name }) }, false))
+    local by_tag = SurfaceLogic.build_candidates("iron", { platform({ search_name = rich_name }) }, false)
+
+    assert.are.equal(1, #by_tag)
+    assert.are.same({}, by_tag[1].search_display_ranges)
+  end)
+
+  it("finds a platform named with tags only", function()
+    local candidates = SurfaceLogic.build_candidates("rocket", {
+      platform({ search_name = "[item=rocket-part][virtual-signal=signal-1]" }),
+    }, false)
+
+    assert.are.equal(1, #candidates)
+  end)
+
+  it("highlights platform name text around a rich-text tag in the original name", function()
+    local rich_name = "[item=iron-plate] Cargo Express"
+
     local candidates = SurfaceLogic.build_candidates("express", { platform({ search_name = rich_name }) }, false)
 
     assert.are.equal(rich_name, candidates[1].search_display_name)
