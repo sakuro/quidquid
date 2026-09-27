@@ -1,8 +1,7 @@
 ---------------------------------------------------------------------------------------------------
 Version: Unreleased
   Modding:
-    - Sources and actions from other mods are declared as mod-data prototypes instead of registered through a remote call; the extension contract is now version 2
-    - An action declares its tooltip hint as a LocalisedString, so its locale key can live in the declaring mod's own category
+    - Sources and actions from other mods are declared as mod-data prototypes instead of registered through a remote call; the extension contract is now version 2, and an action's tooltip hint can use the declaring mod's own locale category
 ---------------------------------------------------------------------------------------------------
 Version: 0.6.0
 Date: 2026-09-27
