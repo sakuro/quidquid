@@ -80,11 +80,14 @@ local function hold(candidate, player_index)
       if fresh_target.slot ~= nil then
         player.hand_location = { inventory = fresh_target.inventory.index, slot = fresh_target.slot }
       end
+      flying_text(player, "quidquid.action-blueprint-held", selected_candidate)
       return
     end
     if player.cursor_stack.import_stack(export_string(target)) == -1 then
       player.cursor_stack.clear()
       flying_text(player, "quidquid.action-blueprint-import-failed", selected_candidate)
+    else
+      flying_text(player, "quidquid.action-blueprint-held", selected_candidate)
     end
   end)
 end
