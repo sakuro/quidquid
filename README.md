@@ -165,9 +165,9 @@ for a locked or ungenerated planet either way.
 
 Space platforms are listed when owned by your force or when their owner
 considers your force a friend. An icon written into a platform's name, such
-as `[item=rocket-part]`, is searchable by what it shows (`rocket-part`) but
-never highlighted. Space locations such as Solar System Edge are not
-surfaces and are not included.
+as `[item=space-science-pack]`, is searchable by what it shows
+(`space-science-pack`) but never highlighted. Space locations such as Solar
+System Edge are not surfaces and are not included.
 
 A surface a mod creates by script, with no planet prototype behind it, is left
 out too — Space Exploration's zones, Subsurface's underground layers,

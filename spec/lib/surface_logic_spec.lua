@@ -169,8 +169,8 @@ describe("SurfaceLogic", function()
   end)
 
   it("finds a platform named with tags only", function()
-    local candidates = SurfaceLogic.build_candidates("rocket", {
-      platform({ search_name = "[item=rocket-part][virtual-signal=signal-1]" }),
+    local candidates = SurfaceLogic.build_candidates("science", {
+      platform({ search_name = "[item=space-science-pack][virtual-signal=signal-1]" }),
     }, false)
 
     assert.are.equal(1, #candidates)
