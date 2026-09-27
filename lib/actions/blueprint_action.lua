@@ -65,12 +65,20 @@ local function hold(candidate, player_index)
       return
     end
     if target.stack ~= nil then
-      if not player.cursor_stack.swap_stack(target.stack) then
+      -- clear_cursor() can insert the cursor's former contents into this same main
+      -- inventory and shift slots, so the target resolved before it may no longer be
+      -- the right stack; resolve again against the post-clear inventory.
+      local fresh_target = resolve(selected_candidate, player)
+      if fresh_target == nil then
+        flying_text(player, UNAVAILABLE, selected_candidate)
+        return
+      end
+      if not player.cursor_stack.swap_stack(fresh_target.stack) then
         flying_text(player, "quidquid.action-blueprint-hold-failed", selected_candidate)
         return
       end
-      if target.slot ~= nil then
-        player.hand_location = { inventory = target.inventory.index, slot = target.slot }
+      if fresh_target.slot ~= nil then
+        player.hand_location = { inventory = fresh_target.inventory.index, slot = fresh_target.slot }
       end
       return
     end
