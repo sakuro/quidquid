@@ -107,6 +107,8 @@ local function copy_to_inventory(candidate, player_index)
     if stack.import_stack(export_string(target)) == -1 then
       stack.clear()
       flying_text(player, "quidquid.action-blueprint-import-failed", selected_candidate)
+    else
+      flying_text(player, "quidquid.action-blueprint-copied", selected_candidate)
     end
   end)
 end
