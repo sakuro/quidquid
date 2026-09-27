@@ -69,6 +69,12 @@ ignores case.
 
 ## Sources and actions
 
+With [Factory Search](https://mods.factorio.com/mod/FactorySearch) installed,
+`Shift` + `Alt` + left click opens its search for the selected item, fluid,
+recipe or resource. A recipe is searched by its main product, or its only
+product, and a resource by what mining it yields. Without Factory Search the
+action is not offered.
+
 ### Items
 
 Search for items by name.
@@ -81,6 +87,7 @@ Search for items by name.
 | `Ctrl/Cmd` + left click | Create a temporary logistics request |
 | `Alt` + left click | Open in Factoriopedia |
 | `Alt` + right click | Pipette |
+| `Shift` + `Alt` + left click | Search in Factory Search |
 
 Craft actions only use a recipe with the same name as the selected item. Rather
 than fail silently, Quidquid reports why it cannot craft: no recipe of that
@@ -99,6 +106,7 @@ Search for fluids by name.
 | Key | Action |
 | --- | --- |
 | `Alt` + left click | Open in Factoriopedia |
+| `Shift` + `Alt` + left click | Search in Factory Search |
 
 Known limitation: when the game language is English, an entry whose name starts
 with the word Fluid cannot be reached by typing its name in lowercase — the
@@ -123,6 +131,7 @@ craftability checks as items.
 | `Ctrl/Cmd` + left click | Create temporary logistics requests for recipe ingredients |
 | `Alt` + left click | Open in Factoriopedia |
 | `Alt` + right click | Pipette the recipe's item product, if it has exactly one |
+| `Shift` + `Alt` + left click | Search in Factory Search |
 
 ### Technologies
 
@@ -184,6 +193,7 @@ Search for resource patches your force has charted.
 | Left click | Open in remote view |
 | `Ctrl/Cmd` + left click | Pin the patch |
 | `Alt` + left click | Open in Factoriopedia |
+| `Shift` + `Alt` + left click | Search in Factory Search |
 
 Resources are left out of the unlocked search; `resource ` or `R ` reaches
 them — uppercase, since lowercase `r` is already the recipe prefix.

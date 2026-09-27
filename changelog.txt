@@ -1,5 +1,7 @@
 ---------------------------------------------------------------------------------------------------
 Version: Unreleased
+  Features:
+    - Search the selected item, fluid, recipe or resource in Factory Search when that mod is installed
   Locale:
     - Drop the space before parentheses in Japanese
 ---------------------------------------------------------------------------------------------------
