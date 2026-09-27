@@ -1,5 +1,6 @@
 ---------------------------------------------------------------------------------------------------
-Version: Unreleased
+Version: 0.6.0
+Date: 2026-09-27
   Features:
     - Search blueprints, books, deconstruction planners and upgrade planners in the inventory and the blueprint library; hold one, copy it into the inventory, or show its export string
   Changes:
