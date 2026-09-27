@@ -54,10 +54,11 @@ local function flying_text(player, locale_key, candidate)
 end
 
 -- A library record cannot itself go in the cursor (cursor_record is read-only), so
--- holding one gives an imported copy, which clearing the cursor leaves in the
--- inventory. An inventory item is moved into the cursor itself, as clicking its slot
--- would; hand_location then sends it back to that slot on Q. An item taken out of a
--- book item has no slot of its own to return to, so it gets no hand location.
+-- holding one gives an imported copy marked temporary: clearing the cursor discards it
+-- as it would a library pick, while placing it in a slot by hand keeps it. An inventory
+-- item is moved into the cursor itself, as clicking its slot would; hand_location then
+-- sends it back to that slot on Q. An item taken out of a book item has no slot of its
+-- own to return to, so it gets no hand location.
 local function hold(candidate, player_index)
   ActionRunner.run(candidate, player_index, resolve, function(target, selected_candidate, player)
     if player.cursor_stack == nil or not player.clear_cursor() then
@@ -87,6 +88,7 @@ local function hold(candidate, player_index)
       player.cursor_stack.clear()
       flying_text(player, "quidquid.action-blueprint-import-failed", selected_candidate)
     else
+      player.cursor_stack_temporary = true
       flying_text(player, "quidquid.action-blueprint-held", selected_candidate)
     end
   end)
