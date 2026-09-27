@@ -139,28 +139,38 @@ function BlueprintLogic.book_path(labels)
 end
 
 -- Fills in what records and blueprint-like items share under the same attribute
--- names. Each description attribute exists only on its own kinds, and
--- default_icons only on a blueprint; reading one elsewhere raises.
+-- names. Each description attribute exists only on its own kinds. default_icons is
+-- read only from a set-up blueprint: on one that is not (including a blank one),
+-- the engine raises "Given blueprint is empty." instead of returning nil.
 local function describe(node, source)
   if node.type == "blueprint" or node.type == "blueprint-book" then
     node.description = source.blueprint_description
   else
     node.description = source.planner_description
   end
-  if node.type == "blueprint" and (node.icons == nil or next(node.icons) == nil) then
+  if node.type == "blueprint" and (node.icons == nil or next(node.icons) == nil) and source.is_blueprint_setup() then
     node.icons = source.default_icons
   end
 end
 
 local function record_node(key, record)
-  local node = { key = key, type = record.type, label = record.label, icons = record.preview_icons }
-  -- A preview record has not been downloaded yet; only what the library itself
-  -- shows before download (label, preview icons) is read from it.
-  if not record.is_preview then
-    describe(node, record)
-    if node.type == "blueprint-book" then
-      node.children = BlueprintLogic.to_nodes(record.contents)
+  local node = { key = key, type = record.type, label = record.label }
+  -- An unlabelled record is never a candidate (build_candidates skips it), so its
+  -- description and icons are left unread -- describe() would call default_icons,
+  -- which raises for a blank blueprint. A preview record has not been downloaded
+  -- yet; only what the library itself shows before download (label, preview icons)
+  -- is read from it.
+  local labelled = record.label ~= nil and record.label ~= ""
+  if labelled then
+    node.icons = record.preview_icons
+    if not record.is_preview then
+      describe(node, record)
     end
+  end
+  -- Books are walked regardless of label: an unlabelled book can still hold
+  -- labelled candidates.
+  if not record.is_preview and node.type == "blueprint-book" then
+    node.children = BlueprintLogic.to_nodes(record.contents)
   end
   return node
 end
@@ -216,9 +226,13 @@ function BlueprintLogic.item_nodes(inventory, item_main)
     if stack.valid_for_read then
       local kind = BlueprintLogic.item_kind(stack)
       if kind ~= nil then
-        local node =
-          { key = slot, type = kind, item_name = stack.name, label = stack.label, icons = stack.preview_icons }
-        describe(node, stack)
+        local node = { key = slot, type = kind, item_name = stack.name, label = stack.label }
+        -- See record_node's comment: an unlabelled item is never a candidate, so its
+        -- description and icons are left unread.
+        if stack.label ~= nil and stack.label ~= "" then
+          node.icons = stack.preview_icons
+          describe(node, stack)
+        end
         if kind == "blueprint-book" then
           local inner = stack.get_inventory(item_main)
           node.children = inner ~= nil and BlueprintLogic.item_nodes(inner, item_main) or {}

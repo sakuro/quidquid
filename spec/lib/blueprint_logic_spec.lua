@@ -26,6 +26,19 @@ local function book_stack(label, inner)
   })
 end
 
+-- Reproduces the runtime fact that reading default_icons on a blank blueprint raises
+-- ("Given blueprint is empty."); the explicit fields still take precedence over the
+-- metatable, since __index only fires for absent keys.
+local function with_raising_default_icons(fields)
+  return setmetatable(fields, {
+    __index = function(_, key)
+      if key == "default_icons" then
+        error("Given blueprint is empty.")
+      end
+    end,
+  })
+end
+
 describe("BlueprintLogic", function()
   describe(".sprite_path", function()
     it("treats a missing type as item", function()
@@ -168,6 +181,9 @@ describe("BlueprintLogic", function()
           preview_icons = {},
           default_icons = { "d" },
           blueprint_description = "",
+          is_blueprint_setup = function()
+            return true
+          end,
         }),
         [1] = record({
           type = "blueprint-book",
@@ -214,6 +230,38 @@ describe("BlueprintLogic", function()
     it("skips invalid records", function()
       assert.are.same({}, BlueprintLogic.to_nodes({ record({ valid = false, type = "blueprint" }) }))
     end)
+
+    it("converts a labelled blank blueprint record without reading default_icons", function()
+      local blank = with_raising_default_icons(record({
+        type = "blueprint",
+        label = "Blank",
+        preview_icons = {},
+        blueprint_description = "",
+        is_blueprint_setup = function()
+          return false
+        end,
+      }))
+
+      local nodes = BlueprintLogic.to_nodes({ blank })
+
+      assert.are.same({}, nodes[1].icons)
+    end)
+
+    it("converts an unlabelled blank blueprint record without reading default_icons", function()
+      local blank = with_raising_default_icons(record({
+        type = "blueprint",
+        label = "",
+        preview_icons = {},
+        blueprint_description = "",
+        is_blueprint_setup = function()
+          return false
+        end,
+      }))
+
+      assert.has_no.errors(function()
+        BlueprintLogic.to_nodes({ blank })
+      end)
+    end)
   end)
 
   describe(".item_kind", function()
@@ -246,6 +294,9 @@ describe("BlueprintLogic", function()
           preview_icons = {},
           default_icons = { "d" },
           blueprint_description = "x",
+          is_blueprint_setup = function()
+            return true
+          end,
         }),
         stack({ name = "iron-plate" }),
         stack({ valid_for_read = false }),
@@ -273,6 +324,40 @@ describe("BlueprintLogic", function()
           },
         },
       }, BlueprintLogic.item_nodes(inventory, ITEM_MAIN))
+    end)
+
+    it("converts a labelled blank blueprint item without reading default_icons", function()
+      local blank = with_raising_default_icons(stack({
+        is_blueprint = true,
+        name = "blueprint",
+        label = "Blank",
+        preview_icons = {},
+        blueprint_description = "",
+        is_blueprint_setup = function()
+          return false
+        end,
+      }))
+
+      local nodes = BlueprintLogic.item_nodes({ blank }, ITEM_MAIN)
+
+      assert.are.same({}, nodes[1].icons)
+    end)
+
+    it("converts an unlabelled blank blueprint item without reading default_icons", function()
+      local blank = with_raising_default_icons(stack({
+        is_blueprint = true,
+        name = "blueprint",
+        label = "",
+        preview_icons = {},
+        blueprint_description = "",
+        is_blueprint_setup = function()
+          return false
+        end,
+      }))
+
+      assert.has_no.errors(function()
+        BlueprintLogic.item_nodes({ blank }, ITEM_MAIN)
+      end)
     end)
   end)
 
@@ -319,6 +404,10 @@ describe("BlueprintLogic", function()
       assert.is_nil(BlueprintLogic.resolve_item(inventory, { 2, 5 }, ITEM_MAIN, "blueprint", "leaf"))
       assert.is_nil(BlueprintLogic.resolve_item(inventory, { 9 }, ITEM_MAIN, "blueprint", "leaf"))
     end)
+
+    it("returns nil when an intermediate index does not point at a book", function()
+      assert.is_nil(BlueprintLogic.resolve_item({ leaf }, { 1, 1 }, ITEM_MAIN, "blueprint", "leaf"))
+    end)
   end)
 
   describe(".build_candidates", function()
@@ -357,6 +446,14 @@ describe("BlueprintLogic", function()
                 },
               }),
               node({ key = 3, type = "blueprint", label = "" }),
+            },
+          }),
+          node({
+            key = 5,
+            type = "blueprint-book",
+            label = "",
+            children = {
+              node({ key = 6, type = "blueprint", label = "Loose" }),
             },
           }),
         },
@@ -437,6 +534,13 @@ describe("BlueprintLogic", function()
       assert.are.equal("item/deconstruction-planner", candidates["my/1"].icon)
       assert.is_nil(candidates["my/1"].search_internal_name)
       assert.is_nil(candidates["game/1/3"])
+    end)
+
+    it("finds a labelled blueprint through an unlabelled book, leaving that book out of the path", function()
+      local candidate = by_id(BlueprintLogic.build_candidates("loose", "en", locations, always_valid))["game/5/6"]
+
+      assert.is_not_nil(candidate)
+      assert.is_nil(candidate.search_internal_name)
     end)
 
     it("puts only the description in the tooltip of a top-level book", function()
