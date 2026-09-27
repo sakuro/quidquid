@@ -291,6 +291,19 @@ inventory.
 Show hidden or internal entries in search results. It applies to every source
 that searches prototypes: items, fluids, recipes, technologies and surfaces.
 
+## Related mods
+
+- [Factory Palette](https://mods.factorio.com/mod/factory-palette) — a
+  command palette for Factorio 2.0 that also opens with `Ctrl/Cmd + K`.
+- [Quicksearch](https://mods.factorio.com/mod/Quicksearch) — searches the
+  inventory, open chests, logistic networks and craftable recipes to pick up
+  or craft items.
+  [Quicksearch Enhanced](https://mods.factorio.com/mod/quicksearch-enhanced)
+  extends it for Factorio 2.1.
+- [Quick Item Search](https://mods.factorio.com/mod/QuickItemSearch) — an item
+  search for Factorio 1.1. Quidquid's temporary logistics requests are modelled
+  on its temporary requests.
+
 ## Extending Quidquid
 
 Other mods can add their own search sources and palette actions by declaring
