@@ -150,6 +150,7 @@ of patches sharing one).
 | `search_score` | yes | Ranking score, higher first — see [Scoring](#scoring). A candidate without a numeric one raises an error that aborts the entire search, not just that candidate. |
 | `search_display_name` | no | Plain string shown instead of `label` as the name — only a plain string can carry match highlighting. Omitted, `label` is shown. |
 | `search_internal_name` | no | Plain string shown as the muted second line (Quidquid's own sources put the prototype name here). Omitted, `secondary_text` takes that line. |
+| `search_internal_prefix` | no | LocalisedString shown before `search_internal_name` on the second line, as is — include any separator. Neither searched nor highlighted. Ignored without a `search_internal_name`. |
 | `search_display_ranges`, `search_internal_ranges` | no | Arrays of tables with `start_byte` and `end_byte`, marking the matched part of the corresponding name in bold. Omitted, that name is shown without highlighting. |
 | `secondary_text` | no | Muted second line for a candidate with no `search_internal_name`. Omitted, such a candidate has no second line. |
 | `numeric` | no | Right-align the name column, for a candidate whose label is a value rather than a name. Defaults to `false`. |

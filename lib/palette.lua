@@ -275,17 +275,23 @@ end
 --- A highlighted internal-name match when the candidate has one, or -- for a candidate
 --- with no internal name to search at all, such as the calculator's result -- its plain
 --- secondary_text. highlight() with no ranges already renders a plain string in the same
---- font, so secondary_text needs no highlighting logic of its own here.
+--- font, so secondary_text needs no highlighting logic of its own here. A candidate that
+--- also supplies search_internal_prefix gets it prepended as is -- the prefix never went
+--- through the matcher, so it is neither searched nor highlighted.
 ---@param candidate table
 ---@return string|table|nil  nil for a candidate with neither
 function Palette.internal_caption(candidate)
   if candidate.search_internal_name ~= nil then
-    return search_highlight.highlight(
+    local highlighted = search_highlight.highlight(
       candidate.search_internal_name,
       candidate.search_internal_ranges,
       "default",
       "default-bold"
     )
+    if candidate.search_internal_prefix ~= nil then
+      return { "", candidate.search_internal_prefix, highlighted }
+    end
+    return highlighted
   end
   if candidate.secondary_text ~= nil then
     return search_highlight.highlight(candidate.secondary_text, nil, "default", "default-bold")
