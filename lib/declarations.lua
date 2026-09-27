@@ -102,6 +102,9 @@ local function action_problem(data, custom_inputs)
   if not is_localised_string(data.label) then
     return "label must be a LocalisedString"
   end
+  if not is_localised_string(data.hint) then
+    return "hint must be a LocalisedString"
+  end
   if not is_non_empty_string(data.input_name) then
     return "input_name must be a non-empty string"
   end

@@ -30,7 +30,7 @@ Declare in `data.lua` or `data-updates.lua`. Each source or action is one
 | Field | Required | Meaning |
 | --- | --- | --- |
 | `type` | yes | `"mod-data"`. |
-| `name` | yes | Identifies the source or action in Quidquid's log messages, and an action's tooltip locale key (see [Tooltip hint locale key](#tooltip-hint-locale-key)). Prefix it with your mod name. |
+| `name` | yes | Identifies the source or action in Quidquid's log messages. Prefix it with your mod name. |
 | `data_type` | yes | `"quidquid.source"` or `"quidquid.action"`. |
 | `order` | no | Registration order, compared as a string with ties broken by `name`. It decides which candidate goes first on an equal `search_score`, and which declaration keeps a prefix or an action slot that two of them claim. Quidquid's own sources use `"a"` to `"h"`; omitted, it is the empty string, which sorts first. |
 | `data` | yes | The definition described under [Sources](#definition) or [Actions](#definition-1), including `contract_version`. |
@@ -251,6 +251,7 @@ The `data` of a `quidquid.action` declaration:
 | `contract_version` | yes | Must be `2`. |
 | `types` | yes | Non-empty array of candidate types this action applies to. |
 | `label` | yes | LocalisedString naming the action in the candidate tooltip. |
+| `hint` | yes | LocalisedString for the key binding shown after the label — see [Tooltip hint](#tooltip-hint). |
 | `input_name` | yes | Name of a custom-input prototype, which must exist by the startup check. Quidquid registers the event handler for it. One action per type and `input_name`; for a pair two declarations claim, the later one is ignored with a log line. |
 | `interface` | yes | Name of your remote interface implementing the functions below. |
 
@@ -266,20 +267,17 @@ type, such as the player's own state. Whether one particular candidate can be
 acted on is a fact for `execute` to resolve and report to the player — hiding it
 in `is_available` removes the action from the tooltip without saying why.
 
-### Tooltip hint locale key
+### Tooltip hint
 
-The tooltip line for an action reads `<label> (<key binding>)`. The engine only
-substitutes `__CONTROL__<input>__` for text that comes from a locale file, so the
-key binding part is read from `quidquid.action-<name>-hint`, where `<name>` is the
-declaration's prototype name — in the **`quidquid`** locale category, not yours.
-Locale categories merge across mods, so add it to your own locale file:
+The tooltip line for an action reads `<label> (<hint>)`. The engine only
+substitutes `__CONTROL__<input>__` with the player's key binding in text that comes
+from a locale file, so `hint` has to name a locale key rather than carry the text
+itself:
 
 ```ini
-[quidquid]
-action-my-mod-do-thing-hint=__CONTROL__my-mod-do-thing__
+[my-mod]
+action-do-thing-hint=__CONTROL__my-mod-do-thing__
 ```
-
-Without that entry the tooltip shows an unknown-key marker.
 
 ### Minimal example
 
@@ -295,6 +293,7 @@ data:extend({
       contract_version = 2,
       types = { "my-mod-widget", "item" },
       label = { "my-mod.action-do-thing" },
+      hint = { "my-mod.action-do-thing-hint" },
       input_name = "my-mod-do-thing",
       interface = "my-mod-do-thing-action",
     },

@@ -19,6 +19,7 @@ local function action_data(overrides)
     contract_version = Declarations.CONTRACT_VERSION,
     types = { "widget" },
     label = { "my-mod.action-do-thing" },
+    hint = { "my-mod.action-do-thing-hint" },
     input_name = "my-mod-do-thing",
     interface = "my-mod.do-thing-action",
   }
@@ -179,6 +180,7 @@ describe("Declarations", function()
       { "empty types", { types = {} }, "types" },
       { "a non-string type", { types = { 1 } }, "types" },
       { "a missing label", { label = false }, "label" },
+      { "a missing hint", { hint = false }, "hint" },
       { "a missing input_name", { input_name = false }, "input_name" },
       { "an input_name with no custom-input", { input_name = "no-such-input" }, "no-such-input" },
       { "a missing interface", { interface = false }, "interface" },
