@@ -64,6 +64,7 @@ function BlueprintExportWindow.open(player, export_string)
   left_spacer.style.horizontally_stretchable = true
   button_row.add({
     type = "button",
+    style = "green_button",
     caption = { "gui.close" },
     tags = { quidquid_blueprint_export_close = true },
   })
