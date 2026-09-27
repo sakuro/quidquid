@@ -1,8 +1,7 @@
--- Sources and actions are declared as mod-data prototypes rather than registered
--- through a remote call: a prototype is readable from control.lua's main chunk, so
--- the registry is complete before any event fires, and a malformed declaration can
--- stop the game at startup instead of leaving a log line nobody reads. See
--- EXTENDING.md "Declaring".
+-- Sources and actions are declared as mod-data prototypes. A prototype is readable
+-- from control.lua's main chunk, so the registry is complete before any event fires,
+-- and a malformed declaration stops the game at startup. See EXTENDING.md
+-- "Declaring".
 
 local Declarations = {}
 
