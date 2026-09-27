@@ -236,14 +236,15 @@ blueprints" and "Game blueprints". Books are searched into, at any depth.
 
 | Key | Action |
 | --- | --- |
-| Left click | Hold it |
+| Left click | Hold the blueprint |
 | `Ctrl/Cmd` + left click | Show the export string |
 | `Alt` + right click | Copy into the inventory |
 
-An inventory item is picked up itself and goes back to its slot on `Q`. A
-library entry is held as a copy, since no mod can put the entry itself in the
-cursor, so clearing the cursor leaves the copy in the inventory. Copying an
-inventory item into the inventory makes a duplicate.
+A top-level inventory item is picked up itself and goes back to its slot on
+`Q`; an item inside a book item is taken out of the book instead, with no slot
+to return to. A library entry is held as a copy, since no mod can put the
+entry itself in the cursor, so clearing the cursor leaves the copy in the
+inventory. Copying an inventory item into the inventory makes a duplicate.
 The export string is shown selected, ready to copy with `Ctrl/Cmd + C`; a mod
 cannot write to the clipboard itself.
 
