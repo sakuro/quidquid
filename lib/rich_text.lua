@@ -1,33 +1,3 @@
---- Replaces rich-text tags with spaces, preserving their byte length.
----
---- Equal length is the whole point: a masked value is what gets normalized and
---- matched, while the original is what gets displayed, so the position map only
---- lines up if masking moves no byte. Spaces rather than removal, for the same
---- reason.
----@param value string  returned unchanged when not a string
----@return string
-local function mask_tags(value)
-  if type(value) ~= "string" then
-    return value
-  end
-
-  local result = {}
-  local next_byte = 1
-  while next_byte <= #value do
-    local start_byte, end_byte = value:find("%b[]", next_byte)
-    if start_byte == nil then
-      table.insert(result, value:sub(next_byte))
-      break
-    end
-    if next_byte < start_byte then
-      table.insert(result, value:sub(next_byte, start_byte - 1))
-    end
-    table.insert(result, string.rep(" ", end_byte - start_byte + 1))
-    next_byte = end_byte + 1
-  end
-  return table.concat(result)
-end
-
 -- Tags whose text never helps a search: formatting, a map position, a whole
 -- blueprint string (which would fuzzy-match nearly any query).
 local ERASED_TAG_NAMES = { color = true, font = true, gps = true, ["special-item"] = true }
@@ -159,7 +129,6 @@ local function icon_list_caption(items, icon_fn, limit, more_locale_key, separat
 end
 
 return {
-  mask_tags = mask_tags,
   searchable = searchable,
   map_ranges = map_ranges,
   icon_list_caption = icon_list_caption,

@@ -55,12 +55,14 @@ function SurfaceLogic.build_candidates(query, descriptors, include_hidden, local
   local candidates = {}
   local matcher = api.matcher(query, locale)
   for _, descriptor in ipairs(descriptors) do
-    -- A platform's name is player-written and can carry rich text tags, which are
-    -- masked out before matching (see README, "Surfaces"). Its
-    -- prototype name is meaningless to search, so only planets match on one.
+    -- A platform's name is player-written and often names things through rich text
+    -- tags, so it is matched in its searchable form: tag contents are searchable
+    -- but map to no original byte, keeping them out of highlighting. Its prototype
+    -- name is meaningless to search, so only planets match on one.
     local search_name = descriptor.search_name
-    if search_name and descriptor.kind == "platform" then
-      search_name = rich_text.mask_tags(search_name)
+    local origins = nil
+    if type(search_name) == "string" and descriptor.kind == "platform" then
+      search_name, origins = rich_text.searchable(search_name)
     end
     local match = matcher:match("surface", descriptor.id, {
       display = search_name,
@@ -79,7 +81,8 @@ function SurfaceLogic.build_candidates(query, descriptors, include_hidden, local
         icon = descriptor.icon,
         search_display_name = type(descriptor.search_name) == "string" and descriptor.search_name or nil,
         search_internal_name = descriptor.kind ~= "platform" and descriptor.name or nil,
-        search_display_ranges = match.display_ranges,
+        search_display_ranges = origins ~= nil and rich_text.map_ranges(match.display_ranges, origins)
+          or match.display_ranges,
         search_internal_ranges = match.internal_ranges,
         search_score = match.score,
       })
