@@ -347,7 +347,7 @@ local function annotation_for(node, path, is_valid_sprite_path)
   return { caption = caption, tooltip = tooltip }
 end
 
-local function build_candidate(matcher, node, id, ancestors, is_valid_sprite_path)
+local function build_candidate(matcher, node, id, ancestors, location_name, is_valid_sprite_path)
   local label_text, label_origins = rich_text.searchable(node.label)
   local path = BlueprintLogic.book_path(ancestors)
   local path_text, path_origins = nil, nil
@@ -358,6 +358,10 @@ local function build_candidate(matcher, node, id, ancestors, is_valid_sprite_pat
   if match == nil then
     return nil
   end
+  -- A top-level inventory entry has no book path to show as the second line, and would
+  -- otherwise be indistinguishable from a top-level library entry; a candidate inside a
+  -- book already has the book path for that line, so it gets none here.
+  local secondary_text = (path == nil and location_name == "inv") and { "gui.inventory" } or nil
   return {
     type = "blueprint",
     id = id,
@@ -371,6 +375,7 @@ local function build_candidate(matcher, node, id, ancestors, is_valid_sprite_pat
     search_internal_ranges = path
         and to_display_ranges(rich_text.map_ranges(match.internal_ranges, path_origins), path)
       or {},
+    secondary_text = secondary_text,
     search_score = match.score,
     annotation = annotation_for(node, path, is_valid_sprite_path),
   }
@@ -394,7 +399,7 @@ function BlueprintLogic.build_candidates(query, locale, locations, is_valid_spri
       local labelled = node.label ~= nil and node.label ~= ""
       if labelled then
         local id = BlueprintLogic.format_id(location_name, node_indices)
-        local candidate = build_candidate(matcher, node, id, ancestors, is_valid_sprite_path)
+        local candidate = build_candidate(matcher, node, id, ancestors, location_name, is_valid_sprite_path)
         if candidate ~= nil then
           table.insert(candidates, candidate)
         end

@@ -559,5 +559,47 @@ describe("BlueprintLogic", function()
     it("returns nothing for an empty query", function()
       assert.are.same({}, BlueprintLogic.build_candidates("", "en", locations, always_valid))
     end)
+
+    it("shows Inventory as the second line of a top-level inventory candidate", function()
+      local inv_locations = { { name = "inv", nodes = { node({ key = 1, type = "blueprint", label = "Solo" }) } } }
+      local candidate = by_id(BlueprintLogic.build_candidates("solo", "en", inv_locations, always_valid))["inv/1"]
+
+      assert.are.same({ "gui.inventory" }, candidate.secondary_text)
+      assert.is_nil(candidate.search_internal_name)
+    end)
+
+    it("gives a top-level library candidate neither a book path nor a secondary line", function()
+      local top_level_locations = {
+        { name = "my", nodes = { node({ key = 1, type = "blueprint", label = "Solo" }) } },
+        { name = "game", nodes = { node({ key = 2, type = "blueprint", label = "Solo" }) } },
+      }
+      local candidates = by_id(BlueprintLogic.build_candidates("solo", "en", top_level_locations, always_valid))
+
+      assert.is_nil(candidates["my/1"].secondary_text)
+      assert.is_nil(candidates["my/1"].search_internal_name)
+      assert.is_nil(candidates["game/2"].secondary_text)
+      assert.is_nil(candidates["game/2"].search_internal_name)
+    end)
+
+    it("gives an inventory candidate inside a book its book path instead of a secondary line", function()
+      local inv_book_locations = {
+        {
+          name = "inv",
+          nodes = {
+            node({
+              key = 1,
+              type = "blueprint-book",
+              label = "Book",
+              children = { node({ key = 2, type = "blueprint", label = "Solo" }) },
+            }),
+          },
+        },
+      }
+      local candidate =
+        by_id(BlueprintLogic.build_candidates("solo", "en", inv_book_locations, always_valid))["inv/1/2"]
+
+      assert.are.equal("Book", candidate.search_internal_name)
+      assert.is_nil(candidate.secondary_text)
+    end)
   end)
 end)
