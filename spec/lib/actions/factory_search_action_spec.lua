@@ -95,6 +95,12 @@ describe("FactorySearchAction", function()
 
       assert.is_nil(FactorySearchAction.resolve_signal({ type = "resource", id = "1", resource_name = "odd-rock" }))
     end)
+
+    it("returns nil for a resource whose entity prototype no longer exists", function()
+      _G.prototypes = { entity = {} }
+
+      assert.is_nil(FactorySearchAction.resolve_signal({ type = "resource", id = "1", resource_name = "gone" }))
+    end)
   end)
 
   describe(".interface_ready", function()

@@ -70,8 +70,16 @@ end
 
 -- Whether FactorySearch is present is the same for every candidate, so it gates here;
 -- whether one candidate maps to an item or fluid is resolved and reported by execute.
+local ready = nil
+
+-- interface_ready can only change when the mod set changes, and that reloads the Lua
+-- state, so this cache is never stale; it is also the same on every peer, so it stays
+-- desync-safe despite living outside storage.
 local function is_available(_player_index)
-  return FactorySearchAction.interface_ready(RemoteCaller)
+  if ready == nil then
+    ready = FactorySearchAction.interface_ready(RemoteCaller)
+  end
+  return ready
 end
 
 local function execute(candidate, player_index)
