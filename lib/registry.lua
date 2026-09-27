@@ -1,12 +1,11 @@
-local SOURCE_CONTRACT_VERSION = 1
-local ACTION_CONTRACT_VERSION = 1
+local Declarations = require("lib.declarations")
 
 local Registry = {}
 Registry.__index = Registry
 
 local function noop_logger(_) end
 
---- A registry of the sources and actions registered through the remote interface.
+--- A registry of the sources and actions declared as mod-data prototypes.
 ---@param logger function|nil  called with one message per rejection; defaults to a no-op
 ---@return Registry
 function Registry.new(logger)
@@ -22,20 +21,22 @@ end
 
 --- Registers a source, or rejects it and says why in the log.
 ---
---- Rejection is a return value and a log line, never an error: a source registers
---- from its own control.lua, where raising would take down the registering mod for
---- a mistake in its definition table. A prefix already taken is skipped while the
---- rest of the registration succeeds -- the source is still reachable, just not
---- under that prefix. See EXTENDING.md "Rejections and failures".
----@param definition table  see EXTENDING.md "Sources"; contract_version must be 1
+--- Rejection is a return value and a log line, never an error: what is rejected here
+--- is a declaration for another contract version or one conflicting with another
+--- mod's, and raising would refuse to load any save with that pair of mods installed.
+--- A malformed declaration has already failed at startup (Declarations.validate). A
+--- prefix already taken is skipped while the rest of the registration succeeds -- the
+--- source is still reachable, just not under that prefix. See EXTENDING.md
+--- "Rejections and failures".
+---@param definition table  see EXTENDING.md "Sources"; from Declarations.collect
 ---@return boolean  false when the definition was rejected outright
 function Registry:register_source(definition)
-  if definition.contract_version ~= SOURCE_CONTRACT_VERSION then
+  if definition.contract_version ~= Declarations.CONTRACT_VERSION then
     self.logger(
       ("quidquid: source '%s' rejected: unsupported contract_version %s (expected %d)"):format(
         tostring(definition.id),
         tostring(definition.contract_version),
-        SOURCE_CONTRACT_VERSION
+        Declarations.CONTRACT_VERSION
       )
     )
     return false
@@ -109,15 +110,15 @@ end
 --- Same contract as register_source: a rejection is a return value and a log line.
 --- A type/input_name pair already taken is skipped while the rest of the
 --- registration succeeds, so the action still applies to its other types.
----@param definition table  see EXTENDING.md "Actions"; contract_version must be 1
+---@param definition table  see EXTENDING.md "Actions"; from Declarations.collect
 ---@return boolean  false when the definition was rejected outright
 function Registry:register_action(definition)
-  if definition.contract_version ~= ACTION_CONTRACT_VERSION then
+  if definition.contract_version ~= Declarations.CONTRACT_VERSION then
     self.logger(
       ("quidquid: action '%s' rejected: unsupported contract_version %s (expected %d)"):format(
         tostring(definition.id),
         tostring(definition.contract_version),
-        ACTION_CONTRACT_VERSION
+        Declarations.CONTRACT_VERSION
       )
     )
     return false

@@ -64,17 +64,9 @@ local function execute(selected_candidate, player_index)
   end)
 end
 
---- Adds this action's remote interface and registers it with Quidquid.
-function OpenFactoriopediaAction.register()
+--- Adds this action's remote interface, named by its declaration in prototypes/actions.lua.
+function OpenFactoriopediaAction.add_interface()
   remote.add_interface("quidquid.open-factoriopedia-action", { execute = execute })
-  remote.call("quidquid", "register_action", {
-    contract_version = 1,
-    id = "open-factoriopedia",
-    types = { "item", "fluid", "recipe", "surface", "resource" },
-    label = { "quidquid.action-open-factoriopedia" },
-    input_name = "quidquid-open-factoriopedia",
-    interface = "quidquid.open-factoriopedia-action",
-  })
 end
 
 return OpenFactoriopediaAction

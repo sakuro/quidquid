@@ -219,7 +219,6 @@ function ResourceSource.on_resource_entity_changed(event)
   enqueue(entity.surface_index, math.floor(entity.position.x / 32), math.floor(entity.position.y / 32))
 end
 
-local SOURCE_LABEL = { "quidquid.source-resources" }
 local NAMESPACE = "resources"
 -- flib's dictionary is one flat table of resource-prototype-name -> translated name;
 -- prototype names are kebab-case, so this sentinel (double-underscore, never valid
@@ -400,20 +399,9 @@ function ResourceSource.register_dictionary()
   flib_dictionary.add(NAMESPACE, OCCUPIED_MARKER_KEY, { "gui.occupied", "" })
 end
 
---- Adds this source's remote interface and registers it with Quidquid.
-function ResourceSource.register()
+--- Adds this source's remote interface, named by its declaration in prototypes/sources.lua.
+function ResourceSource.add_interface()
   remote.add_interface("quidquid.resource-source", { search = search, decorate = decorate })
-  remote.call("quidquid", "register_source", {
-    contract_version = 1,
-    id = "resources",
-    type = "resource",
-    label = SOURCE_LABEL,
-    -- "R" is uppercase because recipes hold "r". Prefix matching is case-sensitive --
-    -- see EXTENDING.md "Definition" and spec/lib/registry_spec.lua.
-    prefixes = { "resource", "R" },
-    in_default_search = false,
-    interface = "quidquid.resource-source",
-  })
 end
 
 return ResourceSource

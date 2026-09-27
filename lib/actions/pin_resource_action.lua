@@ -38,17 +38,9 @@ local function execute(candidate, player_index)
   end, "quidquid.action-pin-resource-unavailable")
 end
 
---- Adds this action's remote interface and registers it with Quidquid.
-function PinResourceAction.register()
+--- Adds this action's remote interface, named by its declaration in prototypes/actions.lua.
+function PinResourceAction.add_interface()
   remote.add_interface("quidquid.pin-resource-action", { execute = execute })
-  remote.call("quidquid", "register_action", {
-    contract_version = 1,
-    id = "pin-resource",
-    types = { "resource" },
-    label = { "quidquid.action-pin-resource" },
-    input_name = "quidquid-pin-resource",
-    interface = "quidquid.pin-resource-action",
-  })
 end
 
 return PinResourceAction

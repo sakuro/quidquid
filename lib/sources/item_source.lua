@@ -185,7 +185,6 @@ function ItemSource.annotate(candidate, ctx)
   )
 end
 
-local SOURCE_LABEL = { "quidquid.source-items" }
 local NAMESPACE = "items"
 
 local function collect_items()
@@ -314,18 +313,9 @@ local function search(query, player_index)
   return candidates
 end
 
---- Adds this source's remote interface and registers it with Quidquid.
-function ItemSource.register()
+--- Adds this source's remote interface, named by its declaration in prototypes/sources.lua.
+function ItemSource.add_interface()
   remote.add_interface("quidquid.item-source", { search = search })
-  remote.call("quidquid", "register_source", {
-    contract_version = 1,
-    id = "items",
-    type = "item",
-    label = SOURCE_LABEL,
-    prefixes = { "i", "item" },
-    in_default_search = true,
-    interface = "quidquid.item-source",
-  })
 end
 
 return ItemSource

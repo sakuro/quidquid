@@ -2,7 +2,6 @@ local NumberFormat = require("lib.number_format")
 
 local CalculatorSource = {}
 
-local SOURCE_LABEL = { "quidquid.source-calculator" }
 local DECIMAL_PLACES = 4
 
 -- helpers.evaluate_expression has no built-in suffix notation, but a number directly
@@ -77,21 +76,9 @@ local function is_query_valid(query, _player_index)
   return CalculatorSource.valid_value(pcall(helpers.evaluate_expression, query, SUFFIX_VARIABLES)) ~= nil
 end
 
---- Adds this source's remote interface and registers it with Quidquid.
----
---- Registered with the "=" prefix and out of the default search: every query would
---- otherwise be handed to the expression evaluator.
-function CalculatorSource.register()
+--- Adds this source's remote interface, named by its declaration in prototypes/sources.lua.
+function CalculatorSource.add_interface()
   remote.add_interface("quidquid.calculator-source", { search = search, is_query_valid = is_query_valid })
-  remote.call("quidquid", "register_source", {
-    contract_version = 1,
-    id = "calculator",
-    type = "calculation",
-    label = SOURCE_LABEL,
-    prefixes = { "=" },
-    in_default_search = false, -- excluded from the unlocked default search
-    interface = "quidquid.calculator-source",
-  })
 end
 
 return CalculatorSource

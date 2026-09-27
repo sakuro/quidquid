@@ -106,44 +106,15 @@ local function craft(count_for)
   end
 end
 
-local function register(id, input_name, interface, label, count_for)
-  remote.add_interface(interface, { execute = craft(count_for) })
-  remote.call("quidquid", "register_action", {
-    contract_version = 1,
-    id = id,
-    types = { "item", "recipe" },
-    label = label,
-    input_name = input_name,
-    interface = interface,
-  })
-end
-
---- Adds the three craft actions' remote interfaces and registers them with Quidquid.
+--- Adds the three craft actions' remote interfaces, named by their declarations in
+--- prototypes/actions.lua.
 ---
 --- Craft 1, Craft 5 and Craft all differ only in how many crafts they start, so they
 --- share one execute path and one resolve step.
-function CraftAction.register()
-  register(
-    "craft-1",
-    "quidquid-craft-1",
-    "quidquid.craft-1-action",
-    { "quidquid.action-craft-1" },
-    CraftAction.fixed_count(1)
-  )
-  register(
-    "craft-5",
-    "quidquid-craft-5",
-    "quidquid.craft-5-action",
-    { "quidquid.action-craft-5" },
-    CraftAction.fixed_count(5)
-  )
-  register(
-    "craft-all",
-    "quidquid-craft-all",
-    "quidquid.craft-all-action",
-    { "quidquid.action-craft-all" },
-    CraftAction.max_craftable
-  )
+function CraftAction.add_interface()
+  remote.add_interface("quidquid.craft-1-action", { execute = craft(CraftAction.fixed_count(1)) })
+  remote.add_interface("quidquid.craft-5-action", { execute = craft(CraftAction.fixed_count(5)) })
+  remote.add_interface("quidquid.craft-all-action", { execute = craft(CraftAction.max_craftable) })
 end
 
 return CraftAction
