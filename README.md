@@ -293,8 +293,8 @@ that searches prototypes: items, fluids, recipes, technologies and surfaces.
 
 ## Extending Quidquid
 
-Other mods can add their own search sources and palette actions through
-Quidquid's remote interface. See
+Other mods can add their own search sources and palette actions by declaring
+them as `mod-data` prototypes. See
 [EXTENDING.md](https://github.com/sakuro/quidquid/blob/main/EXTENDING.md).
 
 ## Third-party software

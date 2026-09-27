@@ -70,7 +70,7 @@ Do not create a section for the next release version directly — version bumpin
 
 - README.md: Project overview
 - CONTRIBUTING.md: Development setup, pull request guidelines, and the function doc-comment convention enforced by `mise run doc-check` (see "Comment conventions")
-- EXTENDING.md: Remote-interface contract for mods adding sources/actions (linked from README.md)
+- EXTENDING.md: Contract for mods adding sources/actions: mod-data declarations and the remote interfaces they name (linked from README.md)
 - .scaffold-sync.json / .scaffold-sync.paths: scaffold-drift sync state and tracked-path list; do not delete (see CONTRIBUTING.md "Scaffold drift")
 
 # External References
