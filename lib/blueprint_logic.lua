@@ -8,6 +8,14 @@ local PATH_SEPARATOR = " › "
 local LOCATIONS = { my = true, game = true, inv = true }
 local NAMESPACE = "blueprint"
 
+-- Vanilla's own wording for where a blueprint-like entry lives, matched so the second
+-- line reads like the rest of the game rather than a Quidquid-specific label.
+local LOCATION_NAMES = {
+  inv = { "gui.inventory" },
+  my = { "gui-blueprint-library.private-shelf" },
+  game = { "gui-blueprint-library.game-blueprints-title" },
+}
+
 --- A signal's SpritePath.
 ---
 --- SignalID reads `type` as nil for items, and names virtual signals `virtual` while
@@ -358,10 +366,13 @@ local function build_candidate(matcher, node, id, ancestors, location_name, is_v
   if match == nil then
     return nil
   end
-  -- A top-level inventory entry has no book path to show as the second line, and would
-  -- otherwise be indistinguishable from a top-level library entry; a candidate inside a
-  -- book already has the book path for that line, so it gets none here.
-  local secondary_text = (path == nil and location_name == "inv") and { "gui.inventory" } or nil
+  local location_label = LOCATION_NAMES[location_name]
+  -- A top-level entry has no book path to show as the second line, so it names its
+  -- location there instead -- entries with the same label from different locations
+  -- (e.g. inventory vs. My blueprints) would otherwise be indistinguishable. A
+  -- candidate inside a book already has the book path for that line, so its location
+  -- is prefixed onto that path instead of taking the line for itself.
+  local secondary_text = path == nil and location_label or nil
   return {
     type = "blueprint",
     id = id,
@@ -375,6 +386,7 @@ local function build_candidate(matcher, node, id, ancestors, location_name, is_v
     search_internal_ranges = path
         and to_display_ranges(rich_text.map_ranges(match.internal_ranges, path_origins), path)
       or {},
+    search_internal_prefix = path and { "", location_label, PATH_SEPARATOR } or nil,
     secondary_text = secondary_text,
     search_score = match.score,
     annotation = annotation_for(node, path, is_valid_sprite_path),

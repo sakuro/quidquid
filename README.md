@@ -250,7 +250,8 @@ cannot write to the clipboard itself.
 
 Icons written into a name, such as `[item=rail]`, are searchable by what they
 show (`rail`) but never highlighted. A record without a name is not listed.
-The second line shows the books a record sits in, with all but the nearest
+The second line starts with where the entry is -- inventory, My blueprints or
+Game blueprints -- followed by the enclosing books, with all but the nearest
 shortened to its icon or first character; the full path is in the tooltip.
 
 ### Calculator

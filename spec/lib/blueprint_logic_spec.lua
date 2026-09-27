@@ -568,20 +568,20 @@ describe("BlueprintLogic", function()
       assert.is_nil(candidate.search_internal_name)
     end)
 
-    it("gives a top-level library candidate neither a book path nor a secondary line", function()
+    it("gives each top-level library candidate its own location as the secondary line", function()
       local top_level_locations = {
         { name = "my", nodes = { node({ key = 1, type = "blueprint", label = "Solo" }) } },
         { name = "game", nodes = { node({ key = 2, type = "blueprint", label = "Solo" }) } },
       }
       local candidates = by_id(BlueprintLogic.build_candidates("solo", "en", top_level_locations, always_valid))
 
-      assert.is_nil(candidates["my/1"].secondary_text)
+      assert.are.same({ "gui-blueprint-library.private-shelf" }, candidates["my/1"].secondary_text)
       assert.is_nil(candidates["my/1"].search_internal_name)
-      assert.is_nil(candidates["game/2"].secondary_text)
+      assert.are.same({ "gui-blueprint-library.game-blueprints-title" }, candidates["game/2"].secondary_text)
       assert.is_nil(candidates["game/2"].search_internal_name)
     end)
 
-    it("gives an inventory candidate inside a book its book path instead of a secondary line", function()
+    it("prefixes an inventory candidate's book path with its location instead of a secondary line", function()
       local inv_book_locations = {
         {
           name = "inv",
@@ -599,6 +599,7 @@ describe("BlueprintLogic", function()
         by_id(BlueprintLogic.build_candidates("solo", "en", inv_book_locations, always_valid))["inv/1/2"]
 
       assert.are.equal("Book", candidate.search_internal_name)
+      assert.are.same({ "", { "gui.inventory" }, " › " }, candidate.search_internal_prefix)
       assert.is_nil(candidate.secondary_text)
     end)
   end)
