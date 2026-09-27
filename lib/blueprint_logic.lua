@@ -1,8 +1,12 @@
+local api = require("lib.api")
+local rich_text = require("lib.rich_text")
+
 local BlueprintLogic = {}
 
 local MISSING_ICON = "utility/missing_icon"
 local PATH_SEPARATOR = " › "
 local LOCATIONS = { my = true, game = true, inv = true }
+local NAMESPACE = "blueprint"
 
 --- A signal's SpritePath.
 ---
@@ -291,6 +295,105 @@ function BlueprintLogic.resolve_item(inventory, indices, item_main, record_type,
     return nil
   end
   return found
+end
+
+local function append(list, value)
+  local copy = { table.unpack(list) }
+  table.insert(copy, value)
+  return copy
+end
+
+-- Carries ranges over the full path onto the displayed one. Only the nearest book is
+-- displayed as written; a range in an abbreviated book has nothing to land on.
+local function to_display_ranges(ranges, path)
+  local shifted = {}
+  local offset = path.display_start - path.full_start
+  for _, range in ipairs(ranges) do
+    local start_byte = math.max(range.start_byte, path.full_start)
+    if start_byte <= range.end_byte then
+      table.insert(shifted, { start_byte = start_byte + offset, end_byte = range.end_byte + offset })
+    end
+  end
+  return shifted
+end
+
+local function annotation_for(node, path, is_valid_sprite_path)
+  local caption = BlueprintLogic.icon_caption(node.icons, is_valid_sprite_path)
+  local lines = {}
+  if path ~= nil and path.display ~= path.full then
+    table.insert(lines, path.full)
+  end
+  if node.description ~= nil and node.description ~= "" then
+    table.insert(lines, node.description)
+  end
+  local tooltip = #lines > 0 and table.concat(lines, "\n") or nil
+  if caption == nil and tooltip == nil then
+    return nil
+  end
+  return { caption = caption, tooltip = tooltip }
+end
+
+local function build_candidate(matcher, node, id, ancestors, is_valid_sprite_path)
+  local label_text, label_origins = rich_text.searchable(node.label)
+  local path = BlueprintLogic.book_path(ancestors)
+  local path_text, path_origins = nil, nil
+  if path ~= nil then
+    path_text, path_origins = rich_text.searchable(path.full)
+  end
+  local match = matcher:match(NAMESPACE, id, { display = label_text, internal = path_text })
+  if match == nil then
+    return nil
+  end
+  return {
+    type = "blueprint",
+    id = id,
+    record_type = node.type,
+    label = node.label,
+    -- An inventory item may be a mod's own blueprint-like item, whose icon is its own.
+    icon = "item/" .. (node.item_name or node.type),
+    search_display_name = node.label,
+    search_display_ranges = rich_text.map_ranges(match.display_ranges, label_origins),
+    search_internal_name = path and path.display or nil,
+    search_internal_ranges = path
+        and to_display_ranges(rich_text.map_ranges(match.internal_ranges, path_origins), path)
+      or {},
+    search_score = match.score,
+    annotation = annotation_for(node, path, is_valid_sprite_path),
+  }
+end
+
+--- Candidates for every labelled entry in the given locations that matches the query.
+---
+--- An unlabelled record is never a candidate (accepted: there is nothing to find it
+--- by), but an unlabelled book is still walked and left out of its contents' path.
+---@param query string
+---@param locale string|nil  the player's locale, for display-name normalization
+---@param locations table  array of { name, nodes }, nodes as `to_nodes` or `item_nodes` returns them
+---@param is_valid_sprite_path function  (path) -> boolean; the runtime check
+---@return table  candidates; see EXTENDING.md "Candidates"
+function BlueprintLogic.build_candidates(query, locale, locations, is_valid_sprite_path)
+  local matcher = api.matcher(query, locale)
+  local candidates = {}
+  local function visit(nodes, location_name, indices, ancestors)
+    for _, node in ipairs(nodes) do
+      local node_indices = append(indices, node.key)
+      local labelled = node.label ~= nil and node.label ~= ""
+      if labelled then
+        local id = BlueprintLogic.format_id(location_name, node_indices)
+        local candidate = build_candidate(matcher, node, id, ancestors, is_valid_sprite_path)
+        if candidate ~= nil then
+          table.insert(candidates, candidate)
+        end
+      end
+      if node.children ~= nil then
+        visit(node.children, location_name, node_indices, labelled and append(ancestors, node.label) or ancestors)
+      end
+    end
+  end
+  for _, location in ipairs(locations) do
+    visit(location.nodes, location.name, {}, {})
+  end
+  return candidates
 end
 
 return BlueprintLogic

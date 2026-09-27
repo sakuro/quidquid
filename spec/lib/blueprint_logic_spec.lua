@@ -320,4 +320,140 @@ describe("BlueprintLogic", function()
       assert.is_nil(BlueprintLogic.resolve_item(inventory, { 9 }, ITEM_MAIN, "blueprint", "leaf"))
     end)
   end)
+
+  describe(".build_candidates", function()
+    local function always_valid()
+      return true
+    end
+
+    local function node(fields)
+      fields.icons = fields.icons or {}
+      fields.description = fields.description or ""
+      return fields
+    end
+
+    local locations = {
+      {
+        name = "game",
+        nodes = {
+          node({
+            key = 1,
+            type = "blueprint-book",
+            label = "[item=rail]鉄道",
+            description = "grid",
+            children = {
+              node({
+                key = 2,
+                type = "blueprint-book",
+                label = "Stations",
+                children = {
+                  node({
+                    key = 7,
+                    type = "blueprint",
+                    label = "[virtual-signal=signal-input]Inbound",
+                    icons = { { index = 1, signal = { type = "virtual", name = "signal-input" } } },
+                    description = "place first",
+                  }),
+                },
+              }),
+              node({ key = 3, type = "blueprint", label = "" }),
+            },
+          }),
+        },
+      },
+      { name = "my", nodes = { node({ key = 1, type = "deconstruction-planner", label = "Trees" }) } },
+      {
+        name = "inv",
+        nodes = { node({ key = 4, type = "blueprint", item_name = "mod-blueprint", label = "Mine" }) },
+      },
+    }
+
+    local function by_id(candidates)
+      local result = {}
+      for _, candidate in ipairs(candidates) do
+        result[candidate.id] = candidate
+      end
+      return result
+    end
+
+    it("builds a candidate from a nested blueprint", function()
+      local candidate = by_id(BlueprintLogic.build_candidates("inbound", "en", locations, always_valid))["game/1/2/7"]
+
+      assert.are.equal("blueprint", candidate.type)
+      assert.are.equal("blueprint", candidate.record_type)
+      assert.are.equal("[virtual-signal=signal-input]Inbound", candidate.label)
+      assert.are.equal("item/blueprint", candidate.icon)
+      assert.are.equal("[virtual-signal=signal-input]Inbound", candidate.search_display_name)
+      assert.are.equal("[item=rail] › Stations", candidate.search_internal_name)
+      assert.are.same({
+        caption = "[img=virtual-signal/signal-input]",
+        tooltip = "[item=rail]鉄道 › Stations\nplace first",
+      }, candidate.annotation)
+    end)
+
+    it("highlights label text but not tag text", function()
+      local candidate = by_id(BlueprintLogic.build_candidates("inbound", "en", locations, always_valid))["game/1/2/7"]
+      local label = candidate.search_display_name
+
+      for _, range in ipairs(candidate.search_display_ranges) do
+        assert.is_nil(label:sub(range.start_byte, range.end_byte):find("[%[%]=]"))
+      end
+      assert.is_true(#candidate.search_display_ranges > 0)
+    end)
+
+    it("finds a record through a tag in its label", function()
+      local candidates = by_id(BlueprintLogic.build_candidates("signal-input", "en", locations, always_valid))
+
+      assert.is_not_nil(candidates["game/1/2/7"])
+      assert.are.same({}, candidates["game/1/2/7"].search_display_ranges)
+    end)
+
+    it("finds records through an abbreviated book and leaves that part unhighlighted", function()
+      local candidates = by_id(BlueprintLogic.build_candidates("鉄道", "ja", locations, always_valid))
+      local candidate = candidates["game/1/2/7"]
+
+      assert.is_not_nil(candidate)
+      assert.are.same({}, candidate.search_internal_ranges)
+    end)
+
+    it("highlights the nearest book in the displayed path", function()
+      local candidate = by_id(BlueprintLogic.build_candidates("stations", "en", locations, always_valid))["game/1/2/7"]
+      local shown = candidate.search_internal_name
+
+      -- The matcher reports one range per matched character (see e.g.
+      -- surface_logic_spec.lua's "express" case), not one range per word; ranges are
+      -- checked in order rather than assumed to be a single span.
+      assert.is_true(#candidate.search_internal_ranges > 0)
+      local highlighted = {}
+      for _, range in ipairs(candidate.search_internal_ranges) do
+        table.insert(highlighted, shown:sub(range.start_byte, range.end_byte))
+      end
+      assert.are.equal("Stations", table.concat(highlighted))
+    end)
+
+    it("lists books and planners, and skips unlabelled records", function()
+      local candidates = by_id(BlueprintLogic.build_candidates("t", "en", locations, always_valid))
+
+      assert.are.equal("item/deconstruction-planner", candidates["my/1"].icon)
+      assert.is_nil(candidates["my/1"].search_internal_name)
+      assert.is_nil(candidates["game/1/3"])
+    end)
+
+    it("puts only the description in the tooltip of a top-level book", function()
+      local candidate = by_id(BlueprintLogic.build_candidates("rail", "en", locations, always_valid))["game/1"]
+
+      assert.are.same({ tooltip = "grid" }, candidate.annotation)
+    end)
+
+    it("uses an inventory item's own name for its icon", function()
+      local candidate = by_id(BlueprintLogic.build_candidates("mine", "en", locations, always_valid))["inv/4"]
+
+      assert.are.equal("item/mod-blueprint", candidate.icon)
+      assert.are.equal("blueprint", candidate.record_type)
+    end)
+
+    it("returns nothing for an empty query", function()
+      assert.are.same({}, BlueprintLogic.build_candidates("", "en", locations, always_valid))
+    end)
+  end)
 end)
