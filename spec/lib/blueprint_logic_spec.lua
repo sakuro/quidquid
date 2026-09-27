@@ -482,6 +482,10 @@ describe("BlueprintLogic", function()
       assert.are.equal("item/blueprint", candidate.icon)
       assert.are.equal("[virtual-signal=signal-input]Inbound", candidate.search_display_name)
       assert.are.equal("[item=rail] › Stations", candidate.search_internal_name)
+      assert.are.same(
+        { "", { "gui-blueprint-library.game-blueprints-title" }, " › " },
+        candidate.search_internal_prefix
+      )
       assert.are.same({
         caption = "[img=virtual-signal/signal-input]",
         tooltip = "[item=rail]鉄道 › Stations\nplace first",
