@@ -134,6 +134,13 @@ script.on_event(defines.events.on_gui_click, function(event)
   TemporaryRequestEditor.on_gui_click(event)
   TemporaryRequestEditor.on_cancel_button(event)
   BlueprintExportWindow.on_gui_click(event)
+  -- A titlebar close button (the editor's cancel, the export window's own) destroys
+  -- its frame directly rather than raising on_gui_closed, so the on_gui_closed
+  -- handler's reclaim never runs for that path; check here too.
+  local player = game.get_player(event.player_index)
+  if player ~= nil then
+    Palette.reclaim_opened(player)
+  end
 end)
 script.on_event("quidquid-temporary-request-editor-confirm", TemporaryRequestEditor.on_confirm_key)
 
