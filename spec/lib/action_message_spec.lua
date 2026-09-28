@@ -6,14 +6,14 @@ describe("ActionMessage", function()
   describe(".localise", function()
     it("puts the icon and label before a bare key", function()
       assert.are.same(
-        { "my-mod.done", "[img=item/iron-plate]", "Iron plate" },
+        { "my-mod.done", { "", "[img=", "item/iron-plate", "]" }, "Iron plate" },
         (ActionMessage.localise(candidate, { "my-mod.done" }))
       )
     end)
 
     it("appends the message's own parameters after the icon and label", function()
       assert.are.same(
-        { "my-mod.done", "[img=item/iron-plate]", "Iron plate", "a", { "item-name.coal" } },
+        { "my-mod.done", { "", "[img=", "item/iron-plate", "]" }, "Iron plate", "a", { "item-name.coal" } },
         (ActionMessage.localise(candidate, { "my-mod.done", "a", { "item-name.coal" } }))
       )
     end)

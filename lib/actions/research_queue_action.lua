@@ -35,8 +35,9 @@ ResearchQueueAction.queued_level = queued_level
 -- pre-combined into one string: technology_name's level suffix means it
 -- returns a nested LocalisedString table, not a plain string, so it can't be
 -- concatenated with the icon string via "..".
--- Names the technology level actually queued, which can differ from the candidate (an
--- upgrade chain queues the next level), so it passes its own icon and name as __3__ and
+-- Names the technology level actually queued, which can differ from the candidate: for an
+-- infinite technology the candidate's own label carries no level, while this message
+-- names the level it is actually queuing. So it passes its own icon and name as __3__ and
 -- __4__; the __1__ and __2__ Palette puts in front are the candidate's and go unused by
 -- these locale strings.
 local function queue_message(queue, target, locale_key, ...)

@@ -276,7 +276,7 @@ parameters — in the locale string `__1__` is the icon, `__2__` the label, and
 your first parameter is `__3__`. Return `nil` to show nothing.
 
 A LocalisedString holds at most 20 parameters, so a message carries at most 18
-of its own.
+of its own. Each parameter must itself be a valid LocalisedString.
 
 ### Tooltip hint
 
@@ -343,8 +343,8 @@ Quidquid calls `search`, `is_query_valid`, `execute` and `is_available` through
 `pcall`. An error inside them is logged and treated as no results, a valid query,
 nothing done, or unavailable respectively — so a broken source or action looks
 silently inert in game. A message from `execute` that is not a table starting
-with a string, or that carries more than 18 parameters, is logged and not
-shown. Check the log.
+with a string, that carries more than 18 parameters, or that the engine
+rejects as a LocalisedString, is logged and not shown. Check the log.
 
 ## Translated names
 

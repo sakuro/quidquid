@@ -24,7 +24,7 @@ function ActionMessage.localise(candidate, message)
   if parameter_count > ActionMessage.MAX_PARAMETERS then
     return nil, ("%d parameters, at most %d allowed"):format(parameter_count, ActionMessage.MAX_PARAMETERS)
   end
-  local localised = { message[1], "[img=" .. candidate.icon .. "]", candidate.label }
+  local localised = { message[1], { "", "[img=", candidate.icon, "]" }, candidate.label }
   for i = 2, #message do
     table.insert(localised, message[i])
   end

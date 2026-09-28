@@ -664,7 +664,15 @@ local function show_message(player, action, candidate, message)
     log(("quidquid: action '%s' returned a malformed message: %s"):format(tostring(action.id), reason))
     return
   end
-  player.create_local_flying_text({ text = text, create_at_cursor = true })
+  -- ActionMessage.localise only checks the outer shape; the message's own parameters
+  -- come from another mod, and only the engine validates a LocalisedString's parameters
+  -- in full (e.g. a nested table starting with a non-string, too many nested parameters,
+  -- nesting past depth 20). create_local_flying_text raises on those, and letting that
+  -- propagate out of a custom-input handler ends the game session.
+  local ok, err = pcall(player.create_local_flying_text, { text = text, create_at_cursor = true })
+  if not ok then
+    log(("quidquid: action '%s' returned a message the engine rejected: %s"):format(tostring(action.id), tostring(err)))
+  end
 end
 
 local function dispatch(player, selected_candidate, input_name)
