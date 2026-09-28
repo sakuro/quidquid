@@ -293,8 +293,12 @@ that searches prototypes: items, fluids, recipes, technologies and surfaces.
 
 ## Related mods
 
+- [Quidquid: Factory Search](https://mods.factorio.com/mod/quidquid-factory-search)
+  — adds an action that opens
+  [Factory Search](https://mods.factorio.com/mod/FactorySearch) for the
+  selected item, fluid, recipe or resource.
 - [Factory Palette](https://mods.factorio.com/mod/factory-palette) — a
-  command palette for Factorio 2.0 that also opens with `Ctrl/Cmd + K`.
+  command palette that also opens with `Ctrl/Cmd + K`.
 - [Quicksearch](https://mods.factorio.com/mod/Quicksearch) — searches the
   inventory, open chests, logistic networks and craftable recipes to pick up
   or craft items.
