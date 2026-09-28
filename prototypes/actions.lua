@@ -80,25 +80,4 @@ data:extend({
     input_name = "quidquid-temporary-request",
     interface = "quidquid.temporary-request-action",
   }),
-  action("quidquid-hold-blueprint", {
-    types = { "blueprint" },
-    label = { "quidquid.action-hold-blueprint" },
-    hint = { "quidquid.action-hold-blueprint-hint" },
-    input_name = "quidquid-hold-blueprint",
-    interface = "quidquid.hold-blueprint-action",
-  }),
-  action("quidquid-copy-blueprint", {
-    types = { "blueprint" },
-    label = { "quidquid.action-copy-blueprint" },
-    hint = { "quidquid.action-copy-blueprint-hint" },
-    input_name = "quidquid-copy-blueprint",
-    interface = "quidquid.copy-blueprint-action",
-  }),
-  action("quidquid-export-blueprint", {
-    types = { "blueprint" },
-    label = { "quidquid.action-export-blueprint" },
-    hint = { "quidquid.action-export-blueprint-hint" },
-    input_name = "quidquid-export-blueprint",
-    interface = "quidquid.export-blueprint-action",
-  }),
 })

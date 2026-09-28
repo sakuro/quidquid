@@ -62,11 +62,4 @@ data:extend({
     in_default_search = false,
     interface = "quidquid.resource-source",
   }),
-  source("quidquid-blueprints", "h", {
-    type = "blueprint",
-    label = { "quidquid.source-blueprints" },
-    prefixes = { "b", "blueprint" },
-    in_default_search = true,
-    interface = "quidquid.blueprint-source",
-  }),
 })

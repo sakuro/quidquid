@@ -48,13 +48,13 @@ describe("ActionRunner", function()
         applied_payload = payload
         applied_candidate = resolved_candidate
         applied_player = resolved_player
-        return { "quidquid.action-blueprint-held" }
+        return { "quidquid.action-research-queue-added" }
       end)
 
       assert.are.equal("recipe-token", applied_payload)
       assert.are.equal(candidate, applied_candidate)
       assert.are.equal(player, applied_player)
-      assert.are.same({ "quidquid.action-blueprint-held" }, message)
+      assert.are.same({ "quidquid.action-research-queue-added" }, message)
     end)
 
     it("returns nil on success when apply_fn returns nothing", function()
