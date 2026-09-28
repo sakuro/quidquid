@@ -70,10 +70,25 @@ script.on_init(function()
   register_dictionaries()
   ResourceSource.ensure_storage()
 end)
+
+-- 0.8.0 owned a blueprint export window (screen frame
+-- "quidquid-blueprint-export-frame"); now that the feature moved to
+-- quidquid-blueprints, a save that kept that window open across the upgrade
+-- has it stuck on screen with nothing left to handle its buttons.
+local function destroy_stale_blueprint_export_frames()
+  for _, player in pairs(game.players) do
+    local frame = player.gui.screen["quidquid-blueprint-export-frame"]
+    if frame ~= nil and frame.valid then
+      frame.destroy()
+    end
+  end
+end
+
 script.on_configuration_changed(function()
   flib_dictionary.on_configuration_changed()
   register_dictionaries()
   ResourceSource.ensure_storage()
+  destroy_stale_blueprint_export_frames()
 end)
 
 script.on_event(defines.events.on_tick, function()

@@ -2,6 +2,7 @@
 Version: Unreleased
   Changes:
     - Blueprint search moved to a separate mod, Quidquid: Blueprints
+    - A blueprint export window left open in a save from an earlier version is closed on load
   Modding:
     - lib/api.lua exposes rich_text.searchable and rich_text.map_ranges, for sources whose names carry rich-text icons, and run_action, the resolve-then-apply shape of Quidquid's own actions
 ---------------------------------------------------------------------------------------------------

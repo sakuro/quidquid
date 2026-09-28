@@ -32,7 +32,7 @@ Declare in `data.lua` or `data-updates.lua`. Each source or action is one
 | `type` | yes | `"mod-data"`. |
 | `name` | yes | Identifies the source or action in Quidquid's log messages. Prefix it with your mod name. |
 | `data_type` | yes | `"quidquid.source"` or `"quidquid.action"`. |
-| `order` | no | Registration order, compared as a string with ties broken by `name`. It decides which candidate goes first on an equal `search_score`, and which declaration keeps a prefix or an action slot that two of them claim. Quidquid's own sources use `"a"` to `"h"`; omitted, it is the empty string, which sorts first. |
+| `order` | no | Registration order, compared as a string with ties broken by `name`. It decides which candidate goes first on an equal `search_score`, and which declaration keeps a prefix or an action slot that two of them claim. Quidquid's own sources use `"a"` to `"g"`; omitted, it is the empty string, which sorts first. |
 | `data` | yes | The definition described under [Sources](#definition) or [Actions](#definition-1), including `contract_version`. |
 
 Quidquid checks every declaration for its own contract version in its
