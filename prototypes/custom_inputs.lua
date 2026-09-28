@@ -94,4 +94,10 @@ data:extend({
     name = "quidquid-export-blueprint",
     key_sequence = "COMMAND + mouse-button-1",
   },
+  {
+    -- Matches FactorySearch's own "search the prototype under the cursor" input.
+    type = "custom-input",
+    name = "quidquid-factory-search",
+    key_sequence = "SHIFT + ALT + mouse-button-1",
+  },
 })

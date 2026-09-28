@@ -101,4 +101,13 @@ data:extend({
     input_name = "quidquid-export-blueprint",
     interface = "quidquid.export-blueprint-action",
   }),
+  -- FactorySearch's own key, so the wording follows FactorySearch's translations. It
+  -- is only rendered while the action is available, that is, with FactorySearch loaded.
+  action("quidquid-factory-search", {
+    types = { "item", "fluid", "recipe", "resource" },
+    label = { "shortcut-name.search-factory" },
+    hint = { "quidquid.action-factory-search-hint" },
+    input_name = "quidquid-factory-search",
+    interface = "quidquid.factory-search-action",
+  }),
 })
