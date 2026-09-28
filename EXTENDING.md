@@ -242,6 +242,18 @@ candidate type it declares. It may act on types owned by other mods, including
 Quidquid's own (`item`, `fluid`, `recipe`, `technology`, `surface`, `calculation`,
 `resource`, `blueprint`).
 
+### Quidquid's candidate types
+
+An action on Quidquid's own types can rely on these fields besides the ones
+under [Candidates](#candidates). Any other field is internal and may change
+without a `contract_version` bump.
+
+| Type | `id` | Other fields |
+| --- | --- | --- |
+| `item`, `fluid`, `recipe`, `technology` | The prototype name | |
+| `resource` | Opaque | `resource_name` (the resource entity prototype name), `surface_index`, `position` |
+| `surface`, `calculation`, `blueprint` | Opaque | |
+
 ### Definition
 
 The `data` of a `quidquid.action` declaration:
