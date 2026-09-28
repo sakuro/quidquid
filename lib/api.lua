@@ -10,6 +10,8 @@ local fuzzy_match = require("__quidquid__.lib.fuzzy_match")
 local normalization = require("__quidquid__.lib.search_normalization")
 local search_highlight = require("__quidquid__.lib.search_highlight")
 local search_key_cache = require("__quidquid__.lib.search_key_cache")
+local action_runner = require("__quidquid__.lib.action_runner")
+local rich_text = require("__quidquid__.lib.rich_text")
 
 -- A display-name hit outranks an internal-name hit of the same raw score: the name
 -- the player reads is the one they meant to type.
@@ -96,4 +98,13 @@ end
 return {
   matcher = matcher,
   forget = forget,
+  -- For a source whose names carry rich-text icons: search what the icons name,
+  -- and keep the highlight off them. See EXTENDING.md "Rich text in names".
+  rich_text = {
+    searchable = rich_text.searchable,
+    map_ranges = rich_text.map_ranges,
+  },
+  -- The shape of every built-in action's execute. See EXTENDING.md "Resolving before
+  -- acting".
+  run_action = action_runner.run,
 }

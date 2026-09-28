@@ -97,3 +97,29 @@ describe("api.forget", function()
     assert.are.equal(1, normalizations)
   end)
 end)
+
+describe("api.rich_text", function()
+  local rich_text = require("lib.rich_text")
+
+  it("exposes rich_text's searchable and map_ranges", function()
+    assert.are.equal(rich_text.searchable, api.rich_text.searchable)
+    assert.are.equal(rich_text.map_ranges, api.rich_text.map_ranges)
+  end)
+
+  it("does not expose icon_list_caption", function()
+    assert.is_nil(api.rich_text.icon_list_caption)
+  end)
+
+  it("maps a match on a tag's text back to no highlight in the original", function()
+    local text, origins = api.rich_text.searchable("[item=rail]Rail")
+    local tag_start = text:find("rail", 1, true)
+
+    assert.are.same({}, api.rich_text.map_ranges({ { start_byte = tag_start, end_byte = tag_start + 3 } }, origins))
+  end)
+end)
+
+describe("api.run_action", function()
+  it("is ActionRunner.run", function()
+    assert.are.equal(require("lib.action_runner").run, api.run_action)
+  end)
+end)

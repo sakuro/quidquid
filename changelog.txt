@@ -1,4 +1,8 @@
 ---------------------------------------------------------------------------------------------------
+Version: Unreleased
+  Modding:
+    - lib/api.lua exposes rich_text.searchable and rich_text.map_ranges, for sources whose names carry rich-text icons, and run_action, the resolve-then-apply shape of Quidquid's own actions
+---------------------------------------------------------------------------------------------------
 Version: 0.8.0
 Date: 2026-09-28
   Modding:
