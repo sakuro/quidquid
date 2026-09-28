@@ -3,7 +3,7 @@
   "version": "0.9.0",
   "title": "Quidquid",
   "author": "sakuro",
-  "description": "A general-purpose palette with incremental search. Items, fluids, recipes, technologies, surfaces, resource patches and blueprints are searchable, and each result offers the actions that apply to it.",
+  "description": "A general-purpose palette with incremental search over items, recipes, technologies and more. Each result offers the actions that apply to it, and extension mods add further sources and actions.",
   "factorio_version": "2.1",
   "dependencies": [
     "base >= 2.1",

@@ -249,7 +249,7 @@ remote.add_interface("my-mod-widget-source", { search = search })
 An action is a key binding that runs against the selected candidate, for every
 candidate type it declares. It may act on types owned by other mods, including
 Quidquid's own (`item`, `fluid`, `recipe`, `technology`, `surface`, `calculation`,
-`resource`, `blueprint`).
+`resource`).
 
 ### Quidquid's candidate types
 
@@ -261,7 +261,7 @@ without a `contract_version` bump.
 | --- | --- | --- |
 | `item`, `fluid`, `recipe`, `technology` | The prototype name | |
 | `resource` | Opaque | `resource_name` (the resource entity prototype name), `surface_index`, `position` |
-| `surface`, `calculation`, `blueprint` | Opaque | |
+| `surface`, `calculation` | Opaque | |
 
 ### Definition
 
@@ -403,4 +403,4 @@ them.
 | [`lib/sources/resource_source.lua`](lib/sources/resource_source.lua) | A source that builds candidates from world state rather than prototypes, keeps a `storage` cache, and uses `decorate` |
 | [`lib/actions/open_factoriopedia_action.lua`](lib/actions/open_factoriopedia_action.lua) | The smallest action, acting on several types |
 | [`lib/actions/temporary_request_action.lua`](lib/actions/temporary_request_action.lua) | `is_available` against player state |
-| [`lib/actions/blueprint_action.lua`](lib/actions/blueprint_action.lua) | Returning a message on success and on failure |
+| [`lib/actions/research_queue_action.lua`](lib/actions/research_queue_action.lua) | Returning a message on success and on failure |
