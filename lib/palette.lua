@@ -1,3 +1,4 @@
+local ActionMessage = require("lib.action_message")
 local FontColors = require("lib.font_colors")
 local PaletteLogic = require("lib.palette_logic")
 local RemoteCaller = require("lib.remote_caller")
@@ -655,6 +656,25 @@ function Palette.close(player)
   frame.destroy()
 end
 
+-- The one place an action's message reaches the player, so built-in and extension
+-- actions report their outcome the same way.
+local function show_message(player, action, candidate, message)
+  local text, reason = ActionMessage.localise(candidate, message)
+  if text == nil then
+    log(("quidquid: action '%s' returned a malformed message: %s"):format(tostring(action.id), reason))
+    return
+  end
+  -- ActionMessage.localise only checks the outer shape; the message's own parameters
+  -- come from another mod, and only the engine validates a LocalisedString's parameters
+  -- in full (e.g. a nested table starting with a non-string, too many nested parameters,
+  -- nesting past depth 20). create_local_flying_text raises on those, and letting that
+  -- propagate out of a custom-input handler ends the game session.
+  local ok, err = pcall(player.create_local_flying_text, { text = text, create_at_cursor = true })
+  if not ok then
+    log(("quidquid: action '%s' returned a message the engine rejected: %s"):format(tostring(action.id), tostring(err)))
+  end
+end
+
 local function dispatch(player, selected_candidate, input_name)
   if selected_candidate == nil then
     return
@@ -676,9 +696,11 @@ local function dispatch(player, selected_candidate, input_name)
     frame.tags = { quidquid_suppress_close = true }
   end
 
-  local ok, err = pcall(remote.call, action.interface, "execute", selected_candidate, player.index)
+  local ok, result = pcall(remote.call, action.interface, "execute", selected_candidate, player.index)
   if not ok then
-    log(("quidquid: action '%s' execute failed: %s"):format(tostring(action.id), tostring(err)))
+    log(("quidquid: action '%s' execute failed: %s"):format(tostring(action.id), tostring(result)))
+  elseif result ~= nil then
+    show_message(player, action, selected_candidate, result)
   end
 
   if frame ~= nil and frame.valid then

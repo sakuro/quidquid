@@ -9,7 +9,7 @@ each one as a `mod-data` prototype in the data stage and implements its behavior
 in a remote interface of its own — no change to Quidquid itself is needed, and
 your code keeps running in your own mod.
 
-The contract is versioned with `contract_version`, currently `2`. A declaration
+The contract is versioned with `contract_version`, currently `3`. A declaration
 whose `contract_version` does not match is skipped, so a future bump disables it
 until you update. Until Quidquid reaches 1.0, expect the contract to change
 without a compatibility shim.
@@ -54,7 +54,7 @@ The `data` of a `quidquid.source` declaration:
 
 | Field | Required | Meaning |
 | --- | --- | --- |
-| `contract_version` | yes | Must be `2`. |
+| `contract_version` | yes | Must be `3`. |
 | `type` | yes | The candidate type this source produces. Unique across all sources — a later declaration for a type already taken is skipped with a log line. Actions are matched to candidates by this string. |
 | `label` | yes | LocalisedString shown as the source label on each result row. |
 | `prefixes` | no | Prefix words that lock the palette to this source — with `{ "w", "widget" }`, typing `widget ` locks to it. Matched case-sensitively, so `W` and `w` are separate prefixes and either may be claimed on its own. A prefix already taken by an earlier declaration is ignored with a log line. Defaults to none. |
@@ -203,7 +203,7 @@ data:extend({
     name = "my-mod-widgets",
     data_type = "quidquid.source",
     data = {
-      contract_version = 2,
+      contract_version = 3,
       type = "my-mod-widget",
       label = { "my-mod.source-widgets" },
       prefixes = { "w", "widget" },
@@ -248,7 +248,7 @@ The `data` of a `quidquid.action` declaration:
 
 | Field | Required | Meaning |
 | --- | --- | --- |
-| `contract_version` | yes | Must be `2`. |
+| `contract_version` | yes | Must be `3`. |
 | `types` | yes | Non-empty array of candidate types this action applies to. |
 | `label` | yes | LocalisedString naming the action in the candidate tooltip. |
 | `hint` | yes | LocalisedString for the key binding shown after the label — see [Tooltip hint](#tooltip-hint). |
@@ -259,13 +259,24 @@ The `data` of a `quidquid.action` declaration:
 
 | Function | Required | Contract |
 | --- | --- | --- |
-| `execute(candidate, player_index)` | yes | Performs the action on the selected candidate. |
+| `execute(candidate, player_index)` | yes | Performs the action on the selected candidate. May return a message to show the player — see [Messages](#messages). |
 | `is_available(player_index)` | no | Return `false` to hide the action. Omitted, the action is always offered for its types. |
 
 `is_available` may only gate on state that is uniform across every candidate of a
 type, such as the player's own state. Whether one particular candidate can be
 acted on is a fact for `execute` to resolve and report to the player — hiding it
 in `is_available` removes the action from the tooltip without saying why.
+
+### Messages
+
+`execute` may return a message: a table whose first element is a locale key,
+followed by that string's own parameters. Quidquid shows it as flying text at
+the cursor, with the candidate's icon and label put in front of your
+parameters — in the locale string `__1__` is the icon, `__2__` the label, and
+your first parameter is `__3__`. Return `nil` to show nothing.
+
+A LocalisedString holds at most 20 parameters, so a message carries at most 18
+of its own. Each parameter must itself be a valid LocalisedString.
 
 ### Tooltip hint
 
@@ -290,7 +301,7 @@ data:extend({
     name = "my-mod-do-thing",
     data_type = "quidquid.action",
     data = {
-      contract_version = 2,
+      contract_version = 3,
       types = { "my-mod-widget", "item" },
       label = { "my-mod.action-do-thing" },
       hint = { "my-mod.action-do-thing-hint" },
@@ -304,15 +315,18 @@ data:extend({
 In `control.lua`:
 
 ```lua
-local function execute(candidate, player_index)
-  local player = game.get_player(player_index)
-  if player == nil then
-    return
-  end
-  player.print(candidate.id)
+local function execute(candidate, _player_index)
+  return { "my-mod.action-do-thing-done", candidate.id }
 end
 
 remote.add_interface("my-mod-do-thing-action", { execute = execute })
+```
+
+With, in the locale file:
+
+```ini
+[my-mod]
+action-do-thing-done=Did the thing to __1__ __2__ (__3__)
 ```
 
 ## Rejections and failures
@@ -328,7 +342,9 @@ while the rest of the declaration still registers.
 Quidquid calls `search`, `is_query_valid`, `execute` and `is_available` through
 `pcall`. An error inside them is logged and treated as no results, a valid query,
 nothing done, or unavailable respectively — so a broken source or action looks
-silently inert in game. Check the log.
+silently inert in game. A message from `execute` that is not a table starting
+with a string, that carries more than 18 parameters, or that the engine
+rejects as a LocalisedString, is logged and not shown. Check the log.
 
 ## Translated names
 
@@ -352,3 +368,4 @@ them.
 | [`lib/sources/resource_source.lua`](lib/sources/resource_source.lua) | A source that builds candidates from world state rather than prototypes, keeps a `storage` cache, and uses `decorate` |
 | [`lib/actions/open_factoriopedia_action.lua`](lib/actions/open_factoriopedia_action.lua) | The smallest action, acting on several types |
 | [`lib/actions/temporary_request_action.lua`](lib/actions/temporary_request_action.lua) | `is_available` against player state |
+| [`lib/actions/blueprint_action.lua`](lib/actions/blueprint_action.lua) | Returning a message on success and on failure |

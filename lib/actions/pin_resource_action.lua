@@ -28,7 +28,7 @@ end
 -- amount from those entities, so the figure follows the patch as it is mined. Any label
 -- we passed would be a frozen copy of that figure sitting beside the live one.
 local function execute(candidate, player_index)
-  ActionRunner.run(candidate, player_index, resolve, function(surface, selected_candidate, player)
+  return ActionRunner.run(candidate, player_index, resolve, function(surface, selected_candidate, player)
     player.add_pin({
       surface = surface,
       position = selected_candidate.position,

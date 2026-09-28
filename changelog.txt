@@ -1,5 +1,7 @@
 ---------------------------------------------------------------------------------------------------
 Version: Unreleased
+  Modding:
+    - An action's execute can return a message, which Quidquid shows as flying text with the candidate's icon and label; the extension contract is now version 3
   Locale:
     - Drop the space before parentheses in Japanese
 ---------------------------------------------------------------------------------------------------

@@ -1,14 +1,12 @@
 local ActionRunner = require("lib.action_runner")
 
 describe("ActionRunner", function()
-  local flying_texts
   local player
 
   before_each(function()
-    flying_texts = {}
     player = {
-      create_local_flying_text = function(params)
-        table.insert(flying_texts, params)
+      create_local_flying_text = function()
+        error("ActionRunner must not show flying text itself")
       end,
     }
     _G.game = {
@@ -31,83 +29,77 @@ describe("ActionRunner", function()
       end
       local applied = false
 
-      ActionRunner.run(candidate, 1, function(_candidate, _player)
+      local message = ActionRunner.run(candidate, 1, function(_candidate, _player)
         return "payload", nil
       end, function(_payload, _candidate, _player)
         applied = true
       end)
 
       assert.is_false(applied)
-      assert.are.same({}, flying_texts)
+      assert.is_nil(message)
     end)
 
-    it("applies the payload and shows no message on success", function()
+    it("applies the payload and returns what apply_fn returns", function()
       local applied_payload, applied_candidate, applied_player
 
-      ActionRunner.run(candidate, 1, function(_candidate, _player)
+      local message = ActionRunner.run(candidate, 1, function(_candidate, _player)
         return "recipe-token", nil
       end, function(payload, resolved_candidate, resolved_player)
         applied_payload = payload
         applied_candidate = resolved_candidate
         applied_player = resolved_player
+        return { "quidquid.action-blueprint-held" }
       end)
 
       assert.are.equal("recipe-token", applied_payload)
       assert.are.equal(candidate, applied_candidate)
       assert.are.equal(player, applied_player)
-      assert.are.same({}, flying_texts)
+      assert.are.same({ "quidquid.action-blueprint-held" }, message)
     end)
 
-    it("shows the resolved locale key and does not apply when the payload is nil", function()
+    it("returns nil on success when apply_fn returns nothing", function()
+      local message = ActionRunner.run(candidate, 1, function(_candidate, _player)
+        return "payload", nil
+      end, function(_payload, _candidate, _player) end)
+
+      assert.is_nil(message)
+    end)
+
+    it("returns the resolved locale key and does not apply when the payload is nil", function()
       local applied = false
 
-      ActionRunner.run(candidate, 1, function(_candidate, _player)
+      local message = ActionRunner.run(candidate, 1, function(_candidate, _player)
         return nil, "quidquid.action-craft-no-recipe"
       end, function(_payload, _candidate, _player)
         applied = true
       end)
 
       assert.is_false(applied)
-      assert.are.same({
-        {
-          text = { "quidquid.action-craft-no-recipe", "[img=item/iron-plate]", candidate.label },
-          create_at_cursor = true,
-        },
-      }, flying_texts)
+      assert.are.same({ "quidquid.action-craft-no-recipe" }, message)
     end)
 
-    it("shows nothing when the payload and locale key are both nil and there is no fallback", function()
-      ActionRunner.run(candidate, 1, function(_candidate, _player)
+    it("returns nil when the payload and locale key are both nil and there is no fallback", function()
+      local message = ActionRunner.run(candidate, 1, function(_candidate, _player)
         return nil, nil
       end, function(_payload, _candidate, _player) end)
 
-      assert.are.same({}, flying_texts)
+      assert.is_nil(message)
     end)
 
     it("falls back to the fallback locale key when the payload and locale key are both nil", function()
-      ActionRunner.run(candidate, 1, function(_candidate, _player)
+      local message = ActionRunner.run(candidate, 1, function(_candidate, _player)
         return nil, nil
       end, function(_payload, _candidate, _player) end, "quidquid.action-open-remote-view-unavailable")
 
-      assert.are.same({
-        {
-          text = { "quidquid.action-open-remote-view-unavailable", "[img=item/iron-plate]", candidate.label },
-          create_at_cursor = true,
-        },
-      }, flying_texts)
+      assert.are.same({ "quidquid.action-open-remote-view-unavailable" }, message)
     end)
 
     it("prefers the resolved locale key over the fallback locale key", function()
-      ActionRunner.run(candidate, 1, function(_candidate, _player)
+      local message = ActionRunner.run(candidate, 1, function(_candidate, _player)
         return nil, "quidquid.action-open-remote-view-not-visited"
       end, function(_payload, _candidate, _player) end, "quidquid.action-open-remote-view-unavailable")
 
-      assert.are.same({
-        {
-          text = { "quidquid.action-open-remote-view-not-visited", "[img=item/iron-plate]", candidate.label },
-          create_at_cursor = true,
-        },
-      }, flying_texts)
+      assert.are.same({ "quidquid.action-open-remote-view-not-visited" }, message)
     end)
   end)
 end)
