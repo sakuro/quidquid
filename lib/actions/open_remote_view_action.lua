@@ -73,7 +73,7 @@ end
 -- -- see README "Surfaces") is a per-candidate runtime fact, so it's resolved here
 -- and reported by execute, not hidden from the tooltip.
 local function execute(candidate, player_index)
-  ActionRunner.run(candidate, player_index, resolve, function(target, _candidate, player)
+  return ActionRunner.run(candidate, player_index, resolve, function(target, _candidate, player)
     remember(player)
     player.set_controller({ type = defines.controllers.remote, surface = target.surface, position = target.position })
     -- Recorded again after landing, at the jump's own destination -- for a resource

@@ -95,7 +95,7 @@ end
 
 local function craft(count_for)
   return function(selected_candidate, player_index)
-    ActionRunner.run(
+    return ActionRunner.run(
       selected_candidate,
       player_index,
       CraftAction.resolve_craftable,

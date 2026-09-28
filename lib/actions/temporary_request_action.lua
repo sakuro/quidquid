@@ -178,7 +178,7 @@ local function resolve(selected_candidate, player)
 end
 
 local function execute(selected_candidate, player_index)
-  ActionRunner.run(selected_candidate, player_index, resolve, function(candidate, _candidate, player)
+  return ActionRunner.run(selected_candidate, player_index, resolve, function(candidate, _candidate, player)
     editor.open(player, candidate)
   end)
 end

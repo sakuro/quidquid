@@ -35,6 +35,10 @@ ResearchQueueAction.queued_level = queued_level
 -- pre-combined into one string: technology_name's level suffix means it
 -- returns a nested LocalisedString table, not a plain string, so it can't be
 -- concatenated with the icon string via "..".
+-- Names the technology level actually queued, which can differ from the candidate (an
+-- upgrade chain queues the next level), so it passes its own icon and name as __3__ and
+-- __4__; the __1__ and __2__ Palette puts in front are the candidate's and go unused by
+-- these locale strings.
 local function queue_message(queue, target, locale_key, ...)
   return {
     locale_key,
@@ -169,24 +173,21 @@ end
 local function execute(candidate, player_index)
   local player = game.get_player(player_index)
   if player == nil then
-    return
+    return nil
   end
 
   local force = player.force
   local queue = force.research_queue
   local technology, locale_key, args, new_queue = ResearchQueueAction.resolve_enqueue(force, candidate)
   if technology == nil then
-    return
+    return nil
   end
 
   if new_queue ~= nil then
     force.research_queue = new_queue
   end
 
-  player.create_local_flying_text({
-    text = queue_message(queue, technology, locale_key, table.unpack(args)),
-    create_at_cursor = true,
-  })
+  return queue_message(queue, technology, locale_key, table.unpack(args))
 end
 
 --- Adds this action's remote interface, named by its declaration in prototypes/actions.lua.

@@ -59,7 +59,7 @@ end
 -- per-candidate runtime fact, so it's resolved here and reported by execute, not
 -- hidden from the tooltip.
 local function execute(selected_candidate, player_index)
-  ActionRunner.run(selected_candidate, player_index, resolve, function(prototype, _candidate, player)
+  return ActionRunner.run(selected_candidate, player_index, resolve, function(prototype, _candidate, player)
     player.open_factoriopedia_gui(prototype)
   end)
 end

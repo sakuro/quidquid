@@ -46,13 +46,6 @@ local function export_string(target)
   return target.stack.export_stack()
 end
 
-local function flying_text(player, locale_key, candidate)
-  player.create_local_flying_text({
-    text = { locale_key, "[img=" .. candidate.icon .. "]", candidate.label },
-    create_at_cursor = true,
-  })
-end
-
 -- A library record cannot itself go in the cursor (cursor_record is read-only), so
 -- holding one gives an imported copy marked temporary: clearing the cursor discards it
 -- as it would a library pick, while placing it in a slot by hand keeps it. An inventory
@@ -60,10 +53,9 @@ end
 -- sends it back to that slot on Q. An item taken out of a book item has no slot of its
 -- own to return to, so it gets no hand location.
 local function hold(candidate, player_index)
-  ActionRunner.run(candidate, player_index, resolve, function(target, selected_candidate, player)
+  return ActionRunner.run(candidate, player_index, resolve, function(target, selected_candidate, player)
     if player.cursor_stack == nil or not player.clear_cursor() then
-      flying_text(player, "quidquid.action-blueprint-cursor-busy", selected_candidate)
-      return
+      return { "quidquid.action-blueprint-cursor-busy" }
     end
     if target.stack ~= nil then
       -- clear_cursor() can insert the cursor's former contents into this same main
@@ -71,47 +63,40 @@ local function hold(candidate, player_index)
       -- the right stack; resolve again against the post-clear inventory.
       local fresh_target = resolve(selected_candidate, player)
       if fresh_target == nil then
-        flying_text(player, UNAVAILABLE, selected_candidate)
-        return
+        return { UNAVAILABLE }
       end
       if not player.cursor_stack.swap_stack(fresh_target.stack) then
-        flying_text(player, "quidquid.action-blueprint-hold-failed", selected_candidate)
-        return
+        return { "quidquid.action-blueprint-hold-failed" }
       end
       if fresh_target.slot ~= nil then
         player.hand_location = { inventory = fresh_target.inventory.index, slot = fresh_target.slot }
       end
-      flying_text(player, "quidquid.action-blueprint-held", selected_candidate)
-      return
+      return { "quidquid.action-blueprint-held" }
     end
     if player.cursor_stack.import_stack(export_string(target)) == -1 then
       player.cursor_stack.clear()
-      flying_text(player, "quidquid.action-blueprint-import-failed", selected_candidate)
-    else
-      player.cursor_stack_temporary = true
-      flying_text(player, "quidquid.action-blueprint-held", selected_candidate)
+      return { "quidquid.action-blueprint-import-failed" }
     end
+    player.cursor_stack_temporary = true
+    return { "quidquid.action-blueprint-held" }
   end)
 end
 
 local function copy_to_inventory(candidate, player_index)
-  ActionRunner.run(candidate, player_index, resolve, function(target, selected_candidate, player)
+  return ActionRunner.run(candidate, player_index, resolve, function(target, _selected_candidate, player)
     local inventory = player.get_main_inventory()
     if inventory == nil then
-      flying_text(player, "quidquid.action-blueprint-no-inventory", selected_candidate)
-      return
+      return { "quidquid.action-blueprint-no-inventory" }
     end
     local stack = inventory.find_empty_stack()
     if stack == nil then
-      flying_text(player, "quidquid.action-blueprint-inventory-full", selected_candidate)
-      return
+      return { "quidquid.action-blueprint-inventory-full" }
     end
     if stack.import_stack(export_string(target)) == -1 then
       stack.clear()
-      flying_text(player, "quidquid.action-blueprint-import-failed", selected_candidate)
-    else
-      flying_text(player, "quidquid.action-blueprint-copied", selected_candidate)
+      return { "quidquid.action-blueprint-import-failed" }
     end
+    return { "quidquid.action-blueprint-copied" }
   end)
 end
 
@@ -125,7 +110,7 @@ function BlueprintAction.init(window)
 end
 
 local function export(candidate, player_index)
-  ActionRunner.run(candidate, player_index, resolve, function(target, _selected_candidate, player)
+  return ActionRunner.run(candidate, player_index, resolve, function(target, _selected_candidate, player)
     export_window.open(player, export_string(target))
   end)
 end

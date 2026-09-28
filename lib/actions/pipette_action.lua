@@ -46,7 +46,7 @@ end
 -- setting -- that setting isn't exposed to mods, so this is the only way to
 -- guarantee the behavior rather than depend on the player's own client config.
 local function execute(selected_candidate, player_index)
-  ActionRunner.run(selected_candidate, player_index, resolve, function(prototype, _candidate, player)
+  return ActionRunner.run(selected_candidate, player_index, resolve, function(prototype, _candidate, player)
     player.pipette(prototype, nil, true)
   end)
 end
