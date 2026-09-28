@@ -5,7 +5,7 @@
 
 local Declarations = {}
 
-Declarations.CONTRACT_VERSION = 2
+Declarations.CONTRACT_VERSION = 3
 Declarations.SOURCE_DATA_TYPE = "quidquid.source"
 Declarations.ACTION_DATA_TYPE = "quidquid.action"
 
