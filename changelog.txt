@@ -1,5 +1,6 @@
 ---------------------------------------------------------------------------------------------------
-Version: Unreleased
+Version: 0.8.0
+Date: 2026-09-28
   Modding:
     - An action's execute can return a message, which Quidquid shows as flying text with the candidate's icon and label; the extension contract is now version 3
   Locale:
