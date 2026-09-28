@@ -192,6 +192,15 @@ everything else there is internal and moves without notice. The module itself is
 experimental until Quidquid reaches 1.0, and it is not covered by
 `contract_version` — that number versions the remote contract above, not this.
 
+### Rich text in names
+
+A name the player writes may carry rich-text tags, such as a blueprint called
+`[item=rail]Main line`. `quidquid.rich_text.searchable(value)` returns the text
+a search should see — tags read as what they name, `rail` here — and, for each
+of its bytes, the original byte it came from. Match against that text, then pass
+the ranges and those origins to `quidquid.rich_text.map_ranges(ranges, origins)`
+for ranges over the original name, with tag-derived bytes left unhighlighted.
+
 ### Minimal example
 
 In `data.lua`:
@@ -289,6 +298,20 @@ your first parameter is `__3__`. Return `nil` to show nothing.
 
 A LocalisedString holds at most 20 parameters, so a message carries at most 18
 of its own. Each parameter must itself be a valid LocalisedString.
+
+### Resolving before acting
+
+Quidquid's own actions share one shape, which `lib/api.lua` offers as
+`quidquid.run_action(candidate, player_index, resolve_fn, apply_fn, fallback_locale_key)`,
+to be returned from `execute`:
+
+- `resolve_fn(candidate, player)` returns what to act on, or `nil` and a locale
+  key saying why not.
+- On `nil`, `run_action` returns `{ locale_key }` (or `{ fallback_locale_key }`
+  when `resolve_fn` gave none) as the message.
+- Otherwise it returns whatever `apply_fn(payload, candidate, player)` returns —
+  a message, or `nil`.
+- A player that no longer exists gives `nil` without calling either.
 
 ### Tooltip hint
 
