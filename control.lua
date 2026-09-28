@@ -18,7 +18,6 @@ local PipetteAction = require("lib.actions.pipette_action")
 local PinResourceAction = require("lib.actions.pin_resource_action")
 local TemporaryRequestAction = require("lib.actions.temporary_request_action")
 local BlueprintAction = require("lib.actions.blueprint_action")
-local FactorySearchAction = require("lib.actions.factory_search_action")
 local TemporaryRequestEditor = require("lib.temporary_request_editor")
 local BlueprintExportWindow = require("lib.blueprint_export_window")
 local Palette = require("lib.palette")
@@ -58,7 +57,6 @@ PipetteAction.add_interface()
 PinResourceAction.add_interface()
 TemporaryRequestAction.add_interface()
 BlueprintAction.add_interface()
-FactorySearchAction.add_interface()
 
 local dictionary_sources = { ItemSource, FluidSource, RecipeSource, TechnologySource, SurfaceSource, ResourceSource }
 
