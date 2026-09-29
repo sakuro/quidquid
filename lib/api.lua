@@ -1,17 +1,16 @@
 -- The one module other mods may require; see EXTENDING.md "Scoring". Everything
 -- else under lib/ is internal.
 --
--- Factorio resolves a require path against the root of the mod that called
--- require, not the file's own mod, so these siblings have to be named absolutely
--- for this file to load from another mod at all (flib does the same). Inside
--- Quidquid that means lib.search_key_cache must be reached through here and never
--- required directly, or its cache would exist twice under two package.loaded keys.
-local fuzzy_match = require("__quidquid__.lib.fuzzy_match")
-local normalization = require("__quidquid__.lib.search_normalization")
-local search_highlight = require("__quidquid__.lib.search_highlight")
-local search_key_cache = require("__quidquid__.lib.search_key_cache")
-local action_runner = require("__quidquid__.lib.action_runner")
-local rich_text = require("__quidquid__.lib.rich_text")
+-- The siblings need no __quidquid__ prefix: Factorio resolves an unprefixed require
+-- against the mod that owns the requiring file, even when another mod loads this
+-- one, and keys package.loaded by the resolved file, so each loads once however it
+-- is spelled (confirmed in a headless run; see issue #226).
+local fuzzy_match = require("lib.fuzzy_match")
+local normalization = require("lib.search_normalization")
+local search_highlight = require("lib.search_highlight")
+local search_key_cache = require("lib.search_key_cache")
+local action_runner = require("lib.action_runner")
+local rich_text = require("lib.rich_text")
 
 -- A display-name hit outranks an internal-name hit of the same raw score: the name
 -- the player reads is the one they meant to type.
