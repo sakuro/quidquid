@@ -197,6 +197,14 @@ for ranges over the original name, with tag-derived bytes left unhighlighted.
 For a source that shows amounts, `quidquid.number_format.suffixed(value)` formats a
 number the way Quidquid's own rows do.
 
+### Shared settings
+
+A source may honour Quidquid's `quidquid-include-hidden` setting, a runtime
+per-user boolean read as `player.mod_settings["quidquid-include-hidden"].value`.
+When it is false, leave out entries the player would not normally see: hidden
+prototypes, or whatever "hidden" means for your entries. The setting's name and
+type are part of the contract.
+
 ### Minimal example
 
 In `data.lua`:

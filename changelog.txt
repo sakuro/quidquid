@@ -2,6 +2,8 @@
 Version: Unreleased
   Changes:
     - Surface search moved to a separate mod, Quidquid: Surfaces; remembered remote-view positions are not carried over
+  Modding:
+    - The include-hidden setting is documented for extension sources to honour
 ---------------------------------------------------------------------------------------------------
 Version: 0.10.0
 Date: 2026-09-29

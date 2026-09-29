@@ -189,7 +189,8 @@ inventory.
 ### Include hidden entries
 
 Show hidden or internal entries in search results. It applies to every source
-that searches prototypes: items, fluids, recipes and technologies.
+that searches prototypes: items, fluids, recipes and technologies, and to
+extensions that honour it, such as Quidquid: Surfaces.
 
 ## Related mods
 
