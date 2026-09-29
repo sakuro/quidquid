@@ -201,9 +201,10 @@ number the way Quidquid's own rows do.
 
 A source may honour Quidquid's `quidquid-include-hidden` setting, a runtime
 per-user boolean read as `player.mod_settings["quidquid-include-hidden"].value`.
-When it is false, leave out entries the player would not normally see: hidden
-prototypes, or whatever "hidden" means for your entries. The setting's name and
-type are part of the contract.
+When it is false, leave out what the game keeps out of the player's view — for
+a prototype, `hidden` set. Entries that are merely locked or not yet researched
+are not hidden in this sense and stay listed. The setting's name and type are
+part of the contract.
 
 ### Minimal example
 

@@ -188,9 +188,11 @@ inventory.
 
 ### Include hidden entries
 
-Show hidden or internal entries in search results. It applies to every source
-that searches prototypes: items, fluids, recipes and technologies, and to
-extensions that honour it, such as Quidquid: Surfaces.
+Also list what the game itself keeps out of view: prototypes marked hidden,
+such as internal items and recipes, and the upgrade-technology levels the
+technology screen does not show as their own tile. Entries that are merely
+locked or not researched yet are listed either way. Extension mods may honour
+the setting for their own entries.
 
 ## Related mods
 
