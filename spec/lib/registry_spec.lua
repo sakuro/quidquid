@@ -248,6 +248,35 @@ describe("Registry", function()
     end)
   end)
 
+  describe(":source_by_id", function()
+    it("returns the source definition registered under an id", function()
+      local registry = Registry.new()
+      registry:register_source({
+        contract_version = CONTRACT_VERSION,
+        id = "items",
+        type = "item",
+        prefixes = { "i" },
+        interface = "my-mod.source-items",
+      })
+
+      local source = registry:source_by_id("items")
+
+      assert.are.equal("items", source.id)
+    end)
+
+    it("returns nil for an unknown id", function()
+      local registry = Registry.new()
+
+      assert.is_nil(registry:source_by_id("nope"))
+    end)
+
+    it("returns nil for a nil id", function()
+      local registry = Registry.new()
+
+      assert.is_nil(registry:source_by_id(nil))
+    end)
+  end)
+
   describe(":register_action", function()
     it("accepts a definition with the current contract version", function()
       local registry = Registry.new()

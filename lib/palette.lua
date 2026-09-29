@@ -80,7 +80,17 @@ local function get_locked_source(player)
   if content == nil then
     return nil
   end
-  return content.tags.quidquid_locked_source
+  local id = content.tags.quidquid_locked_source_id
+  if id == nil then
+    -- Tags survive in the save from before this field existed; that copy held the
+    -- whole source definition instead of just its id.
+    local legacy = content.tags.quidquid_locked_source
+    id = type(legacy) == "table" and legacy.id or nil
+  end
+  -- The source's mod may no longer be installed, so its definition is looked up
+  -- live rather than trusted from the save; a miss here degrades to an unlocked
+  -- search instead of failing.
+  return registry:source_by_id(id)
 end
 
 local function set_input_validity(player, valid)
@@ -752,7 +762,7 @@ local function lock_to_source(player, source)
   if content == nil then
     return
   end
-  content.tags = { quidquid_locked_source = source }
+  content.tags = { quidquid_locked_source_id = source.id }
   content[INPUT_ROW_NAME][INPUT_NAME].text = ""
   content[INPUT_ROW_NAME][LOCK_LABEL_NAME].caption = source.label
   content[INPUT_ROW_NAME][LOCK_LABEL_NAME].visible = true

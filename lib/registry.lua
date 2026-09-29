@@ -105,6 +105,21 @@ function Registry:source_for_prefix(prefix)
   return self.prefix_owners[prefix]
 end
 
+--- The source registered under a given id.
+---@param id string|nil
+---@return table|nil  nil when no source has that id, or id is nil
+function Registry:source_by_id(id)
+  if id == nil then
+    return nil
+  end
+  for _, source in ipairs(self.sources) do
+    if source.id == id then
+      return source
+    end
+  end
+  return nil
+end
+
 --- Registers an action, or rejects it and says why in the log.
 ---
 --- Same contract as register_source: a rejection is a return value and a log line.
