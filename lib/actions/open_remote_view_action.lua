@@ -41,19 +41,9 @@ function OpenRemoteViewAction.on_player_removed(event)
   history()[event.player_index] = nil
 end
 
--- A resource candidate opens at the patch's own coordinates: the position is
--- exactly what makes a patch worth finding, so it never falls back to something
--- remembered. A surface candidate opens where the player last stood on that
--- surface, since a surface has no patch-like "there" of its own.
+-- A surface candidate opens where the player last stood on that surface, since a
+-- surface has no patch-like "there" of its own.
 local function resolve(candidate, player)
-  if candidate.type == "resource" then
-    local surface = game.get_surface(candidate.surface_index)
-    if surface == nil then
-      return nil, "quidquid.action-open-remote-view-unavailable"
-    end
-    return { surface = surface, position = candidate.position }, nil
-  end
-
   local surface, locale_key = SurfaceAccess.resolve_remote_view(candidate, player)
   if surface == nil then
     return nil, locale_key
@@ -76,10 +66,9 @@ local function execute(candidate, player_index)
   return ActionRunner.run(candidate, player_index, resolve, function(target, _candidate, player)
     remember(player)
     player.set_controller({ type = defines.controllers.remote, surface = target.surface, position = target.position })
-    -- Recorded again after landing, at the jump's own destination -- for a resource
-    -- candidate that means the patch's coordinates, not anywhere the player has
-    -- actually stood. That's intentional: a later plain surface jump back to this
-    -- surface should pick up from here, not from wherever the player was before.
+    -- Recorded again after landing, at the jump's own destination -- so a later plain
+    -- surface jump back to this surface picks up from here, not from wherever the
+    -- player was before.
     remember(player)
   end, "quidquid.action-open-remote-view-unavailable")
 end

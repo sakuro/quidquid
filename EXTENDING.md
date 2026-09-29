@@ -32,7 +32,7 @@ Declare in `data.lua` or `data-updates.lua`. Each source or action is one
 | `type` | yes | `"mod-data"`. |
 | `name` | yes | Identifies the source or action in Quidquid's log messages. Prefix it with your mod name. |
 | `data_type` | yes | `"quidquid.source"` or `"quidquid.action"`. |
-| `order` | no | Registration order, compared as a string with ties broken by `name`. It decides which candidate goes first on an equal `search_score`, and which declaration keeps a prefix or an action slot that two of them claim. Quidquid's own sources use `"a"` to `"g"`; omitted, it is the empty string, which sorts first. |
+| `order` | no | Registration order, compared as a string with ties broken by `name`. It decides which candidate goes first on an equal `search_score`, and which declaration keeps a prefix or an action slot that two of them claim. Quidquid's own sources use `"a"` to `"f"`; omitted, it is the empty string, which sorts first. |
 | `data` | yes | The definition described under [Sources](#definition) or [Actions](#definition-1), including `contract_version`. |
 
 Quidquid checks every declaration for its own contract version in its
@@ -104,13 +104,6 @@ decorate(candidates, player_index) -> decorations
   there for that candidate.
 - A source whose `decorate` call raises is logged and its candidates are left exactly
   as `search` produced them, the same as a broken `is_query_valid` or `search`.
-
-See `lib/sources/resource_source.lua`'s `decorate`, which moves a per-candidate
-`find_entities_filtered` occupancy check out of `search` for exactly this reason: it
-scales with matching resource patches, not with the 30 shown, and typing more of a
-resource's name does not shrink the match count the way it does for items or
-technologies (there are only a handful of resource prototypes, but potentially hundreds
-of patches sharing one).
 
 ### Candidates
 
@@ -251,8 +244,7 @@ remote.add_interface("my-mod-widget-source", { search = search })
 
 An action is a key binding that runs against the selected candidate, for every
 candidate type it declares. It may act on types owned by other mods, including
-Quidquid's own (`item`, `fluid`, `recipe`, `technology`, `surface`, `calculation`,
-`resource`).
+Quidquid's own (`item`, `fluid`, `recipe`, `technology`, `surface`, `calculation`).
 
 ### Quidquid's candidate types
 
@@ -263,7 +255,6 @@ without a `contract_version` bump.
 | Type | `id` | Other fields |
 | --- | --- | --- |
 | `item`, `fluid`, `recipe`, `technology` | The prototype name | |
-| `resource` | Opaque | `resource_name` (the resource entity prototype name), `surface_index`, `position` |
 | `surface`, `calculation` | Opaque | |
 
 ### Definition
@@ -417,7 +408,6 @@ them.
 | [`lib/sources/calculator_source.lua`](lib/sources/calculator_source.lua) | The smallest source, plus `is_query_valid` and `secondary_text` |
 | [`lib/sources/fluid_source.lua`](lib/sources/fluid_source.lua) | A prototype-backed source with a translation dictionary |
 | [`lib/sources/item_source.lua`](lib/sources/item_source.lua) | Per-candidate `annotation` |
-| [`lib/sources/resource_source.lua`](lib/sources/resource_source.lua) | A source that builds candidates from world state rather than prototypes, keeps a `storage` cache, and uses `decorate` |
 | [`lib/actions/open_factoriopedia_action.lua`](lib/actions/open_factoriopedia_action.lua) | The smallest action, acting on several types |
 | [`lib/actions/temporary_request_action.lua`](lib/actions/temporary_request_action.lua) | `is_available` against player state |
 | [`lib/actions/research_queue_action.lua`](lib/actions/research_queue_action.lua) | Returning a message on success and on failure |

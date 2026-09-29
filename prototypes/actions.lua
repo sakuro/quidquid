@@ -9,14 +9,14 @@ end
 
 data:extend({
   action("quidquid-open-remote-view", {
-    types = { "surface", "resource" },
+    types = { "surface" },
     label = { "quidquid.action-open-remote-view" },
     hint = { "quidquid.action-open-remote-view-hint" },
     input_name = "quidquid-open-remote-view",
     interface = "quidquid.open-remote-view-action",
   }),
   action("quidquid-open-factoriopedia", {
-    types = { "item", "fluid", "recipe", "surface", "resource" },
+    types = { "item", "fluid", "recipe", "surface" },
     label = { "quidquid.action-open-factoriopedia" },
     hint = { "quidquid.action-open-factoriopedia-hint" },
     input_name = "quidquid-open-factoriopedia",
@@ -65,13 +65,6 @@ data:extend({
     hint = { "quidquid.action-pipette-hint" },
     input_name = "quidquid-pipette",
     interface = "quidquid.pipette-action",
-  }),
-  action("quidquid-pin-resource", {
-    types = { "resource" },
-    label = { "quidquid.action-pin-resource" },
-    hint = { "quidquid.action-pin-resource-hint" },
-    input_name = "quidquid-pin-resource",
-    interface = "quidquid.pin-resource-action",
   }),
   action("quidquid-temporary-request", {
     types = { "item", "recipe" },

@@ -1,5 +1,7 @@
 ---------------------------------------------------------------------------------------------------
 Version: Unreleased
+  Changes:
+    - Resource search moved to a separate mod, Quidquid: Resources
   Modding:
     - lib/api.lua exposes number_format.suffixed; the Factoriopedia and remote view inputs and their label and hint keys are documented for other mods to reuse
 ---------------------------------------------------------------------------------------------------
