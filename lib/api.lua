@@ -13,6 +13,7 @@ local search_highlight = require("lib.search_highlight")
 local search_key_cache = require("lib.search_key_cache")
 local action_runner = require("lib.action_runner")
 local rich_text = require("lib.rich_text")
+local number_format = require("lib.number_format")
 
 -- A display-name hit outranks an internal-name hit of the same raw score: the name
 -- the player reads is the one they meant to type.
@@ -104,6 +105,11 @@ return {
   rich_text = {
     searchable = rich_text.searchable,
     map_ranges = rich_text.map_ranges,
+  },
+  -- The compact number style of Quidquid's own rows (4.2k, 1.3M), for a source that
+  -- shows amounts.
+  number_format = {
+    suffixed = number_format.suffixed,
   },
   -- The shape of every built-in action's execute. See EXTENDING.md "Resolving before
   -- acting".

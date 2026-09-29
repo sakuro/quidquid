@@ -1,4 +1,8 @@
 ---------------------------------------------------------------------------------------------------
+Version: Unreleased
+  Modding:
+    - lib/api.lua exposes number_format.suffixed; the Factoriopedia and remote view inputs and their label and hint keys are documented for other mods to reuse
+---------------------------------------------------------------------------------------------------
 Version: 0.9.0
 Date: 2026-09-28
   Changes:

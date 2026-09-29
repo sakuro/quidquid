@@ -201,6 +201,9 @@ of its bytes, the original byte it came from. Match against that text, then pass
 the ranges and those origins to `quidquid.rich_text.map_ranges(ranges, origins)`
 for ranges over the original name, with tag-derived bytes left unhighlighted.
 
+For a source that shows amounts, `quidquid.number_format.suffixed(value)` formats a
+number the way Quidquid's own rows do.
+
 ### Minimal example
 
 In `data.lua`:
@@ -312,6 +315,20 @@ to be returned from `execute`:
 - Otherwise it returns whatever `apply_fn(payload, candidate, player)` returns —
   a message, or `nil`.
 - A player that no longer exists gives `nil` without calling either.
+
+### Shared inputs
+
+Two of Quidquid's inputs are meant to be reused by other mods. Declare an action
+for your own candidate type with one of them as its `input_name`, and use the same
+`label` and `hint`. The player then has one binding and one wording for the idea,
+whichever mod handles the type.
+
+| `input_name` | `label` | `hint` |
+| --- | --- | --- |
+| `quidquid-open-factoriopedia` | `{ "quidquid.action-open-factoriopedia" }` | `{ "quidquid.action-open-factoriopedia-hint" }` |
+| `quidquid-open-remote-view` | `{ "quidquid.action-open-remote-view" }` | `{ "quidquid.action-open-remote-view-hint" }` |
+
+Keep failure messages in your own locale: only the input and these keys are shared.
 
 ### Tooltip hint
 
