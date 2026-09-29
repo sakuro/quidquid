@@ -13,37 +13,32 @@ data:extend({
     type = "item",
     label = { "quidquid.source-items" },
     prefixes = { "i", "item" },
-    in_default_search = true,
     interface = "quidquid.item-source",
   }),
   source("quidquid-fluids", "b", {
     type = "fluid",
     label = { "quidquid.source-fluids" },
     prefixes = { "f", "fluid" },
-    in_default_search = true,
     interface = "quidquid.fluid-source",
   }),
   source("quidquid-recipes", "c", {
     type = "recipe",
     label = { "quidquid.source-recipes" },
     prefixes = { "r", "recipe" },
-    in_default_search = true,
     interface = "quidquid.recipe-source",
   }),
   source("quidquid-technologies", "d", {
     type = "technology",
     label = { "quidquid.source-technologies" },
     prefixes = { "t", "technology" },
-    in_default_search = true,
     interface = "quidquid.technology-source",
   }),
   -- Out of the default search: every query would otherwise be handed to the
-  -- expression evaluator.
+  -- expression evaluator. Prefix-only, with no default-search setting of its own.
   source("quidquid-calculator", "f", {
     type = "calculation",
     label = { "quidquid.source-calculator" },
     prefixes = { "=" },
-    in_default_search = false,
     interface = "quidquid.calculator-source",
   }),
 })

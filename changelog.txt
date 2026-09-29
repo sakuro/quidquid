@@ -1,4 +1,8 @@
 ---------------------------------------------------------------------------------------------------
+Version: Unreleased
+  Modding:
+    - Whether an extension's source is in the default search is a per-player setting named after its declaration (<name>-default-search) instead of in_default_search; the extension contract is now version 4
+---------------------------------------------------------------------------------------------------
 Version: 0.11.0
 Date: 2026-09-29
   Changes:

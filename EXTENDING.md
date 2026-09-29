@@ -9,7 +9,7 @@ each one as a `mod-data` prototype in the data stage and implements its behavior
 in a remote interface of its own — no change to Quidquid itself is needed, and
 your code keeps running in your own mod.
 
-The contract is versioned with `contract_version`, currently `3`. A declaration
+The contract is versioned with `contract_version`, currently `4`. A declaration
 whose `contract_version` does not match is skipped, so a future bump disables it
 until you update. Until Quidquid reaches 1.0, expect the contract to change
 without a compatibility shim.
@@ -54,15 +54,14 @@ The `data` of a `quidquid.source` declaration:
 
 | Field | Required | Meaning |
 | --- | --- | --- |
-| `contract_version` | yes | Must be `3`. |
+| `contract_version` | yes | Must be `4`. |
 | `type` | yes | The candidate type this source produces. Unique across all sources — a later declaration for a type already taken is skipped with a log line. Actions are matched to candidates by this string. |
 | `label` | yes | LocalisedString shown as the source label on each result row. |
 | `prefixes` | no | Prefix words that lock the palette to this source — with `{ "w", "widget" }`, typing `widget ` locks to it. Matched case-sensitively, so `W` and `w` are separate prefixes and either may be claimed on its own. A prefix already taken by an earlier declaration is ignored with a log line. Defaults to none. |
-| `in_default_search` | no | When true, the source takes part in the unlocked search. Defaults to `false`, which leaves it reachable only through a prefix. |
 | `interface` | yes | Name of your remote interface implementing the functions below. |
 
-A source with neither `prefixes` nor `in_default_search` could never be reached,
-so it fails the startup check.
+Whether a source takes part in the default search is not part of this table —
+see [Default search](#default-search).
 
 ### Interface functions
 
@@ -206,9 +205,50 @@ a prototype, `hidden` set. Entries that are merely locked or not yet researched
 are not hidden in this sense and stay listed. The setting's name and type are
 part of the contract.
 
+### Default search
+
+Whether your source takes part in the default search is a per-player setting
+named `<declaration name>-default-search` — for the `my-mod-widgets` declaration
+below, `my-mod-widgets-default-search`. It must be a `bool-setting` with
+`setting_type = "runtime-per-user"`; `default_value = true` is recommended, so
+a player sees your source without having to opt in. Declare it in
+`settings.lua`:
+
+```lua
+data:extend({
+  {
+    type = "bool-setting",
+    name = "my-mod-widgets-default-search",
+    setting_type = "runtime-per-user",
+    default_value = true,
+  },
+})
+```
+
+With locale keys for its name and description:
+
+```ini
+[mod-setting-name]
+my-mod-widgets-default-search=...
+
+[mod-setting-description]
+my-mod-widgets-default-search=...
+```
+
+A source declared with no such setting is prefix-only: it registers normally
+but never joins the default search. A source with no prefix it can actually
+claim — none declared, or all already taken by an earlier source — and no
+such setting is rejected at registration (see [Rejections and
+failures](#rejections-and-failures)).
+
+A player who turns the setting off sees your source only after one of its
+prefixes. If it has no prefix it could claim, it is unreachable for that
+player; registration cannot catch this, since the value changes per player at
+run time.
+
 ### Minimal example
 
-In `data.lua`:
+In `data.lua`, with the setting above:
 
 ```lua
 data:extend({
@@ -217,11 +257,10 @@ data:extend({
     name = "my-mod-widgets",
     data_type = "quidquid.source",
     data = {
-      contract_version = 3,
+      contract_version = 4,
       type = "my-mod-widget",
       label = { "my-mod.source-widgets" },
       prefixes = { "w", "widget" },
-      in_default_search = true,
       interface = "my-mod-widget-source",
     },
   },
@@ -272,7 +311,7 @@ The `data` of a `quidquid.action` declaration:
 
 | Field | Required | Meaning |
 | --- | --- | --- |
-| `contract_version` | yes | Must be `3`. |
+| `contract_version` | yes | Must be `4`. |
 | `types` | yes | Non-empty array of candidate types this action applies to. |
 | `label` | yes | LocalisedString naming the action in the candidate tooltip. |
 | `hint` | yes | LocalisedString for the key binding shown after the label — see [Tooltip hint](#tooltip-hint). |
@@ -356,7 +395,7 @@ data:extend({
     name = "my-mod-do-thing",
     data_type = "quidquid.action",
     data = {
-      contract_version = 3,
+      contract_version = 4,
       types = { "my-mod-widget", "item" },
       label = { "my-mod.action-do-thing" },
       hint = { "my-mod.action-do-thing-hint" },
@@ -387,12 +426,20 @@ action-do-thing-done=Did the thing to __1__ __2__ (__3__)
 ## Rejections and failures
 
 A mistake inside one declaration — a missing or mistyped field, an empty prefix,
-an `input_name` with no custom-input, a source that cannot be reached — stops the
-game at startup (see [Declaring](#declaring)). What depends on which mods are
-installed together is not fatal: a declaration for another `contract_version`, or
-one whose `type` another source already owns, is skipped with a line in the
-Factorio log, and a prefix or type/`input_name` pair already taken is skipped
-while the rest of the declaration still registers.
+an `input_name` with no custom-input — stops the game at startup (see
+[Declaring](#declaring)). What depends on which mods are installed together is
+not fatal: a declaration for another `contract_version`, or one whose `type`
+another source already owns, is skipped with a line in the Factorio log, and a
+prefix or type/`input_name` pair already taken is skipped while the rest of the
+declaration still registers.
+
+A source's default-search setting (see [Default search](#default-search)) is
+also checked at registration rather than at startup, since a mod setting cannot
+be read in the data stage. Both are log lines, not startup errors: a setting of
+that name existing under the wrong type or `setting_type` rejects the source
+outright, and so does a source with no prefix it can actually claim — none
+declared, or all already taken by an earlier source — and no such setting; it
+could never be reached either way.
 
 Quidquid calls `search`, `is_query_valid`, `execute` and `is_available` through
 `pcall`. An error inside them is logged and treated as no results, a valid query,

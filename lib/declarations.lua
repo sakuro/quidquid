@@ -5,7 +5,7 @@
 
 local Declarations = {}
 
-Declarations.CONTRACT_VERSION = 3
+Declarations.CONTRACT_VERSION = 4
 Declarations.SOURCE_DATA_TYPE = "quidquid.source"
 Declarations.ACTION_DATA_TYPE = "quidquid.action"
 
@@ -85,12 +85,6 @@ local function source_problem(data)
   end
   if data.prefixes ~= nil and not is_array_of_non_empty_strings(data.prefixes) then
     return "prefixes must be an array of non-empty strings"
-  end
-  if data.in_default_search ~= nil and type(data.in_default_search) ~= "boolean" then
-    return "in_default_search must be a boolean"
-  end
-  if (data.prefixes == nil or #data.prefixes == 0) and not data.in_default_search then
-    return "unreachable: it has no prefixes and is not in the default search"
   end
   return nil
 end
