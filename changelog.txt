@@ -1,5 +1,6 @@
 ---------------------------------------------------------------------------------------------------
-Version: Unreleased
+Version: 0.10.0
+Date: 2026-09-29
   Changes:
     - Resource search moved to a separate mod, Quidquid: Resources
   Bugfixes:
