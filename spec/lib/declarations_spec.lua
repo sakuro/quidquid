@@ -115,13 +115,9 @@ describe("Declarations", function()
       end)
     end)
 
-    it("accepts a source reachable only through the default search", function()
+    it("accepts a source with no prefixes at all", function()
       local raw = raw_with({
-        mod_data(
-          "my-mod-widgets",
-          Declarations.SOURCE_DATA_TYPE,
-          source_data({ prefixes = {}, in_default_search = true })
-        ),
+        mod_data("my-mod-widgets", Declarations.SOURCE_DATA_TYPE, source_data({ prefixes = {} })),
       })
 
       assert.has_no.errors(function()
@@ -160,8 +156,6 @@ describe("Declarations", function()
       { "a missing interface", { interface = false }, "interface" },
       { "prefixes that are not an array", { prefixes = "w" }, "prefixes" },
       { "an empty-string prefix", { prefixes = { "w", "" } }, "prefixes" },
-      { "a non-boolean in_default_search", { in_default_search = "yes" }, "in_default_search" },
-      { "neither prefixes nor in_default_search", { prefixes = {} }, "unreachable" },
     }
     for _, case in ipairs(source_cases) do
       it("rejects a source with " .. case[1], function()

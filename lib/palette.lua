@@ -169,7 +169,7 @@ end
 function Palette.search_all_sources(query, player_index, locked_source)
   local trimmed_query = query:match("^%s*(.-)%s*$")
   local results = {}
-  local sources = locked_source and { locked_source } or registry:default_search_sources()
+  local sources = locked_source and { locked_source } or registry:default_search_sources(player_index)
   for _, source in ipairs(sources) do
     local ok, candidates = pcall(remote.call, source.interface, "search", trimmed_query, player_index)
     if ok then
@@ -199,7 +199,7 @@ end
 ---@return boolean
 function Palette.is_query_valid(query, player_index, locked_source)
   local trimmed_query = query:match("^%s*(.-)%s*$")
-  local sources = locked_source and { locked_source } or registry:default_search_sources()
+  local sources = locked_source and { locked_source } or registry:default_search_sources(player_index)
   for _, source in ipairs(sources) do
     if RemoteCaller:has(source.interface, "is_query_valid") then
       local ok, result =

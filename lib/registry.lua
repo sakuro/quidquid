@@ -1,3 +1,4 @@
+local DefaultSearch = require("lib.default_search")
 local Declarations = require("lib.declarations")
 
 local Registry = {}
@@ -7,8 +8,9 @@ local function noop_logger(_) end
 
 --- A registry of the sources and actions declared as mod-data prototypes.
 ---@param logger function|nil  called with one message per rejection; defaults to a no-op
+---@param settings table|nil  `{ classify, enabled }`, as DefaultSearch.runtime; defaults to it
 ---@return Registry
-function Registry.new(logger)
+function Registry.new(logger, settings)
   return setmetatable({
     sources = {},
     actions = {},
@@ -16,6 +18,7 @@ function Registry.new(logger)
     type_owners = {},
     action_slots = {},
     logger = logger or noop_logger,
+    settings = settings or DefaultSearch.runtime,
   }, Registry)
 end
 
@@ -24,8 +27,12 @@ end
 --- Rejection is a return value and a log line, never an error: what is rejected here
 --- is a declaration for another contract version or one conflicting with another
 --- mod's, and raising would refuse to load any save with that pair of mods installed.
---- A malformed declaration has already failed at startup (Declarations.validate). A
---- prefix already taken is skipped while the rest of the registration succeeds -- the
+--- A malformed declaration has already failed at startup (Declarations.validate).
+--- Reachability and the default-search setting are checked here rather than at
+--- startup, because a setting cannot be read in the data stage: a source is
+--- rejected when its default-search setting exists under the wrong type or
+--- setting_type, and when it has neither that setting nor any prefixes. A prefix
+--- already taken is skipped while the rest of the registration succeeds -- the
 --- source is still reachable, just not under that prefix. See EXTENDING.md
 --- "Rejections and failures".
 ---@param definition table  see EXTENDING.md "Sources"; from Declarations.collect
@@ -58,6 +65,34 @@ function Registry:register_source(definition)
     return false
   end
 
+  if DefaultSearch.ALWAYS[definition.id] then
+    definition.default_search_fixed = true
+  else
+    local setting_name = DefaultSearch.setting_name(definition.id)
+    local classification = self.settings.classify(setting_name)
+    if classification == "invalid" then
+      self.logger(
+        ("quidquid: source '%s' rejected: setting '%s' must be a runtime-per-user bool-setting"):format(
+          tostring(definition.id),
+          setting_name
+        )
+      )
+      return false
+    elseif classification == nil then
+      if definition.prefixes == nil or #definition.prefixes == 0 then
+        self.logger(
+          ("quidquid: source '%s' rejected: unreachable: it has no prefixes and no '%s' setting"):format(
+            tostring(definition.id),
+            setting_name
+          )
+        )
+        return false
+      end
+    else
+      definition.default_search_setting = setting_name
+    end
+  end
+
   for _, prefix in ipairs(definition.prefixes or {}) do
     if prefix == "" then
       self.logger(
@@ -81,12 +116,21 @@ function Registry:register_source(definition)
   return true
 end
 
---- The sources taking part in an unlocked search, in registration order.
----@return table  the source definitions with in_default_search set
-function Registry:default_search_sources()
+--- The sources taking part in an unlocked search for one player, in registration order.
+---
+--- Quidquid's own sources (DefaultSearch.ALWAYS) are always included; an extension's
+--- source joins only when the player's own default-search setting is on. A source with
+--- neither -- prefix-only -- never appears here.
+---@param player_index uint
+---@return table  the source definitions in the default search for that player
+function Registry:default_search_sources(player_index)
   local selected = {}
   for _, source in ipairs(self.sources) do
-    if source.in_default_search then
+    if source.default_search_fixed then
+      table.insert(selected, source)
+    elseif
+      source.default_search_setting ~= nil and self.settings.enabled(player_index, source.default_search_setting)
+    then
       table.insert(selected, source)
     end
   end

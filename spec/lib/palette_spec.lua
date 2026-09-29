@@ -127,7 +127,7 @@ describe("Palette", function()
   describe(".search_all_sources", function()
     local function fake_registry(sources)
       return {
-        default_search_sources = function()
+        default_search_sources = function(_player_index)
           return sources
         end,
       }
@@ -194,7 +194,7 @@ describe("Palette", function()
     it("searches only the locked source, ignoring default_search_sources", function()
       local default_search_called = false
       Palette.init({
-        default_search_sources = function()
+        default_search_sources = function(_player_index)
           default_search_called = true
           return {}
         end,
@@ -243,7 +243,7 @@ describe("Palette", function()
   describe(".is_query_valid", function()
     it("returns true when no consulted source implements is_query_valid", function()
       Palette.init({
-        default_search_sources = function()
+        default_search_sources = function(_player_index)
           return { { id = "items", interface = "quidquid.item-source", label = { "quidquid.source-items" } } }
         end,
       })
@@ -256,7 +256,7 @@ describe("Palette", function()
 
     it("returns true when the implementing source reports the query valid", function()
       Palette.init({
-        default_search_sources = function()
+        default_search_sources = function(_player_index)
           return {
             { id = "calculator", interface = "quidquid.calculator-source", label = { "quidquid.source-calculator" } },
           }
@@ -274,7 +274,7 @@ describe("Palette", function()
 
     it("returns false when the implementing source reports the query invalid", function()
       Palette.init({
-        default_search_sources = function()
+        default_search_sources = function(_player_index)
           return {
             { id = "calculator", interface = "quidquid.calculator-source", label = { "quidquid.source-calculator" } },
           }
@@ -293,7 +293,7 @@ describe("Palette", function()
     it("consults only the locked source when one is locked", function()
       local default_search_called = false
       Palette.init({
-        default_search_sources = function()
+        default_search_sources = function(_player_index)
           default_search_called = true
           return {}
         end,
@@ -319,7 +319,7 @@ describe("Palette", function()
         table.insert(logged, message)
       end
       Palette.init({
-        default_search_sources = function()
+        default_search_sources = function(_player_index)
           return {
             { id = "calculator", interface = "quidquid.calculator-source", label = { "quidquid.source-calculator" } },
           }
@@ -341,7 +341,7 @@ describe("Palette", function()
     it("trims leading and trailing whitespace from the query before consulting sources", function()
       local received_query
       Palette.init({
-        default_search_sources = function()
+        default_search_sources = function(_player_index)
           return {
             { id = "calculator", interface = "quidquid.calculator-source", label = { "quidquid.source-calculator" } },
           }

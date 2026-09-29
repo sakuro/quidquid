@@ -12,6 +12,22 @@ local function spy_logger()
   return logger, messages
 end
 
+-- The default: every source has a valid, always-on default-search setting. A test
+-- about registration itself, rather than about default-search membership, wants
+-- register_source to succeed without caring how; override classify/enabled only
+-- when the default-search behavior is what's under test.
+local function settings_stub(overrides)
+  overrides = overrides or {}
+  return {
+    classify = overrides.classify or function(_)
+      return "ok"
+    end,
+    enabled = overrides.enabled or function(_, _)
+      return true
+    end,
+  }
+end
+
 local function always_true_caller()
   return {
     has = function()
@@ -48,7 +64,7 @@ end
 describe("Registry", function()
   describe(":register_source", function()
     it("accepts a definition with the current contract version", function()
-      local registry = Registry.new()
+      local registry = Registry.new(nil, settings_stub())
 
       local ok = registry:register_source({
         contract_version = CONTRACT_VERSION,
@@ -63,7 +79,7 @@ describe("Registry", function()
 
     it("rejects a definition with an unsupported contract version", function()
       local logger, messages = spy_logger()
-      local registry = Registry.new(logger)
+      local registry = Registry.new(logger, settings_stub())
 
       local ok = registry:register_source({
         contract_version = OTHER_CONTRACT_VERSION,
@@ -79,7 +95,7 @@ describe("Registry", function()
 
     it("rejects a definition with no type", function()
       local logger, messages = spy_logger()
-      local registry = Registry.new(logger)
+      local registry = Registry.new(logger, settings_stub())
 
       local ok = registry:register_source({
         contract_version = CONTRACT_VERSION,
@@ -94,7 +110,7 @@ describe("Registry", function()
 
     it("keeps the first registration when two sources claim the same prefix", function()
       local logger, messages = spy_logger()
-      local registry = Registry.new(logger)
+      local registry = Registry.new(logger, settings_stub())
 
       registry:register_source({
         contract_version = CONTRACT_VERSION,
@@ -116,13 +132,12 @@ describe("Registry", function()
 
     it("rejects a second source claiming an already-registered type, keeping the first", function()
       local logger, messages = spy_logger()
-      local registry = Registry.new(logger)
+      local registry = Registry.new(logger, settings_stub())
 
       local first_ok = registry:register_source({
         contract_version = CONTRACT_VERSION,
         id = "items",
         type = "item",
-        in_default_search = true,
         prefixes = { "i" },
         interface = "my-mod.source-items",
       })
@@ -130,7 +145,6 @@ describe("Registry", function()
         contract_version = CONTRACT_VERSION,
         id = "duplicate-items",
         type = "item",
-        in_default_search = true,
         prefixes = { "d" },
         interface = "my-mod.source-duplicate-items",
       })
@@ -139,13 +153,13 @@ describe("Registry", function()
       assert.is_false(second_ok)
       assert.are.equal(1, #messages)
 
-      local default_sources = registry:default_search_sources()
+      local default_sources = registry:default_search_sources(1)
       assert.are.equal(1, #default_sources)
       assert.are.equal("items", default_sources[1].id)
     end)
 
     it("allows two sources to register for different types", function()
-      local registry = Registry.new()
+      local registry = Registry.new(nil, settings_stub())
 
       local item_ok = registry:register_source({
         contract_version = CONTRACT_VERSION,
@@ -168,7 +182,7 @@ describe("Registry", function()
 
     it("treats prefixes differing only in case as distinct", function()
       local logger, messages = spy_logger()
-      local registry = Registry.new(logger)
+      local registry = Registry.new(logger, settings_stub())
 
       local recipe_ok = registry:register_source({
         contract_version = CONTRACT_VERSION,
@@ -194,7 +208,7 @@ describe("Registry", function()
 
     it("ignores an empty-string prefix but still registers the source and its other prefixes", function()
       local logger, messages = spy_logger()
-      local registry = Registry.new(logger)
+      local registry = Registry.new(logger, settings_stub())
 
       local ok = registry:register_source({
         contract_version = CONTRACT_VERSION,
@@ -213,7 +227,7 @@ describe("Registry", function()
 
   describe(":source_for_prefix", function()
     it("returns the source definition registered for a prefix", function()
-      local registry = Registry.new()
+      local registry = Registry.new(nil, settings_stub())
       registry:register_source({
         contract_version = CONTRACT_VERSION,
         id = "items",
@@ -228,7 +242,7 @@ describe("Registry", function()
     end)
 
     it("does not match a prefix typed in another case", function()
-      local registry = Registry.new()
+      local registry = Registry.new(nil, settings_stub())
       registry:register_source({
         contract_version = CONTRACT_VERSION,
         id = "items",
@@ -242,7 +256,7 @@ describe("Registry", function()
     end)
 
     it("returns nil for an unregistered prefix", function()
-      local registry = Registry.new()
+      local registry = Registry.new(nil, settings_stub())
 
       assert.is_nil(registry:source_for_prefix("nope"))
     end)
@@ -250,7 +264,7 @@ describe("Registry", function()
 
   describe(":source_by_id", function()
     it("returns the source definition registered under an id", function()
-      local registry = Registry.new()
+      local registry = Registry.new(nil, settings_stub())
       registry:register_source({
         contract_version = CONTRACT_VERSION,
         id = "items",
@@ -265,13 +279,13 @@ describe("Registry", function()
     end)
 
     it("returns nil for an unknown id", function()
-      local registry = Registry.new()
+      local registry = Registry.new(nil, settings_stub())
 
       assert.is_nil(registry:source_by_id("nope"))
     end)
 
     it("returns nil for a nil id", function()
-      local registry = Registry.new()
+      local registry = Registry.new(nil, settings_stub())
 
       assert.is_nil(registry:source_by_id(nil))
     end)
@@ -340,25 +354,40 @@ describe("Registry", function()
   end)
 
   describe(":default_search_sources", function()
-    it("returns sources registered with in_default_search = true", function()
-      local registry = Registry.new()
+    it("always includes one of Quidquid's own fixed sources, without consulting settings", function()
+      local registry = Registry.new(
+        nil,
+        settings_stub({
+          classify = function()
+            error("classify should not be called for a fixed member")
+          end,
+        })
+      )
       registry:register_source({
         contract_version = CONTRACT_VERSION,
-        id = "items",
+        id = "quidquid-items",
         type = "item",
         prefixes = { "i" },
-        in_default_search = true,
-        interface = "my-mod.source-items",
+        interface = "quidquid.item-source",
       })
 
-      local default_sources = registry:default_search_sources()
+      local default_sources = registry:default_search_sources(1)
 
       assert.are.equal(1, #default_sources)
-      assert.are.equal("items", default_sources[1].id)
+      assert.are.equal("quidquid-items", default_sources[1].id)
     end)
 
-    it("excludes sources without in_default_search", function()
-      local registry = Registry.new()
+    it("includes an extension source only for a player whose default-search setting is enabled", function()
+      local enabled_for = { [1] = true, [2] = false }
+      local registry = Registry.new(
+        nil,
+        settings_stub({
+          enabled = function(player_index, name)
+            assert.are.equal("items-default-search", name)
+            return enabled_for[player_index] == true
+          end,
+        })
+      )
       registry:register_source({
         contract_version = CONTRACT_VERSION,
         id = "items",
@@ -367,15 +396,113 @@ describe("Registry", function()
         interface = "my-mod.source-items",
       })
 
-      local default_sources = registry:default_search_sources()
+      assert.are.equal(1, #registry:default_search_sources(1))
+      assert.are.same({}, registry:default_search_sources(2))
+    end)
 
-      assert.are.same({}, default_sources)
+    it("rejects a source whose default-search setting is not a runtime-per-user bool-setting", function()
+      local logger, messages = spy_logger()
+      local registry = Registry.new(
+        logger,
+        settings_stub({
+          classify = function()
+            return "invalid"
+          end,
+        })
+      )
+
+      local ok = registry:register_source({
+        contract_version = CONTRACT_VERSION,
+        id = "items",
+        type = "item",
+        prefixes = { "i" },
+        interface = "my-mod.source-items",
+      })
+
+      assert.is_false(ok)
+      assert.are.same({
+        "quidquid: source 'items' rejected: setting 'items-default-search' must be a runtime-per-user bool-setting",
+      }, messages)
+      assert.is_nil(registry:source_for_prefix("i"))
+    end)
+
+    it("rejects a source with neither prefixes nor a default-search setting", function()
+      local logger, messages = spy_logger()
+      local registry = Registry.new(
+        logger,
+        settings_stub({
+          classify = function()
+            return nil
+          end,
+        })
+      )
+
+      local ok = registry:register_source({
+        contract_version = CONTRACT_VERSION,
+        id = "items",
+        type = "item",
+        interface = "my-mod.source-items",
+      })
+
+      assert.is_false(ok)
+      assert.are.same({
+        "quidquid: source 'items' rejected: unreachable: it has no prefixes and no 'items-default-search' setting",
+      }, messages)
+    end)
+
+    it("registers a source with no setting but with prefixes, and never includes it in the default search", function()
+      local logger, messages = spy_logger()
+      local registry = Registry.new(
+        logger,
+        settings_stub({
+          classify = function()
+            return nil
+          end,
+        })
+      )
+
+      local ok = registry:register_source({
+        contract_version = CONTRACT_VERSION,
+        id = "calculator",
+        type = "calculation",
+        prefixes = { "=" },
+        interface = "my-mod.source-calculator",
+      })
+
+      assert.is_true(ok)
+      assert.are.same({}, messages)
+      assert.are.equal("calculator", registry:source_for_prefix("=").id)
+      assert.are.same({}, registry:default_search_sources(1))
+    end)
+
+    it("returns sources in registration order", function()
+      local registry = Registry.new(nil, settings_stub())
+      registry:register_source({
+        contract_version = CONTRACT_VERSION,
+        id = "recipes",
+        type = "recipe",
+        prefixes = { "r" },
+        interface = "my-mod.source-recipes",
+      })
+      registry:register_source({
+        contract_version = CONTRACT_VERSION,
+        id = "items",
+        type = "item",
+        prefixes = { "i" },
+        interface = "my-mod.source-items",
+      })
+
+      local default_sources = registry:default_search_sources(1)
+
+      assert.are.equal(2, #default_sources)
+      assert.are.equal("recipes", default_sources[1].id)
+      assert.are.equal("items", default_sources[2].id)
     end)
 
     it("returns an empty list when no sources are registered", function()
-      local registry = Registry.new()
+      local registry = Registry.new(nil, settings_stub())
 
-      local default_sources = registry:default_search_sources()
+      local default_sources = registry:default_search_sources(1)
 
       assert.are.same({}, default_sources)
     end)
