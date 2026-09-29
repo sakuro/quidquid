@@ -167,6 +167,9 @@ candidate fields expect. Either field may be omitted. The `namespace` and `id`
 key a cache of normalized names, so pick a namespace of your own and an `id` that
 is stable for the entry.
 
+`locale` only selects the locale-specific part of the folding applied to display
+names. Passing `nil` skips that part; display names are matched either way.
+
 A renamed entry needs nothing from you: the cache keeps the raw value it
 normalized and compares it on every read. An entry that *disappears* never gets
 that read, so its keys sit in the cache for the rest of the session —
