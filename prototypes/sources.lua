@@ -53,13 +53,4 @@ data:extend({
     in_default_search = false,
     interface = "quidquid.calculator-source",
   }),
-  source("quidquid-resources", "g", {
-    type = "resource",
-    label = { "quidquid.source-resources" },
-    -- "R" is uppercase because recipes hold "r". Prefix matching is case-sensitive --
-    -- see EXTENDING.md "Definition" and spec/lib/registry_spec.lua.
-    prefixes = { "resource", "R" },
-    in_default_search = false,
-    interface = "quidquid.resource-source",
-  }),
 })

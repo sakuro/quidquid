@@ -211,14 +211,14 @@ end
 --- Batches every displayed candidate from the same source into one `decorate` call --
 --- called after PaletteLogic.merge_candidates truncation, never over a source's full
 --- match list, which is the whole point: a source whose per-candidate presentational
---- work scales with match count (e.g. the resource source's occupancy check) now pays
---- that cost only for the rows on screen. `decorate` is optional, so a source that
---- implements neither it nor anything else here costs one `RemoteCaller:has` check and
---- is otherwise untouched. `decorate` runs after `search`, so its result -- merged onto
---- each candidate through PaletteLogic.apply_decoration -- wins over whatever `search`
---- already put there. A source whose call fails is logged and its candidates left as
---- `search` produced them, matching how `is_query_valid` and the old `annotate_candidates`
---- handled a broken source.
+--- work scales with match count now pays that cost only for the rows on screen.
+--- `decorate` is optional, so a source that implements neither it nor anything else
+--- here costs one `RemoteCaller:has` check and is otherwise untouched. `decorate` runs
+--- after `search`, so its result -- merged onto each candidate through
+--- PaletteLogic.apply_decoration -- wins over whatever `search` already put there. A
+--- source whose call fails is logged and its candidates left as `search` produced
+--- them, matching how `is_query_valid` and the old `annotate_candidates` handled a
+--- broken source.
 ---@param merged table  candidates already trimmed to DISPLAY_LIMIT, as
 ---  Palette.search_all_sources returns; mutated in place
 ---@param player_index uint
