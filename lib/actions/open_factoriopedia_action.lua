@@ -1,42 +1,20 @@
 local OpenFactoriopediaAction = {}
 
 local ActionRunner = require("lib.action_runner")
-local SurfaceAccess = require("lib.surface_access")
-
--- pure decision logic given an already-resolved surface: dispatches on the
--- LuaSurface's own kind rather than SurfaceAccess's descriptor, since resolve()'s
--- descriptor isn't available for a real generated surface (only carried for the
--- ungenerated-planet fallback SurfaceAccess.resolve already handles internally).
-local function surface_prototype(surface)
-  if surface.platform ~= nil then
-    return prototypes.surface["space-platform"]
-  elseif surface.planet ~= nil then
-    return surface.planet.prototype
-  end
-  return nil
-end
 
 --- The prototype whose Factoriopedia page a candidate should open.
----
---- A surface candidate is the awkward one: a generated surface resolves through its
---- LuaSurface, while an ungenerated planet has only its prototype to offer.
 ---@param candidate table
----@param player LuaPlayer
+---@param _player LuaPlayer  unused now that every remaining candidate type resolves from
+---  prototypes alone; kept to match ActionRunner's resolve_fn(candidate, player) shape.
 ---@return LuaPrototypeBase|nil  nil for a candidate type with no page, or one that no
 ---  longer resolves
-function OpenFactoriopediaAction.resolve_prototype(candidate, player)
+function OpenFactoriopediaAction.resolve_prototype(candidate, _player)
   if candidate.type == "item" then
     return prototypes.item[candidate.id]
   elseif candidate.type == "fluid" then
     return prototypes.fluid[candidate.id]
   elseif candidate.type == "recipe" then
     return prototypes.recipe[candidate.id]
-  elseif candidate.type == "surface" then
-    local surface = SurfaceAccess.resolve(candidate, player)
-    if surface ~= nil then
-      return surface_prototype(surface)
-    end
-    return SurfaceAccess.planet_prototype(candidate)
   end
   return nil
 end

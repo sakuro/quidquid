@@ -10,7 +10,7 @@ local registry = nil
 
 -- Not persisted to storage: the frame is destroyed and rebuilt on every open/close, so
 -- this remembers the player's pin choice only across that within the current session --
--- resetting on save load is fine here, unlike e.g. surface navigation history.
+-- resetting on save load is fine here.
 local pin_choices = {}
 local selection_states = {}
 
@@ -945,8 +945,7 @@ end
 --- Toggles the pin, which keeps the palette open after an action runs.
 ---
 --- Kept per player for the session rather than in `storage`: it is a preference about
---- this session's frames, and resetting it on load is acceptable (unlike surface
---- navigation history).
+--- this session's frames, and resetting it on load is acceptable.
 ---@param event table  on_gui_click; ignored unless the element carries the pin tag
 function Palette.on_toggle_pin(event)
   local element = event.element

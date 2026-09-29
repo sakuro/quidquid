@@ -244,7 +244,7 @@ remote.add_interface("my-mod-widget-source", { search = search })
 
 An action is a key binding that runs against the selected candidate, for every
 candidate type it declares. It may act on types owned by other mods, including
-Quidquid's own (`item`, `fluid`, `recipe`, `technology`, `surface`, `calculation`).
+Quidquid's own (`item`, `fluid`, `recipe`, `technology`, `calculation`).
 
 ### Quidquid's candidate types
 
@@ -255,7 +255,7 @@ without a `contract_version` bump.
 | Type | `id` | Other fields |
 | --- | --- | --- |
 | `item`, `fluid`, `recipe`, `technology` | The prototype name | |
-| `surface`, `calculation` | Opaque | |
+| `calculation` | Opaque | |
 
 ### Definition
 
@@ -318,6 +318,9 @@ whichever mod handles the type.
 | --- | --- | --- |
 | `quidquid-open-factoriopedia` | `{ "quidquid.action-open-factoriopedia" }` | `{ "quidquid.action-open-factoriopedia-hint" }` |
 | `quidquid-open-remote-view` | `{ "quidquid.action-open-remote-view" }` | `{ "quidquid.action-open-remote-view-hint" }` |
+
+Quidquid itself declares no action on `quidquid-open-remote-view`; the input exists
+for extensions.
 
 Keep failure messages in your own locale: only the input and these keys are shared.
 
