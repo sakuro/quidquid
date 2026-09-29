@@ -405,8 +405,11 @@ describe("Registry", function()
       local registry = Registry.new(
         logger,
         settings_stub({
-          classify = function()
-            return "invalid"
+          classify = function(name)
+            if name == "items-default-search" then
+              return "invalid"
+            end
+            return "ok"
           end,
         })
       )
@@ -424,6 +427,18 @@ describe("Registry", function()
         "quidquid: source 'items' rejected: setting 'items-default-search' must be a runtime-per-user bool-setting",
       }, messages)
       assert.is_nil(registry:source_for_prefix("i"))
+      assert.is_nil(registry:source_by_id("items"))
+
+      -- Same type, same prefix: proves the rejected registration claimed neither.
+      local retry_ok = registry:register_source({
+        contract_version = CONTRACT_VERSION,
+        id = "items-again",
+        type = "item",
+        prefixes = { "i" },
+        interface = "my-mod.source-items",
+      })
+      assert.is_true(retry_ok)
+      assert.are.equal("items-again", registry:source_for_prefix("i").id)
     end)
 
     it("rejects a source with neither prefixes nor a default-search setting", function()
@@ -446,8 +461,217 @@ describe("Registry", function()
 
       assert.is_false(ok)
       assert.are.same({
-        "quidquid: source 'items' rejected: unreachable: it has no prefixes and no 'items-default-search' setting",
+        "quidquid: source 'items' rejected: unreachable: none of its prefixes could be claimed and it has "
+          .. "no 'items-default-search' setting",
       }, messages)
+      assert.is_nil(registry:source_by_id("items"))
+
+      -- Same id, same type: proves the rejected registration did not claim the type.
+      local retry_ok = registry:register_source({
+        contract_version = CONTRACT_VERSION,
+        id = "items",
+        type = "item",
+        prefixes = { "i" },
+        interface = "my-mod.source-items",
+      })
+      assert.is_true(retry_ok)
+      assert.are.equal("items", registry:source_for_prefix("i").id)
+    end)
+
+    it(
+      "rejects a source as unreachable when all its declared prefixes are already taken and it has no setting",
+      function()
+        local logger, messages = spy_logger()
+        local registry = Registry.new(
+          logger,
+          settings_stub({
+            classify = function()
+              return nil
+            end,
+          })
+        )
+        registry:register_source({
+          contract_version = CONTRACT_VERSION,
+          id = "items",
+          type = "item",
+          prefixes = { "i" },
+          interface = "my-mod.source-items",
+        })
+
+        local ok = registry:register_source({
+          contract_version = CONTRACT_VERSION,
+          id = "other-items",
+          type = "resource",
+          prefixes = { "i" },
+          interface = "my-mod.source-other-items",
+        })
+
+        assert.is_false(ok)
+        assert.are.same({
+          "quidquid: source 'other-items' prefix 'i' ignored: already registered by 'items'",
+          "quidquid: source 'other-items' rejected: unreachable: none of its prefixes could be claimed and it "
+            .. "has no 'other-items-default-search' setting",
+        }, messages)
+        assert.is_nil(registry:source_by_id("other-items"))
+        assert.are.equal("items", registry:source_for_prefix("i").id)
+
+        -- Same id, same type, a prefix nobody holds: proves nothing was claimed.
+        local retry_ok = registry:register_source({
+          contract_version = CONTRACT_VERSION,
+          id = "other-items",
+          type = "resource",
+          prefixes = { "j" },
+          interface = "my-mod.source-other-items",
+        })
+        assert.is_true(retry_ok)
+        assert.are.equal("other-items", registry:source_for_prefix("j").id)
+      end
+    )
+
+    it("rejects a source as unreachable when its only prefix is empty and it has no setting", function()
+      local logger, messages = spy_logger()
+      local registry = Registry.new(
+        logger,
+        settings_stub({
+          classify = function()
+            return nil
+          end,
+        })
+      )
+
+      local ok = registry:register_source({
+        contract_version = CONTRACT_VERSION,
+        id = "items",
+        type = "item",
+        prefixes = { "" },
+        interface = "my-mod.source-items",
+      })
+
+      assert.is_false(ok)
+      assert.are.same({
+        "quidquid: source 'items' prefix '' ignored: empty prefixes are not allowed",
+        "quidquid: source 'items' rejected: unreachable: none of its prefixes could be claimed and it has "
+          .. "no 'items-default-search' setting",
+      }, messages)
+      assert.is_nil(registry:source_by_id("items"))
+
+      local retry_ok = registry:register_source({
+        contract_version = CONTRACT_VERSION,
+        id = "items",
+        type = "item",
+        prefixes = { "i" },
+        interface = "my-mod.source-items",
+      })
+      assert.is_true(retry_ok)
+      assert.are.equal("items", registry:source_for_prefix("i").id)
+    end)
+
+    it(
+      "registers a source whose declared prefixes are all taken when it has an enabled default-search setting",
+      function()
+        local registry = Registry.new(nil, settings_stub())
+        registry:register_source({
+          contract_version = CONTRACT_VERSION,
+          id = "items",
+          type = "item",
+          prefixes = { "i" },
+          interface = "my-mod.source-items",
+        })
+
+        local ok = registry:register_source({
+          contract_version = CONTRACT_VERSION,
+          id = "other-items",
+          type = "resource",
+          prefixes = { "i" },
+          interface = "my-mod.source-other-items",
+        })
+
+        assert.is_true(ok)
+        assert.are.equal("items", registry:source_for_prefix("i").id)
+        local default_sources = registry:default_search_sources(1)
+        assert.are.equal(2, #default_sources)
+        assert.are.equal("other-items", default_sources[2].id)
+      end
+    )
+
+    it("rejects the fixed-false calculator as unreachable when its prefix is already taken", function()
+      local logger, messages = spy_logger()
+      local registry = Registry.new(
+        logger,
+        settings_stub({
+          classify = function(name)
+            if name == "quidquid-calculator-default-search" then
+              error("classify should not be called for a fixed member")
+            end
+            return "ok"
+          end,
+        })
+      )
+      registry:register_source({
+        contract_version = CONTRACT_VERSION,
+        id = "equals-recipes",
+        type = "recipe",
+        prefixes = { "=" },
+        interface = "my-mod.source-equals-recipes",
+      })
+
+      local ok = registry:register_source({
+        contract_version = CONTRACT_VERSION,
+        id = "quidquid-calculator",
+        type = "calculation",
+        prefixes = { "=" },
+        interface = "quidquid.calculator-source",
+      })
+
+      assert.is_false(ok)
+      assert.are.same({
+        "quidquid: source 'quidquid-calculator' prefix '=' ignored: already registered by 'equals-recipes'",
+        "quidquid: source 'quidquid-calculator' rejected: unreachable: none of its prefixes could be claimed",
+      }, messages)
+      assert.is_nil(registry:source_by_id("quidquid-calculator"))
+    end)
+
+    it(
+      "never calls classify or enabled for the fixed-false calculator, and never includes it in the default search",
+      function()
+        local registry = Registry.new(
+          nil,
+          settings_stub({
+            classify = function()
+              error("classify should not be called for a fixed member")
+            end,
+            enabled = function()
+              error("enabled should not be called for a fixed member")
+            end,
+          })
+        )
+        registry:register_source({
+          contract_version = CONTRACT_VERSION,
+          id = "quidquid-calculator",
+          type = "calculation",
+          prefixes = { "=" },
+          interface = "quidquid.calculator-source",
+        })
+
+        assert.are.same({}, registry:default_search_sources(1))
+      end
+    )
+
+    it("counts a prefix repeated within one declaration only once, without logging it as taken", function()
+      local logger, messages = spy_logger()
+      local registry = Registry.new(logger, settings_stub())
+
+      local ok = registry:register_source({
+        contract_version = CONTRACT_VERSION,
+        id = "items",
+        type = "item",
+        prefixes = { "i", "i" },
+        interface = "my-mod.source-items",
+      })
+
+      assert.is_true(ok)
+      assert.are.same({}, messages)
+      assert.are.equal("items", registry:source_for_prefix("i").id)
     end)
 
     it("registers a source with no setting but with prefixes, and never includes it in the default search", function()

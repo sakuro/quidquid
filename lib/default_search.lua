@@ -1,13 +1,14 @@
 local DefaultSearch = {}
 
--- Quidquid's own sources are in the default search by fixed rule, not by a
--- setting: an extension's membership is the player's choice, these are part of
--- what Quidquid is. The calculator stays prefix-only.
-DefaultSearch.ALWAYS = {
+-- Quidquid's own sources' default-search membership is fixed, not settings-driven:
+-- it is not a mod's choice to make on Quidquid's behalf by defining a same-named
+-- setting. The calculator is fixed out (not merely absent), so it stays prefix-only.
+DefaultSearch.FIXED = {
   ["quidquid-items"] = true,
   ["quidquid-fluids"] = true,
   ["quidquid-recipes"] = true,
   ["quidquid-technologies"] = true,
+  ["quidquid-calculator"] = false,
 }
 
 --- The per-player setting that puts an extension's source in the default search.

@@ -28,13 +28,18 @@ end
 --- is a declaration for another contract version or one conflicting with another
 --- mod's, and raising would refuse to load any save with that pair of mods installed.
 --- A malformed declaration has already failed at startup (Declarations.validate).
---- Reachability and the default-search setting are checked here rather than at
---- startup, because a setting cannot be read in the data stage: a source is
---- rejected when its default-search setting exists under the wrong type or
---- setting_type, and when it has neither that setting nor any prefixes. A prefix
---- already taken is skipped while the rest of the registration succeeds -- the
---- source is still reachable, just not under that prefix. See EXTENDING.md
---- "Rejections and failures".
+--- A rejected source claims nothing -- no prefix, no type, and it is left out of
+--- `sources` -- so a later declaration for the same type or prefix can still
+--- succeed. Quidquid's own sources are fixed in or out of the default search
+--- (DefaultSearch.FIXED) without consulting settings; an extension's source has
+--- its default-search setting checked here rather than at startup, because a
+--- setting cannot be read in the data stage: a setting of the wrong type or
+--- setting_type rejects the source outright, and so does having no prefix it can
+--- actually claim -- none declared, or all already taken -- and no way into the
+--- default search. A prefix already taken by an earlier source is otherwise
+--- skipped while the rest of the registration succeeds -- the source is still
+--- reachable, just not under that prefix. See EXTENDING.md "Rejections and
+--- failures".
 ---@param definition table  see EXTENDING.md "Sources"; from Declarations.collect
 ---@return boolean  false when the definition was rejected outright
 function Registry:register_source(definition)
@@ -65,10 +70,10 @@ function Registry:register_source(definition)
     return false
   end
 
-  if DefaultSearch.ALWAYS[definition.id] then
-    definition.default_search_fixed = true
-  else
-    local setting_name = DefaultSearch.setting_name(definition.id)
+  local fixed = DefaultSearch.FIXED[definition.id]
+  local setting_name, default_search_setting
+  if fixed == nil then
+    setting_name = DefaultSearch.setting_name(definition.id)
     local classification = self.settings.classify(setting_name)
     if classification == "invalid" then
       self.logger(
@@ -78,37 +83,65 @@ function Registry:register_source(definition)
         )
       )
       return false
-    elseif classification == nil then
-      if definition.prefixes == nil or #definition.prefixes == 0 then
-        self.logger(
-          ("quidquid: source '%s' rejected: unreachable: it has no prefixes and no '%s' setting"):format(
-            tostring(definition.id),
-            setting_name
-          )
-        )
-        return false
-      end
-    else
-      definition.default_search_setting = setting_name
+    elseif classification == "ok" then
+      default_search_setting = setting_name
     end
   end
 
+  -- Computed without claiming anything yet, so a source rejected below (as
+  -- unreachable) leaves prefix_owners untouched for whoever declares next.
+  local claimable_prefixes = {}
+  local claimed_in_declaration = {}
   for _, prefix in ipairs(definition.prefixes or {}) do
     if prefix == "" then
       self.logger(
         ("quidquid: source '%s' prefix '' ignored: empty prefixes are not allowed"):format(tostring(definition.id))
       )
-    elseif self.prefix_owners[prefix] == nil then
-      self.prefix_owners[prefix] = definition
+    elseif not claimed_in_declaration[prefix] then
+      -- A prefix repeated within this declaration reaches here only once; the
+      -- repeat is silently a no-op, not a second claim to log as taken.
+      if self.prefix_owners[prefix] ~= nil then
+        self.logger(
+          ("quidquid: source '%s' prefix '%s' ignored: already registered by '%s'"):format(
+            tostring(definition.id),
+            prefix,
+            tostring(self.prefix_owners[prefix].id)
+          )
+        )
+      else
+        claimed_in_declaration[prefix] = true
+        table.insert(claimable_prefixes, prefix)
+      end
+    end
+  end
+
+  local reachable_by_default_search = fixed == true or default_search_setting ~= nil
+  if #claimable_prefixes == 0 and not reachable_by_default_search then
+    if setting_name ~= nil then
+      self.logger(
+        (
+          "quidquid: source '%s' rejected: unreachable: none of its prefixes could be claimed and it has "
+          .. "no '%s' setting"
+        ):format(tostring(definition.id), setting_name)
+      )
     else
       self.logger(
-        ("quidquid: source '%s' prefix '%s' ignored: already registered by '%s'"):format(
-          tostring(definition.id),
-          prefix,
-          tostring(self.prefix_owners[prefix].id)
+        ("quidquid: source '%s' rejected: unreachable: none of its prefixes could be claimed"):format(
+          tostring(definition.id)
         )
       )
     end
+    return false
+  end
+
+  if fixed ~= nil then
+    definition.default_search_fixed = fixed
+  elseif default_search_setting ~= nil then
+    definition.default_search_setting = default_search_setting
+  end
+
+  for _, prefix in ipairs(claimable_prefixes) do
+    self.prefix_owners[prefix] = definition
   end
 
   self.type_owners[definition.type] = definition
@@ -118,9 +151,11 @@ end
 
 --- The sources taking part in an unlocked search for one player, in registration order.
 ---
---- Quidquid's own sources (DefaultSearch.ALWAYS) are always included; an extension's
---- source joins only when the player's own default-search setting is on. A source with
---- neither -- prefix-only -- never appears here.
+--- Quidquid's own sources are fixed in or out (DefaultSearch.FIXED) without consulting
+--- settings; a fixed-false source (the calculator) never joins, even if a same-named
+--- setting happens to exist. An extension's source joins only when the player's own
+--- default-search setting is on. A source with neither -- prefix-only -- never appears
+--- here.
 ---@param player_index uint
 ---@return table  the source definitions in the default search for that player
 function Registry:default_search_sources(player_index)

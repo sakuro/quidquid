@@ -236,8 +236,9 @@ my-mod-widgets-default-search=...
 ```
 
 A source declared with no such setting is prefix-only: it registers normally
-but never joins the default search. A source with neither `prefixes` nor the
-setting is rejected at registration (see [Rejections and
+but never joins the default search. A source with no prefix it can actually
+claim — none declared, or all already taken by an earlier source — and no
+such setting is rejected at registration (see [Rejections and
 failures](#rejections-and-failures)).
 
 ### Minimal example
@@ -431,8 +432,9 @@ A source's default-search setting (see [Default search](#default-search)) is
 also checked at registration rather than at startup, since a mod setting cannot
 be read in the data stage. Both are log lines, not startup errors: a setting of
 that name existing under the wrong type or `setting_type` rejects the source
-outright, and so does a source with neither prefixes nor that setting — it
-could never be reached.
+outright, and so does a source with no prefix it can actually claim — none
+declared, or all already taken by an earlier source — and no such setting; it
+could never be reached either way.
 
 Quidquid calls `search`, `is_query_valid`, `execute` and `is_available` through
 `pcall`. An error inside them is logged and treated as no results, a valid query,
