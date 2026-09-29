@@ -1,10 +1,12 @@
 -- The one module other mods may require; see EXTENDING.md "Scoring". Everything
 -- else under lib/ is internal.
 --
--- The siblings need no __quidquid__ prefix: Factorio resolves an unprefixed require
--- against the mod that owns the requiring file, even when another mod loads this
--- one, and keys package.loaded by the resolved file, so each loads once however it
--- is spelled (confirmed in a headless run; see issue #226).
+-- The siblings need no __quidquid__ prefix: since Factorio 2.0, an unprefixed
+-- require resolves against the mod that owns the requiring file, even when another
+-- mod loads this one, and package.loaded is keyed by the resolved file, so each
+-- loads once however it is spelled. Advice to prefix every require predates that fix
+-- (https://forums.factorio.com/viewtopic.php?p=617290); confirmed in a headless run
+-- for issue #226.
 local fuzzy_match = require("lib.fuzzy_match")
 local normalization = require("lib.search_normalization")
 local search_highlight = require("lib.search_highlight")
