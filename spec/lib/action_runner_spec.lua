@@ -89,17 +89,17 @@ describe("ActionRunner", function()
     it("falls back to the fallback locale key when the payload and locale key are both nil", function()
       local message = ActionRunner.run(candidate, 1, function(_candidate, _player)
         return nil, nil
-      end, function(_payload, _candidate, _player) end, "quidquid.action-open-remote-view-unavailable")
+      end, function(_payload, _candidate, _player) end, "quidquid.action-open-factoriopedia-unavailable")
 
-      assert.are.same({ "quidquid.action-open-remote-view-unavailable" }, message)
+      assert.are.same({ "quidquid.action-open-factoriopedia-unavailable" }, message)
     end)
 
     it("prefers the resolved locale key over the fallback locale key", function()
       local message = ActionRunner.run(candidate, 1, function(_candidate, _player)
-        return nil, "quidquid.action-open-remote-view-not-visited"
-      end, function(_payload, _candidate, _player) end, "quidquid.action-open-remote-view-unavailable")
+        return nil, "quidquid.action-craft-no-recipe"
+      end, function(_payload, _candidate, _player) end, "quidquid.action-open-factoriopedia-unavailable")
 
-      assert.are.same({ "quidquid.action-open-remote-view-not-visited" }, message)
+      assert.are.same({ "quidquid.action-craft-no-recipe" }, message)
     end)
   end)
 end)

@@ -2,6 +2,10 @@
 Version: Unreleased
   Changes:
     - Surface search moved to a separate mod, Quidquid: Surfaces; remembered remote-view positions are not carried over
+  Modding:
+    - The include-hidden setting is documented for extension sources to honour
+  Locale:
+    - The include-hidden setting's description says what counts as hidden, and that locked or unresearched entries are listed either way
 ---------------------------------------------------------------------------------------------------
 Version: 0.10.0
 Date: 2026-09-29
