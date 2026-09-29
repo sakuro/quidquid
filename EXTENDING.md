@@ -60,7 +60,7 @@ The `data` of a `quidquid.source` declaration:
 | `prefixes` | no | Prefix words that lock the palette to this source — with `{ "w", "widget" }`, typing `widget ` locks to it. Matched case-sensitively, so `W` and `w` are separate prefixes and either may be claimed on its own. A prefix already taken by an earlier declaration is ignored with a log line. Defaults to none. |
 | `interface` | yes | Name of your remote interface implementing the functions below. |
 
-Whether a source takes part in the unlocked search is not part of this table —
+Whether a source takes part in the default search is not part of this table —
 see [Default search](#default-search).
 
 ### Interface functions
@@ -207,7 +207,7 @@ part of the contract.
 
 ### Default search
 
-Whether your source takes part in the unlocked search is a per-player setting
+Whether your source takes part in the default search is a per-player setting
 named `<declaration name>-default-search` — for the `my-mod-widgets` declaration
 below, `my-mod-widgets-default-search`. It must be a `bool-setting` with
 `setting_type = "runtime-per-user"`; `default_value = true` is recommended, so
@@ -240,6 +240,11 @@ but never joins the default search. A source with no prefix it can actually
 claim — none declared, or all already taken by an earlier source — and no
 such setting is rejected at registration (see [Rejections and
 failures](#rejections-and-failures)).
+
+A player who turns the setting off sees your source only after one of its
+prefixes. If it has no prefix it could claim, it is unreachable for that
+player; registration cannot catch this, since the value changes per player at
+run time.
 
 ### Minimal example
 

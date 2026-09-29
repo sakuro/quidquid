@@ -157,7 +157,7 @@ Blueprint search moved to its own mod,
 ### Calculator
 
 Evaluate an arithmetic expression with the `= ` prefix. The calculator is left
-out of the unlocked search, so the prefix is the only way to reach it.
+out of the default search, so the prefix is the only way to reach it.
 
 Expressions are evaluated by the game's own expression parser. A number may
 carry a `k` (thousand) or `M` (million) suffix in either case, as in the base
