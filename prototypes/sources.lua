@@ -37,13 +37,6 @@ data:extend({
     in_default_search = true,
     interface = "quidquid.technology-source",
   }),
-  source("quidquid-surfaces", "e", {
-    type = "surface",
-    label = { "quidquid.source-surfaces" },
-    prefixes = { "s", "surface" },
-    in_default_search = true,
-    interface = "quidquid.surface-source",
-  }),
   -- Out of the default search: every query would otherwise be handed to the
   -- expression evaluator.
   source("quidquid-calculator", "f", {

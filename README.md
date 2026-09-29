@@ -9,8 +9,7 @@ apply to it, and extension mods add further sources and actions. Open it with
 
 ## Features
 
-- `Ctrl/Cmd + K` palette that searches items, fluids, recipes, technologies,
-  planets and accessible space platforms
+- `Ctrl/Cmd + K` palette that searches items, fluids, recipes and technologies
 - Source-specific actions on the selected result
 - Source prefixes to restrict a search to one category
 - Temporary personal logistics requests for items and recipe ingredients,
@@ -52,7 +51,6 @@ source accepts a one-letter abbreviation as well as its full name:
 | `f ` / `fluid ` | Fluids |
 | `r ` / `recipe ` | Recipes |
 | `t ` / `technology ` | Technologies |
-| `s ` / `surface ` | Surfaces |
 | `= ` | Calculator |
 
 While locked, typing another recognized prefix switches directly to that
@@ -143,33 +141,8 @@ than research — what that action is.
 
 ### Surfaces
 
-Search for planets and space platforms available to your force. A platform
-owned by another force is listed with that force's name.
-
-| Key | Action |
-| --- | --- |
-| Left click | Open in remote view |
-| `Alt` + left click | Open in Factoriopedia |
-
-Remote view opens at the position you last occupied on that surface, whether in
-person or in remote view. Without such a position it opens at the space
-platform's hub, or at your force's spawn position on a planet.
-
-Remote view also needs the planet to be unlocked by your force and its surface
-to be generated; Quidquid says which of the two is missing. Factoriopedia works
-for a locked or ungenerated planet either way.
-
-Space platforms are listed when owned by your force or when their owner
-considers your force a friend. An icon written into a platform's name, such
-as `[item=space-science-pack]`, is searchable by what it shows
-(`space-science-pack`) but never highlighted. Space locations such as Solar
-System Edge are not surfaces and are not included.
-
-A surface a mod creates by script, with no planet prototype behind it, is left
-out too — Space Exploration's zones, Subsurface's underground layers,
-Factorissimo's factory interiors. A mod that adds a planet the Space Age way is
-listed like any other planet. See
-[issue #162](https://github.com/sakuro/quidquid/issues/162).
+Surface search moved to its own mod,
+[Quidquid: Surfaces](https://mods.factorio.com/mod/quidquid-surfaces).
 
 ### Resources
 
@@ -216,7 +189,7 @@ inventory.
 ### Include hidden entries
 
 Show hidden or internal entries in search results. It applies to every source
-that searches prototypes: items, fluids, recipes, technologies and surfaces.
+that searches prototypes: items, fluids, recipes and technologies.
 
 ## Related mods
 
@@ -225,6 +198,8 @@ that searches prototypes: items, fluids, recipes, technologies and surfaces.
   library, to hold, copy or export them.
 - [Quidquid: Resources](https://mods.factorio.com/mod/quidquid-resources) —
   searches charted resource patches, to view, pin or look them up.
+- [Quidquid: Surfaces](https://mods.factorio.com/mod/quidquid-surfaces) —
+  searches planets and space platforms, to open them in remote view or look them up.
 - [Quidquid: Factory Search](https://mods.factorio.com/mod/quidquid-factory-search)
   — adds an action that opens
   [Factory Search](https://mods.factorio.com/mod/FactorySearch) for the

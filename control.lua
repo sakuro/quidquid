@@ -5,9 +5,7 @@ local ItemSource = require("lib.sources.item_source")
 local FluidSource = require("lib.sources.fluid_source")
 local RecipeSource = require("lib.sources.recipe_source")
 local TechnologySource = require("lib.sources.technology_source")
-local SurfaceSource = require("lib.sources.surface_source")
 local CalculatorSource = require("lib.sources.calculator_source")
-local OpenRemoteViewAction = require("lib.actions.open_remote_view_action")
 local OpenFactoriopediaAction = require("lib.actions.open_factoriopedia_action")
 local OpenTechnologyAction = require("lib.actions.open_technology_action")
 local ResearchQueueAction = require("lib.actions.research_queue_action")
@@ -16,7 +14,6 @@ local PipetteAction = require("lib.actions.pipette_action")
 local TemporaryRequestAction = require("lib.actions.temporary_request_action")
 local TemporaryRequestEditor = require("lib.temporary_request_editor")
 local Palette = require("lib.palette")
-local api = require("lib.api")
 
 local registry = Registry.new(log)
 
@@ -38,9 +35,7 @@ ItemSource.add_interface()
 FluidSource.add_interface()
 RecipeSource.add_interface()
 TechnologySource.add_interface()
-SurfaceSource.add_interface()
 CalculatorSource.add_interface()
-OpenRemoteViewAction.add_interface()
 OpenFactoriopediaAction.add_interface()
 OpenTechnologyAction.add_interface()
 ResearchQueueAction.add_interface()
@@ -48,7 +43,7 @@ CraftAction.add_interface()
 PipetteAction.add_interface()
 TemporaryRequestAction.add_interface()
 
-local dictionary_sources = { ItemSource, FluidSource, RecipeSource, TechnologySource, SurfaceSource }
+local dictionary_sources = { ItemSource, FluidSource, RecipeSource, TechnologySource }
 
 -- flib_dictionary.new/.add may only run before flib's internal init_ran flag flips true,
 -- which happens on the first on_tick -- so dictionaries must be (re-)registered from
@@ -86,6 +81,8 @@ script.on_configuration_changed(function()
   -- Resource search moved to quidquid-resources, which keeps its own cache; this one
   -- would only sit in the save.
   storage.resources = nil
+  -- Surface search and its remembered positions moved to quidquid-surfaces.
+  storage.surface_positions = nil
 end)
 
 script.on_event(defines.events.on_tick, function()
@@ -146,25 +143,8 @@ script.on_event({
   defines.events.on_player_cursor_stack_changed,
 }, TemporaryRequestAction.on_inventory_changed)
 
--- Track viewed tile positions for surface navigation; discard references when their
--- player or surface is removed so reused indices cannot inherit old positions.
-script.on_event(defines.events.on_player_changed_position, OpenRemoteViewAction.on_player_changed_position)
-
--- SurfaceSource's cached search keys are keyed by surface name; evict them alongside
--- the position history above so a destroyed surface's cache doesn't linger for the
--- rest of the session. on_pre_surface_deleted only gives surface_index, so the surface
--- (still valid -- this fires just before deletion) is looked up to get its name.
-script.on_event(defines.events.on_pre_surface_deleted, function(event)
-  OpenRemoteViewAction.on_pre_surface_deleted(event)
-  local surface = game.get_surface(event.surface_index)
-  if surface ~= nil then
-    api.forget("surface", surface.name)
-  end
-end)
-
--- Palette also keys a small per-player table (pin state) by player_index, which needs
--- the same reused-index cleanup as OpenRemoteViewAction's history above.
+-- Palette keys a small per-player table (pin state) by player_index, which needs
+-- reused-index cleanup on player removal.
 script.on_event(defines.events.on_player_removed, function(event)
-  OpenRemoteViewAction.on_player_removed(event)
   Palette.on_player_removed(event)
 end)

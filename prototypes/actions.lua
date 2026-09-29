@@ -8,15 +8,8 @@ local function action(name, data)
 end
 
 data:extend({
-  action("quidquid-open-remote-view", {
-    types = { "surface" },
-    label = { "quidquid.action-open-remote-view" },
-    hint = { "quidquid.action-open-remote-view-hint" },
-    input_name = "quidquid-open-remote-view",
-    interface = "quidquid.open-remote-view-action",
-  }),
   action("quidquid-open-factoriopedia", {
-    types = { "item", "fluid", "recipe", "surface" },
+    types = { "item", "fluid", "recipe" },
     label = { "quidquid.action-open-factoriopedia" },
     hint = { "quidquid.action-open-factoriopedia-hint" },
     input_name = "quidquid-open-factoriopedia",

@@ -15,6 +15,8 @@ data:extend({
     key_sequence = "mouse-button-1",
   },
   {
+    -- No Quidquid type uses this any more. It stays as the shared remote-view input
+    -- that extensions declare their actions on (EXTENDING.md "Shared inputs").
     type = "custom-input",
     name = "quidquid-open-remote-view",
     key_sequence = "mouse-button-1",
