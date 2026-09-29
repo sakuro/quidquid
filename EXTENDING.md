@@ -1,9 +1,5 @@
 # Extending Quidquid
 
-> **Draft.** Written from Quidquid's own implementation, not yet verified by
-> building a mod against it. Expect gaps and mistakes; check the code, or open an
-> issue, when something here does not match what you see.
-
 Other mods can add their own search sources and palette actions. A mod declares
 each one as a `mod-data` prototype in the data stage and implements its behavior
 in a remote interface of its own — no change to Quidquid itself is needed, and
