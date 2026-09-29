@@ -74,7 +74,7 @@ end
 --- The query is normalized once here rather than per entry: `locale` picks the
 --- normalization for display names, which differs from the internal-name one.
 ---@param query string
----@param locale string|nil  the player's locale, or nil to score internal names only
+---@param locale string|nil  the player's locale; nil skips locale-specific folding
 ---@return table  a matcher, with :match(namespace, id, fields)
 local function matcher(query, locale)
   return setmetatable({
