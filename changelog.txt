@@ -2,6 +2,8 @@
 Version: Unreleased
   Changes:
     - Resource search moved to a separate mod, Quidquid: Resources
+  Bugfixes:
+    - A palette left locked to a source that is no longer available searches all sources instead of failing
   Modding:
     - lib/api.lua exposes number_format.suffixed; the Factoriopedia and remote view inputs and their label and hint keys are documented for other mods to reuse
 ---------------------------------------------------------------------------------------------------
