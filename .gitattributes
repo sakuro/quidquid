@@ -4,7 +4,8 @@
 
 /changelog.txt export-ignore=false
 /LICENSE.txt export-ignore=false
-/LICENSE-fzy-lua.txt export-ignore=false
+/LICENSE.fzy-lua.txt export-ignore=false
+/LICENSE.Unicode-3.0.txt export-ignore=false
 
 /info.json export-ignore=false
 

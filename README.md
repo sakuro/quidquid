@@ -241,7 +241,13 @@ is adapted from [fzy-lua](https://github.com/swarn/fzy-lua) by Seth Warn,
 modified to operate on normalized UTF-8 code point sequences instead of bytes,
 to return 1-based code point positions, and to score candidates for ranking
 across search sources. It is separately licensed under the MIT License; see
-[`LICENSE-fzy-lua.txt`](https://github.com/sakuro/quidquid/blob/main/LICENSE-fzy-lua.txt).
+[`LICENSE.fzy-lua.txt`](https://github.com/sakuro/quidquid/blob/main/LICENSE.fzy-lua.txt).
+
+The search normalization tables in
+[`lib/search_mapping.lua`](https://github.com/sakuro/quidquid/blob/main/lib/search_mapping.lua)
+are generated from the Unicode Character Database, distributed under the Unicode
+License v3. See
+[`LICENSE.Unicode-3.0.txt`](https://github.com/sakuro/quidquid/blob/main/LICENSE.Unicode-3.0.txt).
 
 The calculator icon (`graphics/icons/calculator.png`) is derived from the
 `calculator` icon of [Font Awesome Free](https://fontawesome.com/license/free)

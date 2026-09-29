@@ -1,4 +1,4 @@
--- Adapted from swarn/fzy-lua (MIT; see LICENSE-fzy-lua.txt).
+-- Adapted from swarn/fzy-lua (MIT; see LICENSE.fzy-lua.txt).
 -- This version operates on normalized UTF-8 code points instead of bytes and
 -- returns positions in the normalized code-point index space.
 
