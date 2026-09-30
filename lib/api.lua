@@ -22,11 +22,11 @@ local DISPLAY_NAME_BONUS = 0.5
 local Matcher = {}
 Matcher.__index = Matcher
 
-local function field_match(namespace, id, field, locale, query, raw_value)
+local function field_match(namespace, id, field, query, raw_value)
   if type(raw_value) ~= "string" then
     return nil
   end
-  local target, position_map = search_key_cache.get(namespace, id, field, locale, raw_value)
+  local target, position_map = search_key_cache.get(namespace, id, field, raw_value)
   local score, positions = fuzzy_match(query, target)
   if score == nil then
     return nil
@@ -46,13 +46,13 @@ end
 ---  shape candidate fields expect
 function Matcher:match(namespace, id, fields)
   local best_field = nil
-  local best = field_match(namespace, id, "display", self.locale, self.display_query, fields.display)
+  local best = field_match(namespace, id, "display", self.query, fields.display)
   if best ~= nil then
     best_field = "display"
     best.score = best.score + DISPLAY_NAME_BONUS
   end
 
-  local internal = field_match(namespace, id, "internal", nil, self.internal_query, fields.internal)
+  local internal = field_match(namespace, id, "internal", self.query, fields.internal)
   -- Strictly greater, so a tie keeps the display match.
   if internal ~= nil and (best == nil or internal.score > best.score) then
     best_field = "internal"
@@ -71,16 +71,12 @@ end
 
 --- A matcher for one query, to score every entry of a search against.
 ---
---- The query is normalized once here rather than per entry: `locale` picks the
---- normalization for display names, which differs from the internal-name one.
+--- The query is normalized once here rather than per entry.
 ---@param query string
----@param locale string|nil  the player's locale; nil skips locale-specific folding
 ---@return table  a matcher, with :match(namespace, id, fields)
-local function matcher(query, locale)
+local function matcher(query)
   return setmetatable({
-    internal_query = normalization.normalize(query, "internal", nil),
-    display_query = normalization.normalize(query, "display", locale),
-    locale = locale,
+    query = normalization.normalize(query),
   }, Matcher)
 end
 

@@ -183,12 +183,11 @@ end
 --- Builds this source's candidates for one query, before filtering and annotation.
 ---@param query string
 ---@param technologies table  array of technology prototypes
----@param locale string|nil
 ---@param translated_names table  prototype name -> translated name
 ---@param include_hidden boolean
 ---@return table  candidates; see EXTENDING.md "Candidates"
-function TechnologySource.build_candidates(query, technologies, locale, translated_names, include_hidden)
-  return build_candidates("technology", "technology", query, technologies, locale, translated_names, include_hidden)
+function TechnologySource.build_candidates(query, technologies, translated_names, include_hidden)
+  return build_candidates("technology", "technology", query, technologies, translated_names, include_hidden)
 end
 
 -- Prototypes are fixed for the run of a save, so the chain links are derived once
@@ -328,8 +327,7 @@ local function search(query, player_index)
   end
   local include_hidden = player.mod_settings["quidquid-include-hidden"].value
   local translated_names = flib_dictionary.get(player_index, NAMESPACE) or {}
-  local candidates =
-    TechnologySource.build_candidates(query, collect_technologies(), player.locale, translated_names, include_hidden)
+  local candidates = TechnologySource.build_candidates(query, collect_technologies(), translated_names, include_hidden)
   if #candidates == 0 then
     -- The graph build is per-search, not per-candidate: with nothing to annotate, it's pure waste.
     return candidates

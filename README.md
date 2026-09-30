@@ -59,10 +59,9 @@ differences invisible to the search:
 - Korean: a syllable breaks into the jamo that type it, so an initials-only
   query (`ㅊㅈ`) and a half-typed syllable both reach the finished word
 - Arabic and Hebrew: vowel points, and the tatweel used to stretch a word
-
-Under the Turkish locale, `I` folds to dotless `ı` and `İ` to `i`; under every
-other locale both fold to `i`. Internal names are folded with no locale rule at
-all, so they behave the same for every player.
+- Turkish dotless `ı` and dotted `İ`, which fold to `i` like `I` does. Whether
+  `I` pairs with `i` or `ı` depends on the language of the text, and a name a
+  player wrote does not say which
 
 Matched characters are highlighted where they sit in the name as it is written,
 not in the folded form.

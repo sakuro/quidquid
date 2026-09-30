@@ -20,9 +20,9 @@ describe("search_key_cache", function()
   end
 
   it("returns the same value and position map normalization.normalize would produce", function()
-    local expected_value, expected_position_map = normalization.normalize("Iron Plate", "display", "en")
+    local expected_value, expected_position_map = normalization.normalize("Iron Plate")
 
-    local value, position_map = search_key_cache.get("prototype", "iron-plate", "display", "en", "Iron Plate")
+    local value, position_map = search_key_cache.get("prototype", "iron-plate", "display", "Iron Plate")
 
     assert.are.equal(expected_value, value)
     assert.are.same(expected_position_map, position_map)
@@ -30,7 +30,7 @@ describe("search_key_cache", function()
 
   it("passes a non-string raw value through without normalizing", function()
     local restore = spy_on_normalize()
-    local value, position_map = search_key_cache.get("prototype", "iron-plate", "display", "en", nil)
+    local value, position_map = search_key_cache.get("prototype", "iron-plate", "display", nil)
     local calls = restore()
 
     assert.are.equal(0, calls)
@@ -40,8 +40,8 @@ describe("search_key_cache", function()
 
   it("reuses the cached value on a second call with identical inputs", function()
     local restore = spy_on_normalize()
-    search_key_cache.get("prototype", "iron-plate", "display", "en", "Iron Plate")
-    search_key_cache.get("prototype", "iron-plate", "display", "en", "Iron Plate")
+    search_key_cache.get("prototype", "iron-plate", "display", "Iron Plate")
+    search_key_cache.get("prototype", "iron-plate", "display", "Iron Plate")
     local calls = restore()
 
     assert.are.equal(1, calls)
@@ -49,17 +49,8 @@ describe("search_key_cache", function()
 
   it("recomputes when the raw value changes for the same key", function()
     local restore = spy_on_normalize()
-    search_key_cache.get("prototype", "iron-plate", "display", "en", "Iron Plate")
-    search_key_cache.get("prototype", "iron-plate", "display", "en", "Iron Plate Renamed")
-    local calls = restore()
-
-    assert.are.equal(2, calls)
-  end)
-
-  it("recomputes when the locale changes for the same key", function()
-    local restore = spy_on_normalize()
-    search_key_cache.get("prototype", "iron-plate", "display", "en", "Iron Plate")
-    search_key_cache.get("prototype", "iron-plate", "display", "fr", "Iron Plate")
+    search_key_cache.get("prototype", "iron-plate", "display", "Iron Plate")
+    search_key_cache.get("prototype", "iron-plate", "display", "Iron Plate Renamed")
     local calls = restore()
 
     assert.are.equal(2, calls)
@@ -67,21 +58,21 @@ describe("search_key_cache", function()
 
   it("recomputes when normalization.rule_version changes", function()
     local restore = spy_on_normalize()
-    search_key_cache.get("prototype", "iron-plate", "display", "en", "Iron Plate")
+    search_key_cache.get("prototype", "iron-plate", "display", "Iron Plate")
 
     local original_rule_version = normalization.rule_version
     normalization.rule_version = original_rule_version .. "-changed"
-    search_key_cache.get("prototype", "iron-plate", "display", "en", "Iron Plate")
+    search_key_cache.get("prototype", "iron-plate", "display", "Iron Plate")
     normalization.rule_version = original_rule_version
 
     local calls = restore()
     assert.are.equal(2, calls)
   end)
 
-  it("keeps namespaces isolated even for the same candidate id/field/locale", function()
+  it("keeps namespaces isolated even for the same candidate id/field", function()
     local restore = spy_on_normalize()
-    search_key_cache.get("prototype", "iron-plate", "display", "en", "Iron Plate")
-    search_key_cache.get("surface", "iron-plate", "display", "en", "Iron Plate")
+    search_key_cache.get("prototype", "iron-plate", "display", "Iron Plate")
+    search_key_cache.get("surface", "iron-plate", "display", "Iron Plate")
     local calls = restore()
 
     assert.are.equal(2, calls)
@@ -89,9 +80,9 @@ describe("search_key_cache", function()
 
   it("clear() forces every subsequent lookup to recompute", function()
     local restore = spy_on_normalize()
-    search_key_cache.get("prototype", "iron-plate", "display", "en", "Iron Plate")
+    search_key_cache.get("prototype", "iron-plate", "display", "Iron Plate")
     search_key_cache.clear()
-    search_key_cache.get("prototype", "iron-plate", "display", "en", "Iron Plate")
+    search_key_cache.get("prototype", "iron-plate", "display", "Iron Plate")
     local calls = restore()
 
     assert.are.equal(2, calls)
@@ -99,11 +90,11 @@ describe("search_key_cache", function()
 
   it("clear(namespace) only forces recompute within that namespace", function()
     local restore = spy_on_normalize()
-    search_key_cache.get("prototype", "iron-plate", "display", "en", "Iron Plate")
-    search_key_cache.get("surface", "nauvis", "display", "en", "Nauvis")
+    search_key_cache.get("prototype", "iron-plate", "display", "Iron Plate")
+    search_key_cache.get("surface", "nauvis", "display", "Nauvis")
     search_key_cache.clear("prototype")
-    search_key_cache.get("prototype", "iron-plate", "display", "en", "Iron Plate")
-    search_key_cache.get("surface", "nauvis", "display", "en", "Nauvis")
+    search_key_cache.get("prototype", "iron-plate", "display", "Iron Plate")
+    search_key_cache.get("surface", "nauvis", "display", "Nauvis")
     local calls = restore()
 
     assert.are.equal(3, calls)
@@ -111,11 +102,11 @@ describe("search_key_cache", function()
 
   it("clear(namespace, candidate_id) only forces recompute for that candidate", function()
     local restore = spy_on_normalize()
-    search_key_cache.get("surface", 1, "display", "en", "Nauvis")
-    search_key_cache.get("surface", 2, "display", "en", "Fulgora")
+    search_key_cache.get("surface", 1, "display", "Nauvis")
+    search_key_cache.get("surface", 2, "display", "Fulgora")
     search_key_cache.clear("surface", 1)
-    search_key_cache.get("surface", 1, "display", "en", "Nauvis")
-    search_key_cache.get("surface", 2, "display", "en", "Fulgora")
+    search_key_cache.get("surface", 1, "display", "Nauvis")
+    search_key_cache.get("surface", 2, "display", "Fulgora")
     local calls = restore()
 
     assert.are.equal(3, calls)

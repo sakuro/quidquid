@@ -27,12 +27,11 @@ end
 --- Builds this source's candidates for one query.
 ---@param query string
 ---@param fluids table  array of fluid prototypes
----@param locale string|nil
 ---@param translated_names table  prototype name -> translated name
 ---@param include_hidden boolean
 ---@return table  candidates; see EXTENDING.md "Candidates"
-function FluidSource.build_candidates(query, fluids, locale, translated_names, include_hidden)
-  return build_candidates("fluid", "fluid", query, fluids, locale, translated_names, include_hidden)
+function FluidSource.build_candidates(query, fluids, translated_names, include_hidden)
+  return build_candidates("fluid", "fluid", query, fluids, translated_names, include_hidden)
 end
 
 local function search(query, player_index)
@@ -42,7 +41,7 @@ local function search(query, player_index)
   end
   local include_hidden = player.mod_settings["quidquid-include-hidden"].value
   local translated_names = flib_dictionary.get(player_index, NAMESPACE) or {}
-  return FluidSource.build_candidates(query, collect_fluids(), player.locale, translated_names, include_hidden)
+  return FluidSource.build_candidates(query, collect_fluids(), translated_names, include_hidden)
 end
 
 --- Adds this source's remote interface, named by its declaration in prototypes/sources.lua.

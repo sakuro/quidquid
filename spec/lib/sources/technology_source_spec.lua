@@ -9,7 +9,7 @@ describe("TechnologySource", function()
         { name = "steam-power", localised_name = { "technology-name.steam-power" }, hidden = false },
       }
 
-      local candidates = TechnologySource.build_candidates("steam", technologies, "en", {}, false)
+      local candidates = TechnologySource.build_candidates("steam", technologies, {}, false)
 
       assert.are.equal(1, #candidates)
       assert.are.equal("technology", candidates[1].type)

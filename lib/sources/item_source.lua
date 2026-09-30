@@ -209,12 +209,11 @@ end
 --- Builds this source's candidates for one query, before annotation.
 ---@param query string
 ---@param items table  array of item prototypes
----@param locale string|nil
 ---@param translated_names table  prototype name -> translated name
 ---@param include_hidden boolean
 ---@return table  candidates; see EXTENDING.md "Candidates"
-function ItemSource.build_candidates(query, items, locale, translated_names, include_hidden)
-  return build_candidates("item", "item", query, items, locale, translated_names, include_hidden)
+function ItemSource.build_candidates(query, items, translated_names, include_hidden)
+  return build_candidates("item", "item", query, items, translated_names, include_hidden)
 end
 
 -- Inventories counted toward the "inventory" total: main inventory, cursor stack,
@@ -304,8 +303,7 @@ local function search(query, player_index)
   end
   local include_hidden = player.mod_settings["quidquid-include-hidden"].value
   local translated_names = flib_dictionary.get(player_index, NAMESPACE) or {}
-  local candidates =
-    ItemSource.build_candidates(query, collect_items(), player.locale, translated_names, include_hidden)
+  local candidates = ItemSource.build_candidates(query, collect_items(), translated_names, include_hidden)
   local ok, err = pcall(apply_annotations, candidates, player)
   if not ok then
     log(("quidquid: source 'items' annotation failed: %s"):format(tostring(err)))
