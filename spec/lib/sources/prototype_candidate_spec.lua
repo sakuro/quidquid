@@ -5,7 +5,7 @@ describe("prototype_candidate", function()
   local icon_prefix = "item"
 
   it("returns nothing for an empty prototype list", function()
-    local candidates = build_candidates(candidate_type, icon_prefix, "iron", {}, "en", {}, false)
+    local candidates = build_candidates(candidate_type, icon_prefix, "iron", {}, {}, false)
 
     assert.are.same({}, candidates)
   end)
@@ -15,7 +15,7 @@ describe("prototype_candidate", function()
       { name = "iron-plate", localised_name = { "item-name.iron-plate" }, hidden = false },
     }
 
-    local candidates = build_candidates(candidate_type, icon_prefix, "", prototype_list, "en", {}, false)
+    local candidates = build_candidates(candidate_type, icon_prefix, "", prototype_list, {}, false)
 
     assert.are.same({}, candidates)
   end)
@@ -25,7 +25,7 @@ describe("prototype_candidate", function()
       { name = "iron-plate", localised_name = { "item-name.iron-plate" }, hidden = false },
     }
 
-    local candidates = build_candidates(candidate_type, icon_prefix, "iron", prototype_list, "en", {}, false)
+    local candidates = build_candidates(candidate_type, icon_prefix, "iron", prototype_list, {}, false)
 
     assert.are.equal(1, #candidates)
     assert.are.equal("item", candidates[1].type)
@@ -42,7 +42,7 @@ describe("prototype_candidate", function()
       { name = "iron-plate", localised_name = { "item-name.iron-plate" }, hidden = false },
     }
 
-    local candidates = build_candidates(candidate_type, icon_prefix, "iron", prototype_list, "en", {}, false)
+    local candidates = build_candidates(candidate_type, icon_prefix, "iron", prototype_list, {}, false)
 
     assert.is_nil(candidates[1].numeric)
   end)
@@ -52,7 +52,7 @@ describe("prototype_candidate", function()
       { name = "iron-plate", localised_name = { "item-name.iron-plate" }, hidden = false },
     }
 
-    local candidates = build_candidates(candidate_type, icon_prefix, "ipl", prototype_list, "en", {}, false)
+    local candidates = build_candidates(candidate_type, icon_prefix, "ipl", prototype_list, {}, false)
 
     assert.are.equal(1, #candidates)
     assert.are.same({}, candidates[1].search_display_ranges)
@@ -71,8 +71,7 @@ describe("prototype_candidate", function()
     }
     local translated_names = { ["iron-plate"] = "鉄板" }
 
-    local candidates =
-      build_candidates(candidate_type, icon_prefix, "鉄", prototype_list, "en", translated_names, false)
+    local candidates = build_candidates(candidate_type, icon_prefix, "鉄", prototype_list, translated_names, false)
 
     assert.are.equal(1, #candidates)
     assert.are.equal("iron-plate", candidates[1].id)
@@ -84,8 +83,7 @@ describe("prototype_candidate", function()
     }
     local translated_names = { cafe = "Café" }
 
-    local candidates =
-      build_candidates(candidate_type, icon_prefix, "CAFE", prototype_list, "en", translated_names, false)
+    local candidates = build_candidates(candidate_type, icon_prefix, "CAFE", prototype_list, translated_names, false)
 
     assert.are.equal(1, #candidates)
   end)
@@ -96,8 +94,7 @@ describe("prototype_candidate", function()
     }
     local translated_names = { ["iron-plate"] = "Iron Plate" }
 
-    local candidates =
-      build_candidates(candidate_type, icon_prefix, "ipl", prototype_list, "en", translated_names, false)
+    local candidates = build_candidates(candidate_type, icon_prefix, "ipl", prototype_list, translated_names, false)
 
     assert.are.equal(1, #candidates)
     assert.are.equal("Iron Plate", candidates[1].search_display_name)
@@ -117,7 +114,7 @@ describe("prototype_candidate", function()
     local translated_names = { belt = "ベルト" }
 
     local candidates =
-      build_candidates(candidate_type, icon_prefix, "べると", prototype_list, "ja", translated_names, false)
+      build_candidates(candidate_type, icon_prefix, "べると", prototype_list, translated_names, false)
 
     assert.are.equal(1, #candidates)
   end)
@@ -127,7 +124,7 @@ describe("prototype_candidate", function()
       { name = "iron-plate", localised_name = { "item-name.iron-plate" }, hidden = false },
     }
 
-    local candidates = build_candidates(candidate_type, icon_prefix, "copper", prototype_list, "en", {}, false)
+    local candidates = build_candidates(candidate_type, icon_prefix, "copper", prototype_list, {}, false)
 
     assert.are.same({}, candidates)
   end)
@@ -140,7 +137,7 @@ describe("prototype_candidate", function()
       { name = "iron-plate", localised_name = { "item-name.iron-plate" }, hidden = false },
     }
 
-    local candidates = build_candidates(candidate_type, icon_prefix, "鉄", prototype_list, "en", {}, false)
+    local candidates = build_candidates(candidate_type, icon_prefix, "鉄", prototype_list, {}, false)
 
     assert.are.same({}, candidates)
   end)
@@ -150,7 +147,7 @@ describe("prototype_candidate", function()
       { name = "debug-marker", localised_name = { "item-name.debug-marker" }, hidden = true },
     }
 
-    local candidates = build_candidates(candidate_type, icon_prefix, "debug", prototype_list, "en", {}, false)
+    local candidates = build_candidates(candidate_type, icon_prefix, "debug", prototype_list, {}, false)
 
     assert.are.same({}, candidates)
   end)
@@ -160,7 +157,7 @@ describe("prototype_candidate", function()
       { name = "debug-marker", localised_name = { "item-name.debug-marker" }, hidden = true },
     }
 
-    local candidates = build_candidates(candidate_type, icon_prefix, "debug", prototype_list, "en", {}, true)
+    local candidates = build_candidates(candidate_type, icon_prefix, "debug", prototype_list, {}, true)
 
     assert.are.equal(1, #candidates)
   end)
@@ -173,7 +170,7 @@ describe("prototype_candidate", function()
       { name = "secret-plate", localised_name = { "item-name.secret-plate" }, hidden = true },
     }
 
-    local candidates = build_candidates(candidate_type, icon_prefix, "plate", prototype_list, "en", {}, false)
+    local candidates = build_candidates(candidate_type, icon_prefix, "plate", prototype_list, {}, false)
 
     assert.are.equal(2, #candidates)
     assert.are.equal("iron-plate", candidates[1].id)
@@ -185,7 +182,7 @@ describe("prototype_candidate", function()
       { name = "steam-power", localised_name = { "technology-name.steam-power" }, hidden = false },
     }
 
-    local candidates = build_candidates("technology", "technology", "steam", prototype_list, "en", {}, false)
+    local candidates = build_candidates("technology", "technology", "steam", prototype_list, {}, false)
 
     assert.are.equal(1, #candidates)
     assert.are.equal("technology", candidates[1].type)
@@ -202,7 +199,7 @@ describe("prototype_candidate", function()
       { name = "steam-power", localised_name = { "technology-name.steam-power" }, hidden = false },
     }
 
-    local candidates = build_candidates("technology", "tech-icon", "steam", prototype_list, "en", {}, false)
+    local candidates = build_candidates("technology", "tech-icon", "steam", prototype_list, {}, false)
 
     assert.are.equal(1, #candidates)
     assert.are.equal("technology", candidates[1].type)

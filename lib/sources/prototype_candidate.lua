@@ -11,21 +11,12 @@ local api = require("lib.api")
 ---@param icon_prefix string  rich-text tag type, e.g. "item" for [item=iron-plate]
 ---@param query string
 ---@param prototype_list table  array of prototypes with .name, .localised_name, .hidden
----@param locale string|nil  the player's locale, for display-name normalization
 ---@param translated_names table  prototype name -> translated name, from flib's dictionary
 ---@param include_hidden boolean  the player's include-hidden setting
 ---@return table  candidates; see EXTENDING.md "Candidates"
-local function build_candidates(
-  candidate_type,
-  icon_prefix,
-  query,
-  prototype_list,
-  locale,
-  translated_names,
-  include_hidden
-)
+local function build_candidates(candidate_type, icon_prefix, query, prototype_list, translated_names, include_hidden)
   local candidates = {}
-  local matcher = api.matcher(query, locale)
+  local matcher = api.matcher(query)
   for _, prototype in ipairs(prototype_list) do
     if include_hidden or not prototype.hidden then
       local translated = translated_names[prototype.name]

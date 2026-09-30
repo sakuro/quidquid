@@ -1,8 +1,8 @@
 local normalization = require("lib.search_normalization")
 
 describe("search_normalization", function()
-  local function normalized(value, locale)
-    return normalization.normalize(value, "display", locale)
+  local function normalized(value)
+    return normalization.normalize(value)
   end
 
   it("folds case and accents without changing punctuation", function()
@@ -25,10 +25,10 @@ describe("search_normalization", function()
     assert.are.equal("カ", normalized("カ"))
   end)
 
-  it("uses the Turkish I exception only for the Turkish locale", function()
-    assert.are.equal("i", normalized("I", "en"))
-    assert.are.equal("ı", normalized("I", "tr"))
-    assert.are.equal("i", normalized("İ", "tr"))
+  -- Whether I pairs with i or with dotless i depends on the language of the text,
+  -- which is unknown for player-written names; see issue #245.
+  it("folds I, dotless i and dotted capital I to i", function()
+    assert.are.equal("iiii", normalized("Iiıİ"))
   end)
 
   it("folds Greek sigma variants without transliterating Greek", function()

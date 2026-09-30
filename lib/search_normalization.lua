@@ -1,6 +1,6 @@
 local generated_mapping = require("lib.search_mapping")
 
-local RULE_VERSION = "unicode-18.0.0-r2"
+local RULE_VERSION = "unicode-18.0.0-r3"
 
 -- These are the small set of compatibility mappings that are useful for
 -- names, but are not canonical decompositions in the UCD.
@@ -12,7 +12,12 @@ local explicit_mapping = {
   [0x0111] = { 0x0064 }, -- đ
   [0x0110] = { 0x0064 }, -- Đ
   [0x0127] = { 0x0068 }, -- ħ
-  [0x0131] = { 0x0131 }, -- dotless i is not plain i
+  -- Dotless i joins plain i. CaseFolding pairs I with i by default and with ı
+  -- only as a Turkic tailoring, and the language of a player-written name is
+  -- unknown, so folding the whole family together is the one choice that never
+  -- makes a name unreachable (issue #245). İ already reaches i through its
+  -- decomposition.
+  [0x0131] = { 0x0069 }, -- ı
   [0x0142] = { 0x006C }, -- ł
   [0x0141] = { 0x006C }, -- Ł
   [0x0153] = { 0x006F, 0x0065 }, -- œ
@@ -301,14 +306,7 @@ local function is_removed_mark(codepoint)
     or (codepoint >= 0x06D6 and codepoint <= 0x06ED)
 end
 
-local function map_codepoint_once(codepoint, locale)
-  if locale == "tr" then
-    if codepoint == 0x0049 then
-      return { 0x0131 }
-    elseif codepoint == 0x0130 then
-      return { 0x0069 }
-    end
-  end
+local function map_codepoint_once(codepoint)
   if codepoint >= 0x3041 and codepoint <= 0x3096 then
     return { codepoint + 0x60 }
   elseif codepoint >= 0x309D and codepoint <= 0x309F then
@@ -348,8 +346,8 @@ end
 -- in Unicode 18 settle in two or three passes.
 local MAX_MAPPING_PASSES = 8
 
-local function map_codepoint(codepoint, locale)
-  local values = map_codepoint_once(codepoint, locale)
+local function map_codepoint(codepoint)
+  local values = map_codepoint_once(codepoint)
   if #values == 1 and values[1] == codepoint then
     return values
   end
@@ -358,7 +356,7 @@ local function map_codepoint(codepoint, locale)
     local expanded = {}
     local changed = false
     for _, value in ipairs(values) do
-      local mapped = map_codepoint_once(value, locale)
+      local mapped = map_codepoint_once(value)
       if #mapped ~= 1 or mapped[1] ~= value then
         changed = true
       end
@@ -379,15 +377,12 @@ end
 ---
 --- The position map is what lets a match be highlighted in the value the player
 --- reads: one normalized code point can come from several original bytes, or from
---- none. `field_kind` picks the rules -- an internal name is locale-independent, so
---- locale-specific folding applies to display names only. A value that is not valid
---- UTF-8 comes back unchanged with no map rather than being rejected.
+--- none. A value that is not valid UTF-8 comes back unchanged with no map rather
+--- than being rejected.
 ---@param value string  returned as-is, with an empty map, when not a string
----@param field_kind string  "display" or "internal"
----@param locale string|nil  ignored for "internal"
 ---@return string  the normalized value
 ---@return table|nil  position map, or nil when the value would not decode
-local function normalize(value, field_kind, locale)
+local function normalize(value)
   if type(value) ~= "string" then
     return value, {}
   end
@@ -425,7 +420,7 @@ local function normalize(value, field_kind, locale)
   local position_map = {}
   local pending_start_byte
   for _, item in ipairs(source) do
-    local values = map_codepoint(item.value, field_kind == "internal" and nil or locale)
+    local values = map_codepoint(item.value)
     for _, codepoint in ipairs(values) do
       if (codepoint == 0x3099 or codepoint == 0x309A) and #normalized > 0 then
         local composed = kana_compose[normalized[#normalized]] and kana_compose[normalized[#normalized]][codepoint]

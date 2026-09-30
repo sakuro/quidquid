@@ -7,7 +7,7 @@ describe("ItemSource", function()
         { name = "iron-plate", localised_name = { "item-name.iron-plate" }, hidden = false },
       }
 
-      local candidates = ItemSource.build_candidates("iron", items, "en", {}, false)
+      local candidates = ItemSource.build_candidates("iron", items, {}, false)
 
       assert.are.equal(1, #candidates)
       assert.are.equal("item", candidates[1].type)

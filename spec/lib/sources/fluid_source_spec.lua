@@ -7,7 +7,7 @@ describe("FluidSource", function()
         { name = "water", localised_name = { "fluid-name.water" }, hidden = false },
       }
 
-      local candidates = FluidSource.build_candidates("water", fluids, "en", {}, false)
+      local candidates = FluidSource.build_candidates("water", fluids, {}, false)
 
       assert.are.equal(1, #candidates)
       assert.are.equal("fluid", candidates[1].type)

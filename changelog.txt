@@ -1,4 +1,10 @@
 ---------------------------------------------------------------------------------------------------
+Version: Unreleased
+  Bugfixes:
+    - Under the Turkish locale, an English name containing a capital I, such as a blueprint a Turkish player called "Iron smelting", is found by a plain i instead of only by a dotless ı; I, i, ı and İ now match each other for every player
+  Modding:
+    - matcher takes only the query; the locale argument is gone, and one still passed is ignored
+---------------------------------------------------------------------------------------------------
 Version: 0.12.0
 Date: 2026-09-29
   Modding:

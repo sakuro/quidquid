@@ -133,9 +133,8 @@ Rather than reproduce that, take it from Quidquid:
 local quidquid = require("__quidquid__.lib.api")
 
 local function search(query, player_index)
-  local player = game.get_player(player_index)
   -- Normalizes the query once. Build it per search, not per candidate.
-  local matcher = quidquid.matcher(query, player.locale)
+  local matcher = quidquid.matcher(query)
   local candidates = {}
 
   for _, entry in ipairs(my_entries()) do
@@ -167,8 +166,8 @@ candidate fields expect. Either field may be omitted. The `namespace` and `id`
 key a cache of normalized names, so pick a namespace of your own and an `id` that
 is stable for the entry.
 
-`locale` only selects the locale-specific part of the folding applied to display
-names. Passing `nil` skips that part; display names are matched either way.
+Folding does not depend on the player's locale; see the list in the
+[README](README.md#searching).
 
 A renamed entry needs nothing from you: the cache keeps the raw value it
 normalized and compares it on every read. An entry that *disappears* never gets

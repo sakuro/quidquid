@@ -4,19 +4,19 @@ local normalization = require("lib.search_normalization")
 local search_highlight = require("lib.search_highlight")
 
 local function internal_score(query, target)
-  local value = normalization.normalize(target, "internal", nil)
-  return (fuzzy_match(normalization.normalize(query, "internal", nil), value))
+  local value = normalization.normalize(target)
+  return (fuzzy_match(normalization.normalize(query), value))
 end
 
-local function display_match(query, target, locale)
-  local value, position_map = normalization.normalize(target, "display", locale)
-  local score, positions = fuzzy_match(normalization.normalize(query, "display", locale), value)
+local function display_match(query, target)
+  local value, position_map = normalization.normalize(target)
+  local score, positions = fuzzy_match(normalization.normalize(query), value)
   return score, search_highlight.positions_to_ranges(position_map, positions)
 end
 
 describe("api.matcher", function()
   it("scores an internal-name match the way fuzzy_match does", function()
-    local matcher = api.matcher("iron", "en")
+    local matcher = api.matcher("iron")
 
     local match = matcher:match("spec", "iron-plate", { internal = "iron-plate" })
 
@@ -24,23 +24,23 @@ describe("api.matcher", function()
   end)
 
   it("returns nil when no field matches", function()
-    local matcher = api.matcher("zzz", "en")
+    local matcher = api.matcher("zzz")
 
     assert.is_nil(matcher:match("spec", "iron-plate", { internal = "iron-plate" }))
   end)
 
   it("rewards a display-name match so it outranks the same score on the internal name", function()
-    local expected = display_match("iron", "Iron Plate", "en")
+    local expected = display_match("iron", "Iron Plate")
 
-    local match = api.matcher("iron", "en"):match("spec", "iron-plate", { display = "Iron Plate" })
+    local match = api.matcher("iron"):match("spec", "iron-plate", { display = "Iron Plate" })
 
     assert.are.equal(expected + 0.5, match.score)
   end)
 
   it("reports the matched ranges of the winning field only", function()
-    local _, expected_ranges = display_match("iron", "Iron Plate", "en")
+    local _, expected_ranges = display_match("iron", "Iron Plate")
 
-    local match = api.matcher("iron", "en"):match("spec", "iron-plate", {
+    local match = api.matcher("iron"):match("spec", "iron-plate", {
       display = "Iron Plate",
       internal = "iron-plate",
     })
@@ -52,23 +52,23 @@ describe("api.matcher", function()
   it("normalizes the query once, not once per entry", function()
     local original = normalization.normalize
     local query_normalizations = 0
-    normalization.normalize = function(value, ...)
+    normalization.normalize = function(value)
       if value == "iron" then
         query_normalizations = query_normalizations + 1
       end
-      return original(value, ...)
+      return original(value)
     end
 
-    local matcher = api.matcher("iron", "en")
+    local matcher = api.matcher("iron")
     matcher:match("spec", "iron-plate", { internal = "iron-plate" })
     matcher:match("spec", "iron-gear-wheel", { internal = "iron-gear-wheel" })
     normalization.normalize = original
 
-    assert.are.equal(2, query_normalizations)
+    assert.are.equal(1, query_normalizations)
   end)
 
   it("keeps the internal match when it outscores the rewarded display one", function()
-    local match = api.matcher("iron-plate", "en"):match("spec", "iron-plate", {
+    local match = api.matcher("iron-plate"):match("spec", "iron-plate", {
       display = "Solid iron plate for building",
       internal = "iron-plate",
     })
@@ -80,7 +80,7 @@ end)
 
 describe("api.forget", function()
   it("drops one entry's cached keys, so the next match normalizes it again", function()
-    local matcher = api.matcher("iron", "en")
+    local matcher = api.matcher("iron")
     matcher:match("spec-forget", "widget", { display = "Iron Plate" })
 
     api.forget("spec-forget", "widget")

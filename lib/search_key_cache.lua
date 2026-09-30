@@ -6,24 +6,19 @@ local function candidate_key(candidate_id)
   return type(candidate_id) .. "\0" .. tostring(candidate_id)
 end
 
-local function field_key(field, locale)
-  return field .. "\0" .. (locale or "")
-end
-
 --- The normalized form of one entry's field, computing it on a miss.
 ---
---- The cache stores the raw value it normalized, the locale, and the normalization
---- rule version, and compares all three on every read -- so a renamed prototype, a
---- locale switch, or a rule change invalidates its own entry with no explicit
---- purge. Only an entry that disappears needs clear().
+--- The cache stores the raw value it normalized and the normalization rule
+--- version, and compares both on every read -- so a renamed prototype or a rule
+--- change invalidates its own entry with no explicit purge. Only an entry that
+--- disappears needs clear().
 ---@param namespace string
 ---@param candidate_id any  keyed by type and value, so 1 and "1" do not collide
 ---@param field string  "display" or "internal"
----@param locale string|nil
 ---@param raw_value string  returned as-is, with an empty map, when not a string
 ---@return string  the normalized value
 ---@return table|nil  position map, as lib.search_normalization returns it
-local function get(namespace, candidate_id, field, locale, raw_value)
+local function get(namespace, candidate_id, field, raw_value)
   if type(raw_value) ~= "string" then
     return raw_value, {}
   end
@@ -40,21 +35,14 @@ local function get(namespace, candidate_id, field, locale, raw_value)
     namespace_cache[id_key] = id_cache
   end
 
-  local key = field_key(field, locale)
-  local entry = id_cache[key]
-  if
-    entry ~= nil
-    and entry.raw_value == raw_value
-    and entry.locale == locale
-    and entry.rule_version == normalization.rule_version
-  then
+  local entry = id_cache[field]
+  if entry ~= nil and entry.raw_value == raw_value and entry.rule_version == normalization.rule_version then
     return entry.value, entry.position_map
   end
 
-  local value, position_map = normalization.normalize(raw_value, field, locale)
-  id_cache[key] = {
+  local value, position_map = normalization.normalize(raw_value)
+  id_cache[field] = {
     raw_value = raw_value,
-    locale = locale,
     rule_version = normalization.rule_version,
     value = value,
     position_map = position_map,

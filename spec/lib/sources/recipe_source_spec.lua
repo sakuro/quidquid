@@ -7,7 +7,7 @@ describe("RecipeSource", function()
         { name = "iron-gear-wheel", localised_name = { "recipe-name.iron-gear-wheel" }, hidden = false },
       }
 
-      local candidates = RecipeSource.build_candidates("iron", recipes, "en", {}, false)
+      local candidates = RecipeSource.build_candidates("iron", recipes, {}, false)
 
       assert.are.equal(1, #candidates)
       assert.are.equal("recipe", candidates[1].type)
