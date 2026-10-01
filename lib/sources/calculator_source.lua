@@ -24,7 +24,7 @@ end
 
 --- The usable number out of an expression evaluation, or nil when there isn't one.
 ---
---- A parse/eval error, a non-number result, and a non-finite one (NaN, +-inf -- e.g.
+--- A parse/eval error, a non-number result, and a non-finite one (NaN, +-inf, e.g.
 --- "1/0") all fold into nil: none of them has a meaningful result to show, so the
 --- caller treats them identically.
 ---@param ok boolean  the pcall status

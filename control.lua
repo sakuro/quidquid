@@ -46,7 +46,7 @@ TemporaryRequestAction.add_interface()
 local dictionary_sources = { ItemSource, FluidSource, RecipeSource, TechnologySource }
 
 -- flib_dictionary.new/.add may only run before flib's internal init_ran flag flips true,
--- which happens on the first on_tick -- so dictionaries must be (re-)registered from
+-- which happens on the first on_tick, so dictionaries must be (re-)registered from
 -- on_init/on_configuration_changed. Both of those already fully reset
 -- storage.__flib.dictionary (flib_dictionary.on_configuration_changed is an alias for
 -- .on_init), so re-registering unconditionally here is correct, not redundant.
@@ -99,7 +99,7 @@ script.on_event("quidquid-palette-down", Palette.on_palette_down)
 
 -- Palette and TemporaryRequestEditor each own a disjoint set of GUI elements and both
 -- already no-op for events aimed at elements they don't recognize (checked by name/tag
--- at the top of each handler) — script.on_event only accepts one handler per event per
+-- at the top of each handler). script.on_event only accepts one handler per event per
 -- mod, so both are chained from a single registration rather than one silently
 -- replacing the other.
 script.on_event(defines.events.on_gui_text_changed, function(event)
@@ -132,8 +132,8 @@ end)
 script.on_event("quidquid-temporary-request-editor-confirm", TemporaryRequestEditor.on_confirm_key)
 
 -- Every event that can change what LuaControl:get_item_count sees for a player's
--- character — confirmed empirically that get_item_count aggregates across all of these
--- (main inventory, cursor stack, guns, ammo), so a temporary request can become
+-- character. get_item_count aggregates across all of these (main inventory, cursor
+-- stack, guns, ammo; confirmed empirically), so a temporary request can become
 -- satisfied via any one of them.
 script.on_event({
   defines.events.on_player_main_inventory_changed,

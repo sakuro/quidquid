@@ -37,7 +37,7 @@ end
 --- setting_type rejects the source outright, and so does having no prefix it can
 --- actually claim -- none declared, or all already taken -- and no way into the
 --- default search. A prefix already taken by an earlier source is otherwise
---- skipped while the rest of the registration succeeds -- the source is still
+--- skipped while the rest of the registration succeeds; the source is still
 --- reachable, just not under that prefix. See EXTENDING.md "Rejections and
 --- failures".
 ---@param definition table  see EXTENDING.md "Sources"; from Declarations.collect
@@ -176,7 +176,7 @@ end
 ---
 --- Looked up exactly, so prefixes are case-sensitive even though the search itself
 --- is not: "R" and "r" are separate prefixes and two sources may hold one each. That
---- asymmetry is deliberate -- it frees the uppercase letters for sources whose
+--- asymmetry is deliberate: it frees the uppercase letters for sources whose
 --- natural initial is already taken. See EXTENDING.md "Definition".
 ---@param prefix string
 ---@return table|nil  nil when no source claimed that prefix
@@ -261,9 +261,9 @@ function Registry:resolve_actions(selected_candidate, player_index, caller)
 
   for input_name, definition in pairs(slots) do
     local applicable = true
-    -- is_available only gates on state uniform across every candidate of a type
-    -- (player/network state, say); a fact specific to one candidate belongs in
-    -- execute instead, reported to the player rather than silently hidden.
+    -- is_available receives only the player, so it answers for every candidate of
+    -- this type at once. A fact about one candidate belongs in execute (see
+    -- ActionRunner.run).
     if caller:has(definition.interface, "is_available") then
       local ok, result = pcall(caller.call, caller, definition.interface, "is_available", player_index)
       if ok then

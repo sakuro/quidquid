@@ -9,7 +9,7 @@ end
 --- The normalized form of one entry's field, computing it on a miss.
 ---
 --- The cache stores the raw value it normalized and the normalization rule
---- version, and compares both on every read -- so a renamed prototype or a rule
+--- version, and compares both on every read, so a renamed prototype or a rule
 --- change invalidates its own entry with no explicit purge. Only an entry that
 --- disappears needs clear().
 ---@param namespace string
@@ -53,7 +53,7 @@ end
 --- Drops cached entries: one candidate's with both arguments, a whole namespace
 --- with only the first, everything with neither.
 ---
---- Only reachability makes this necessary -- stale content invalidates itself on
+--- Only reachability makes this necessary, since stale content invalidates itself on
 --- read. An entry that can no longer be reached (a destroyed surface's, say) never
 --- gets that read, so its keys would sit there for the rest of the session.
 ---@param namespace string|nil

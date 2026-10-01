@@ -15,7 +15,7 @@ end
 --- Rounds down to the previous multiple of stack_size.
 ---
 --- Strictly less than current_value even when current_value is already an exact
---- multiple -- the mirror of next_stack_multiple. Floored at 0: a temporary request
+--- multiple, mirroring next_stack_multiple. Floored at 0: a temporary request
 --- can't have a negative quantity, and 0 is meaningful on its own as the "remove
 --- this request" case.
 ---@param current_value number
@@ -107,7 +107,7 @@ end
 --- Decides what Confirm should do, given the entered quantity and how many the
 --- player currently holds of the selected item+quality.
 ---
---- Knows nothing about GUI or LuaLogisticSection -- the caller maps each outcome to
+--- Knows nothing about GUI or LuaLogisticSection; the caller maps each outcome to
 --- the actual set_slot/clear_slot call and flying-text message.
 ---@param quantity number
 ---@param already_have number
@@ -125,7 +125,7 @@ end
 --- True when a parsed quantity is acceptable as a temporary-request quantity: a
 --- non-negative whole number.
 ---
---- Knows nothing about GUI, helpers.evaluate_expression, or textfield styles -- the
+--- Knows nothing about GUI, helpers.evaluate_expression, or textfield styles; the
 --- caller maps this to the error-background/Confirm-enabled state.
 ---@param value number|nil  the evaluation result, or nil when the input did not parse
 ---@return boolean

@@ -103,9 +103,8 @@ end
 --- Every entry is an untranslated rich-text tag, so the list is concatenated into a
 --- single string rather than built as a LocalisedString array. That makes it cost
 --- exactly one parameter in whatever LocalisedString it is embedded into, however
---- many items it lists. Each call site used to build the array itself, and
---- Factorio's hard 20-parameters-per-array limit was hit in production once an item
---- list grew past ~10 entries.
+--- many items it lists. As an array, a list of more than ~10 entries hits Factorio's
+--- hard limit of 20 parameters per array, which has happened in production.
 ---@param items table
 ---@param icon_fn function  (item) -> rich-text tag string
 ---@param limit number  entries shown before the "N more" entry takes over

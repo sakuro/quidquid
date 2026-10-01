@@ -17,9 +17,8 @@ end
 
 --- A count as it appears on a row, muted when it is zero.
 ---
---- Muting a zero rather than hiding it is the point: a candidate the player holds none
---- of still shows a 0, just one that doesn't visually compete with the rows they do
---- hold something of.
+--- A candidate the player holds none of still shows its 0, muted so it doesn't
+--- visually compete with the rows they do hold something of.
 ---@param value number
 ---@return string  rich text, so it carries its own color
 function ItemSource.format_count(value)
@@ -30,9 +29,9 @@ function ItemSource.format_count(value)
   return text
 end
 
--- SEPARATOR is deliberately not "/": that reads as "current / max", which this isn't
--- -- inventory and network are two independent totals, not a fraction. Muted like the
--- counts that carry nothing: it is punctuation holding two figures apart, not a figure.
+-- SEPARATOR is deliberately not "/", which would read as "current / max"; inventory
+-- and network are two independent totals. It is muted like a zero count because it
+-- only separates two figures and carries no value of its own.
 local SEPARATOR = "·"
 -- Muted for the same reason a zero count is, only more so: this one says the number
 -- can't be read at all, and -- unlike a zero, which varies per row -- it is the same
@@ -41,8 +40,8 @@ local OUT_OF_RANGE_TEXT = "—"
 
 --- The row's headline count.
 ---
---- Just the inventory count while locked -- there is nothing to pair it with yet --
---- otherwise inventory, separator, network, with the network figure replaced by a
+--- Just the inventory count while locked, since there is nothing to pair it with yet.
+--- Otherwise inventory, separator, network, with the network figure replaced by a
 --- muted dash when the player is outside any network's range.
 ---@param state string  as LogisticsState.classify returns
 ---@param inventory_total number
@@ -59,7 +58,7 @@ end
 
 -- Without the Quality mod, prototypes.quality has only "normal" (visible) and
 -- "quality-unknown" (hidden, internal, confirmed over RCON to never appear on a real
--- item stack outside of an explicit scripted quality="quality-unknown" insert) -- so
+-- item stack outside of an explicit scripted quality="quality-unknown" insert), so
 -- an item's breakdown is always length 1 and this limit never applies. The Quality
 -- mod alone brings it to 5 tiers; another mod could add more, so this still bounds
 -- that case rather than assuming 5 is the ceiling.
@@ -70,8 +69,8 @@ local function quality_icon(entry)
 end
 
 -- One labelled tooltip line, e.g. "Inventory: 45", with a per-quality breakdown
--- parenthesized after it once there's more than one quality to distinguish --
--- a single quality would just repeat the same total a second time.
+-- parenthesized after it once there's more than one quality to distinguish. With a
+-- single quality the breakdown would only repeat the total.
 local function count_line(label_key, total, breakdown)
   local line = { label_key, ItemSource.format_count(total) }
   if #breakdown <= 1 then
@@ -197,8 +196,8 @@ end
 
 --- Registers the item-name dictionary with flib, for translated-name search.
 ---
---- Must run from on_init/on_configuration_changed, before the first on_tick -- see
---- control.lua and EXTENDING.md "Translated names".
+--- Must run from on_init/on_configuration_changed, before the first on_tick (see
+--- control.lua and EXTENDING.md "Translated names").
 function ItemSource.register_dictionary()
   flib_dictionary.new(NAMESPACE)
   for _, item in ipairs(collect_items()) do
@@ -221,7 +220,7 @@ end
 -- this set, but only for a single quality at a time, hence merging get_contents()
 -- here instead). Deliberately excludes the trash slots: an item sitting there is
 -- physically still on the character (not yet actually returned to the network), so
--- this is a known undercount for a player who's trashed something -- accepted
+-- this is a known undercount for a player who's trashed something, accepted
 -- rather than also tracked via the character's separate trash logistic point.
 local function personal_inventory_index(character)
   local contents_lists = { character.get_main_inventory().get_contents() }
@@ -281,7 +280,7 @@ end
 -- Annotating every match rather than only the displayed ones is deliberate here:
 -- the candidate carries its own annotation across the remote boundary, so there
 -- is no later hook that could narrow the set first. The pcall keeps an
--- annotation failure from taking the result list down with it -- without it,
+-- annotation failure from taking the result list down with it. Without it,
 -- Palette.search_all_sources' own pcall would discard every candidate this
 -- source found. Because this loop mutates candidates in place, a failure partway
 -- leaves the earlier candidates annotated and the rest bare: a mixed render is

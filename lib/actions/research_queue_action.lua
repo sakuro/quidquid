@@ -102,14 +102,10 @@ ResearchQueueAction.queue_index = queue_index
 --- Prerequisites are queued along with the technology, so an enqueue can be refused
 --- for needing more slots than the queue has left, which is why the whole new queue
 --- comes back rather than just the one name.
----
---- is_available only gates on state uniform across every candidate (this action
---- registers none); per-candidate queue eligibility is a runtime fact, resolved here
---- and reported by execute rather than hidden from the tooltip.
 ---@param force LuaForce
 ---@param candidate table
----@return LuaTechnology|nil  nil for a candidate with no matching force technology --
----  near-impossible, since TechnologySource builds candidates from force.technologies
+---@return LuaTechnology|nil  nil for a candidate with no matching force technology,
+---  near-impossible since TechnologySource builds candidates from force.technologies
 ---@return string|nil  locale key for the message to show
 ---@return table|nil  that message's arguments
 ---@return table|nil  the queue to install, or nil when the outcome is only a message

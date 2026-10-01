@@ -3,20 +3,16 @@ local LogisticsState = require("lib.logistics_state")
 
 local TemporaryRequestAction = {}
 
--- Injected from control.lua (see TemporaryRequestAction.init) rather than required
--- directly: lib/temporary_request_editor.lua already requires this module (to reuse its
--- section/slot helpers), and Factorio only allows `require` during control.lua's initial
--- parsing, not later from inside an event handler like `execute` -- so a mutual
--- require between the two files isn't resolvable by deferring one side to call time
--- (confirmed in-game: "Require can't be used outside of control.lua parsing."). Both
--- modules are required once, up front, in control.lua, which then wires this one in.
+-- Set by TemporaryRequestAction.init, which explains why it is injected.
 local editor = nil
 
 --- Wires in the editor module, which control.lua passes after requiring both.
 ---
---- Injected rather than required here: the editor already requires this module, and
---- Factorio only allows `require` during control.lua's initial parsing, so a mutual
---- require cannot be resolved by deferring one side to call time.
+--- Injected rather than required here: the editor already requires this module (to
+--- reuse its section/slot helpers), and Factorio only allows `require` during
+--- control.lua's initial parsing, not from an event handler like `execute` (confirmed
+--- in-game: "Require can't be used outside of control.lua parsing."). A mutual
+--- require therefore cannot be resolved by deferring one side to call time.
 ---@param editor_module table  lib.temporary_request_editor
 function TemporaryRequestAction.init(editor_module)
   editor = editor_module
@@ -59,9 +55,8 @@ end
 
 --- The player's total requested count for one item+quality, across every section.
 ---
---- `filters` already reflects Factorio's own per-item pooled total across every section
---- on the point, so a single matching entry's `count` IS the combined target -- no
---- manual summation across sections is needed here.
+--- `filters` already holds Factorio's own per-item total pooled across every section
+--- on the point, so a single matching entry's `count` is the combined target.
 ---@param filters table  shaped like LuaLogisticPoint.filters: a plain array of
 ---  { name, quality, count }, already extracted by the caller
 ---@param item_name string
@@ -78,7 +73,7 @@ end
 
 --- The player's character requester point, or nil when there is no character.
 ---
---- Also nil while force.character_logistic_requests is off, even in range -- see
+--- Also nil while force.character_logistic_requests is off, even in range. See
 --- LogisticsState.classify, which is why the character check is passed separately.
 ---@param player LuaPlayer
 ---@return LuaLogisticPoint|nil
@@ -125,15 +120,11 @@ end
 ---
 --- Item candidates always do; a recipe candidate needs at least one item ingredient,
 --- since a request naming only fluid ingredients doesn't make sense.
----
---- is_available only gates on player/logistics-network state, uniform across every
---- candidate; this per-candidate fact is resolved here and reported by execute rather
---- than hidden from the tooltip.
 ---@param selected_candidate table
 ---@param force LuaForce
 ---@return boolean
 ---@return string|nil  locale key explaining a false; nil for a recipe candidate with no
----  matching force recipe -- a near-impossible case not worth a message, since
+---  matching force recipe, a near-impossible case not worth a message since
 ---  RecipeSource builds candidates from prototypes.recipe directly
 function TemporaryRequestAction.resolve_requestable(selected_candidate, force)
   if selected_candidate.type ~= "recipe" then
@@ -153,7 +144,7 @@ end
 
 --- Whether this action is offered at all, for state uniform across every candidate.
 ---
---- Requests can be set both out of range and connected -- only no_character and locked
+--- Requests can be set both out of range and connected; only no_character and locked
 --- rule it out. See LogisticsState.classify for what distinguishes the four states.
 ---@param player_index uint
 ---@return boolean

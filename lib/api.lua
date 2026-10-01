@@ -83,10 +83,10 @@ end
 --- Drops cached normalizations: one entry with `id`, a whole `namespace` without
 --- it, everything with neither.
 ---
---- This is about releasing memory, not correctness -- a renamed entry
---- re-normalizes on its own, because the cache stores the raw value it normalized
---- and compares it on every read. An entry that goes away has no such next read,
---- so without this its keys sit there for the rest of the session.
+--- Only memory is at stake: a renamed entry re-normalizes on its own, because the
+--- cache stores the raw value it normalized and compares it on every read. An entry
+--- that goes away has no such next read, so without this its keys sit there for the
+--- rest of the session.
 ---@param namespace string|nil
 ---@param id string|nil
 local function forget(namespace, id)

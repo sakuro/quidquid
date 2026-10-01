@@ -96,8 +96,8 @@ end
 --- The row's tooltip: what blocks this technology, and how far it has got.
 ---
 --- Each block is included only when it has something to say, and the whole tooltip
---- collapses to nil when none of them do -- a technology with nothing to explain gets
---- no tooltip rather than an empty one.
+--- collapses to nil when none of them do, so a technology with nothing to explain
+--- gets no tooltip rather than an empty one.
 ---@param state string  as TechnologyPrerequisites.classify_state returns
 ---@param prerequisites table  array of unresearched, unqueued prerequisites
 ---@param triggers table  array of blocking trigger technologies
@@ -171,8 +171,8 @@ end
 
 --- Registers the technology-name dictionary with flib, for translated-name search.
 ---
---- Must run from on_init/on_configuration_changed, before the first on_tick -- see
---- control.lua and EXTENDING.md "Translated names".
+--- Must run from on_init/on_configuration_changed, before the first on_tick (see
+--- control.lua and EXTENDING.md "Translated names").
 function TechnologySource.register_dictionary()
   flib_dictionary.new(NAMESPACE)
   for _, technology in ipairs(collect_technologies()) do
@@ -260,8 +260,6 @@ end
 -- force's technologies (see lib/technology_graph.lua), built once here so the
 -- per-candidate prerequisite walk never crosses Factorio's C++ boundary. ctx is
 -- a snapshot of a moment and is valid for the duration of one search only.
--- Research state is force-wide, so unlike the item source there is no character
--- to check for.
 local function gather_annotation_context(player)
   local force = player.force
   return {
@@ -274,8 +272,8 @@ end
 
 --- Annotates one candidate from a per-player context.
 ---
---- Research state is force-wide, so -- unlike the item source -- there is no character
---- to check for; a candidate is skipped only when the force has no technology of that
+--- Research state is force-wide, so unlike the item source there is no character to
+--- check for. A candidate is skipped only when the force has no technology of that
 --- name.
 ---@param candidate table  only its `id` is read
 ---@param ctx table  as gather_annotation_context builds it
@@ -301,9 +299,7 @@ function TechnologySource.annotate(candidate, ctx)
 end
 
 -- See the item source for why this annotates every match and why the caller
--- guards it with pcall. Research is force-wide, so unlike the item source there
--- is no character check -- a candidate is skipped only when the force has no
--- technology of that name.
+-- guards it with pcall.
 --
 -- Filtering and annotating share one ctx: both read the same force snapshot, and
 -- building the graph twice per search would be the expensive half of each.
@@ -332,8 +328,8 @@ local function search(query, player_index)
     -- The graph build is per-search, not per-candidate: with nothing to annotate, it's pure waste.
     return candidates
   end
-  -- On failure the unrefined list is still a usable answer -- every match, no
-  -- annotations -- so the search degrades instead of coming back empty.
+  -- On failure the unrefined list (every match, no annotations) is still a usable
+  -- answer, so the search degrades instead of coming back empty.
   local ok, refined = pcall(refine_candidates, candidates, player, include_hidden)
   if not ok then
     log(("quidquid: source 'technologies' candidate refinement failed: %s"):format(tostring(refined)))

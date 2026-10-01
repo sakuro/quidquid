@@ -48,7 +48,7 @@ describe("CraftAction", function()
   describe(".max_craftable", function()
     it("returns the player's craftable count", function()
       -- resolve_craftable already rejects a zero craftable count before this is
-      -- ever called, so there's no flooring here -- only the pass-through case.
+      -- ever called, so there is no flooring to test, only the pass-through case.
       local player = {
         get_craftable_count = function(_recipe)
           return 3

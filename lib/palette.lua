@@ -8,9 +8,9 @@ local Palette = {}
 
 local registry = nil
 
--- Not persisted to storage: the frame is destroyed and rebuilt on every open/close, so
--- this remembers the player's pin choice only across that within the current session --
--- resetting on save load is fine here.
+-- The frame is destroyed and rebuilt on every open/close, so the player's pin choice is
+-- kept here to outlive it for the current session. It is not persisted to storage;
+-- resetting on save load is fine.
 local pin_choices = {}
 local selection_states = {}
 
@@ -218,17 +218,16 @@ end
 
 --- Refines the candidates about to be shown, once the trim has already picked them.
 ---
---- Batches every displayed candidate from the same source into one `decorate` call --
---- called after PaletteLogic.merge_candidates truncation, never over a source's full
---- match list, which is the whole point: a source whose per-candidate presentational
---- work scales with match count now pays that cost only for the rows on screen.
+--- Batches every displayed candidate from the same source into one `decorate` call.
+--- It runs after PaletteLogic.merge_candidates has truncated the list, never over a
+--- source's full match list, so a source whose per-candidate presentational work
+--- scales with match count pays that cost only for the rows on screen.
 --- `decorate` is optional, so a source that implements neither it nor anything else
 --- here costs one `RemoteCaller:has` check and is otherwise untouched. `decorate` runs
 --- after `search`, so its result -- merged onto each candidate through
 --- PaletteLogic.apply_decoration -- wins over whatever `search` already put there. A
 --- source whose call fails is logged and its candidates left as `search` produced
---- them, matching how `is_query_valid` and the old `annotate_candidates` handled a
---- broken source.
+--- them, matching how `is_query_valid` handles a broken source.
 ---@param merged table  candidates already trimmed to DISPLAY_LIMIT, as
 ---  Palette.search_all_sources returns; mutated in place
 ---@param player_index uint
@@ -287,7 +286,7 @@ end
 --- with no internal name to search at all, such as the calculator's result -- its plain
 --- secondary_text. highlight() with no ranges already renders a plain string in the same
 --- font, so secondary_text needs no highlighting logic of its own here. A candidate that
---- also supplies search_internal_prefix gets it prepended as is -- the prefix never went
+--- also supplies search_internal_prefix gets it prepended as is. The prefix never went
 --- through the matcher, so it is neither searched nor highlighted.
 ---@param candidate table
 ---@return string|table|nil  nil for a candidate with neither
@@ -312,10 +311,10 @@ end
 
 -- __CONTROL__<name>__ is a locale-string placeholder the engine substitutes with the
 -- player's actual current key binding for that custom-input (not just its data.lua
--- default -- confirmed this also works for mod-defined custom-inputs, not only builtin
+-- default; confirmed this also works for mod-defined custom-inputs, not only builtin
 -- game controls). Confirmed empirically that this substitution only happens for text
 -- read from an actual locale (.cfg) entry, not for a raw string segment built at
--- runtime and dropped directly into a LocalisedString array -- so each action
+-- runtime and dropped directly into a LocalisedString array, so each action
 -- declares its hint as a LocalisedString naming a locale key, like its label. Input
 -- names are sorted for a stable, predictable tooltip order.
 --
@@ -434,7 +433,7 @@ local function build_candidate_row(pane, wrapped, index, player_index)
   button.style.maximal_width = NAME_COLUMN_WIDTH
   button.style.horizontally_squashable = true
   -- Without this, the button auto-sizes to its caption's width, leaving no slack for
-  -- horizontal_align to shift text within -- left and right would look identical.
+  -- horizontal_align to shift text within, so left and right would look identical.
   button.style.horizontally_stretchable = true
   button.style.horizontal_align = align
   button.style.font_color = DEFAULT_FONT_COLOR
@@ -456,13 +455,13 @@ local function build_candidate_row(pane, wrapped, index, player_index)
 
   -- #121: a source's annotation (e.g. an item's inventory/network counts) takes the
   -- top line of the right end, with the source label demoted to a second, muted line
-  -- below it -- same column as the plain, single-line source label a candidate without
-  -- an annotation still gets.
+  -- below it, in the same column as the plain, single-line source label a candidate
+  -- without an annotation still gets.
   local annotation_caption = wrapped.candidate.annotation and wrapped.candidate.annotation.caption
   if annotation_caption ~= nil then
-    -- Not squashable, unlike `names` -- `side` keeps its actual content's
-    -- natural size (up to SIDE_COLUMN_WIDTH) so the row squashes `names`
-    -- under pressure instead of clipping the annotation.
+    -- Not squashable, unlike `names`: `side` keeps its content's natural size
+    -- (up to SIDE_COLUMN_WIDTH), so the row squashes `names` under pressure
+    -- instead of clipping the annotation.
     local side = row.add({ type = "flow", direction = "vertical", ignored_by_interaction = true })
     side.style.maximal_width = SIDE_COLUMN_WIDTH
     side.style.horizontal_align = "right"
@@ -511,7 +510,7 @@ local function render_candidates(player, candidates)
   end
   -- Without this, a leftover mouse hover from the previous candidate list can make a row
   -- look "active" at the same screen position as before the query changed, even though it's
-  -- now a different candidate -- pin the active selection to a known state on every render.
+  -- now a different candidate. Pin the active selection to a known state on every render.
   if #candidates > 0 then
     set_active_index(player, 1)
   end
@@ -696,7 +695,7 @@ local function dispatch(player, selected_candidate, input_name)
   end
 
   -- Some actions (e.g. the temporary-request editor) reassign player.opened to a GUI
-  -- of their own, which raises on_gui_closed for whatever was previously opened -- the
+  -- of their own, which raises on_gui_closed for whatever was previously opened: the
   -- palette frame. That fires synchronously, inside this remote.call, and would destroy
   -- the palette through Palette.on_gui_closed before the pin check below ever runs.
   -- Tag the frame so that handler can tell this incidental close from a real one.
@@ -722,10 +721,10 @@ local function dispatch(player, selected_candidate, input_name)
   end
 
   -- A pinned palette stays open after the action, so its counts (e.g. #121's
-  -- inventory/network annotation) would otherwise show stale data after e.g.
-  -- crafting or a temporary request -- refresh with the same query rather than
-  -- leave the old render up. content_frame_of returning nil here covers the rare
-  -- case where the action closed the frame some other way (e.g. quitting).
+  -- inventory/network annotation) would go stale after an action such as crafting
+  -- or a temporary request. Refresh with the same query rather than leave the old
+  -- render up. content_frame_of returning nil here covers the rare case where the
+  -- action closed the frame some other way (e.g. quitting).
   local content = content_frame_of(player)
   if content == nil then
     return
