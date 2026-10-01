@@ -3,7 +3,7 @@ local PaletteLogic = {}
 --- Merges every source's candidates into one ranked list, capped at limit.
 ---
 --- Ties are broken by the order the candidates arrived, which is source
---- registration order -- so a tie is resolved deterministically rather than by
+--- registration order, so a tie is resolved deterministically rather than by
 --- pairs(). A candidate without a numeric search_score raises here rather than
 --- sorting unpredictably: EXTENDING.md states that this aborts the whole search, not
 --- just that candidate.

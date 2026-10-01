@@ -3,17 +3,16 @@ local ActionRunner = {}
 --- Runs an action whose per-candidate feasibility is a runtime fact, resolving it
 --- and returning the message that reports the outcome.
 ---
---- is_available only gates on state uniform across every candidate of a type, so a
---- fact specific to one candidate is resolved here instead, and reported rather
---- than silently hiding the action (see individual actions' is_available for what
---- that means for them).
+--- is_available can only answer for every candidate of a type at once, so a fact
+--- about one candidate is resolved here and reported to the player instead of
+--- hiding the action. Each action's resolve function documents the facts it checks.
 ---
 --- The message is what execute returns to Palette, which shows it with the
 --- candidate's icon and label in front (see EXTENDING.md "Messages"). With neither
---- locale key there is no message at all -- reserved for edge cases judged
---- impossible to reach in practice, where fallback_locale_key is for ones that are
---- merely rare (e.g. the candidate having stopped resolving to anything between
---- search and execute).
+--- locale key there is no message at all. That is reserved for edge cases judged
+--- impossible to reach in practice; fallback_locale_key is for ones that are merely
+--- rare (e.g. the candidate having stopped resolving to anything between search and
+--- execute).
 ---@param candidate table
 ---@param player_index uint
 ---@param resolve_fn function  (candidate, player) -> payload|nil, locale_key|nil

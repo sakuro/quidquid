@@ -30,10 +30,6 @@ local function resolve(candidate, player)
   return prototype, nil
 end
 
--- is_available only gates by candidate type (via this action's registered `types`);
--- whether the prototype actually resolves for this specific candidate is a
--- per-candidate runtime fact, so it's resolved here and reported by execute, not
--- hidden from the tooltip.
 local function execute(selected_candidate, player_index)
   return ActionRunner.run(selected_candidate, player_index, resolve, function(prototype, _candidate, player)
     player.open_factoriopedia_gui(prototype)

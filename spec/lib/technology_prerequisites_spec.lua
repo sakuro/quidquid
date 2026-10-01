@@ -32,9 +32,8 @@ describe("TechnologyPrerequisites", function()
 
     it("returns false for a finite leveled-family technology, where max_level equals its own level", function()
       -- Confirmed via RCON against a real save: braking-force-4 (part of an
-      -- upgrade = true numbered family) reports level = 4, max_level = 4 --
-      -- unlike a genuine infinite technology, this isn't "level N of a
-      -- repeatable prototype."
+      -- upgrade = true numbered family) reports level = 4, max_level = 4. Unlike
+      -- an infinite technology, it isn't "level N of a repeatable prototype."
       local leveled = technology("braking-force-4", nil, { level = 4, max_level = 4 })
 
       assert.is_false(TechnologyPrerequisites.is_multi_level(leveled))

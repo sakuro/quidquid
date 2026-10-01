@@ -132,7 +132,7 @@ describe("prototype_candidate", function()
   it("does not match when the translated-name entry is absent", function()
     -- Same non-matching-on-internal-name query as the previous test, but this time the
     -- prototype has no entry at all in translated_names (flib omits failed/not-yet-done
-    -- translations rather than storing a sentinel) — this must NOT be treated as a match.
+    -- translations rather than storing a sentinel). A missing entry is not a match.
     local prototype_list = {
       { name = "iron-plate", localised_name = { "item-name.iron-plate" }, hidden = false },
     }

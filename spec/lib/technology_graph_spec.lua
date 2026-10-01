@@ -123,7 +123,7 @@ describe("TechnologyGraph", function()
       -- Built directly rather than through linked(): linked() resolves
       -- prerequisite_names via technologies[name], so an unknown name would
       -- resolve to nil and assigning prerequisites[name] = nil creates no
-      -- entry at all -- it could never reach build()'s assert. This bypasses
+      -- entry at all, so it could never reach build()'s assert. This bypasses
       -- that fixture-building step to construct the case build() itself must
       -- reject: a prerequisites key with no matching node in the collection.
       local technologies = {

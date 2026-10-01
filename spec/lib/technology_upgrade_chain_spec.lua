@@ -1,7 +1,7 @@
 local TechnologyUpgradeChain = require("lib.technology_upgrade_chain")
 
 -- Shaped like the part of LuaTechnologyPrototype this module reads. Only the
--- keys of `prerequisites` matter -- a real prototype maps them to prototypes,
+-- keys of `prerequisites` matter; a real prototype maps them to prototypes,
 -- which the module never dereferences.
 local function technology(name, options)
   options = options or {}

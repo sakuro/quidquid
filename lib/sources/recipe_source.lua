@@ -15,8 +15,8 @@ end
 
 --- Registers the recipe-name dictionary with flib, for translated-name search.
 ---
---- Must run from on_init/on_configuration_changed, before the first on_tick -- see
---- control.lua and EXTENDING.md "Translated names".
+--- Must run from on_init/on_configuration_changed, before the first on_tick (see
+--- control.lua and EXTENDING.md "Translated names").
 function RecipeSource.register_dictionary()
   flib_dictionary.new(NAMESPACE)
   for _, recipe in ipairs(collect_recipes()) do

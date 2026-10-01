@@ -1,7 +1,7 @@
 local TechnologyUpgradeChain = {}
 
 -- An `upgrade = true` family is a run of separate, finite prototypes
--- (braking-force-1 .. -7), not one multi-level prototype -- see
+-- (braking-force-1 .. -7), not one multi-level prototype; see
 -- TechnologyPrerequisites.is_multi_level for that unrelated mechanism. The
 -- technology screen's grid draws only part of such a run as tiles; its tree
 -- view still shows every level, so this models what the grid offers, not what
@@ -47,7 +47,7 @@ end
 ---
 --- Only the keys of a prototype's `prerequisites` are read, never the prototypes they
 --- map to. Prototypes don't change while a save runs, so the result is worth caching
---- for the session -- but in a module upvalue, never in `storage`.
+--- for the session, in a module upvalue and never in `storage`.
 ---@param technologies table  anything pairs() yields prototypes from: the array
 ---  TechnologySource collects in production, a plain list in a spec
 ---@return table  name -> { previous = name|nil, next = name|nil } for chain members only
@@ -90,8 +90,8 @@ end
 ---   * a researched level is collapsed away once the level above it is researched, so
 ---     only the topmost researched level of a chain survives; a merely queued level
 ---     above does not collapse it
----   * an unresearched level appears once the level below it is researched or queued
----     -- one level past the frontier, no further. A chain head has no level below it
+---   * an unresearched level appears once the level below it is researched or queued,
+---     one level past the frontier and no further. A chain head has no level below it
 ---     and is always shown.
 ---@param name string
 ---@param links table  as returned by build_links

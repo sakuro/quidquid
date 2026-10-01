@@ -66,8 +66,8 @@ local function quality_system_active()
 end
 
 -- A rich-text tag like [item=iron-plate] or [item=iron-plate,quality=legendary],
--- omitting the quality segment entirely when the quality system isn't active --
--- matching the base game's own convention, since there are no player-visible
+-- omitting the quality segment entirely when the quality system isn't active, as
+-- the base game's own convention does, since there are no player-visible
 -- qualities to name in that case.
 local function tag_with_quality(type_name, name, quality)
   local suffix = quality_system_active() and ",quality=" .. quality or ""
@@ -187,17 +187,14 @@ local function target_ingredients(player, target, craft_count, quality)
   return TemporaryRequestEditorLogic.recipe_ingredients(ingredients_for(player, target), craft_count, quality)
 end
 
--- The current actual maximum number of item ingredients any recipe has
--- (fusion-reactor-equipment; confirmed empirically via RCON against base +
--- Space Age + elevated-rails + quality + recycler -- entity ingredient_count
--- gives no useful bound here, since every crafting machine except
--- furnaces/recycler reports 65535, an "effectively unlimited" sentinel, not
--- a real per-machine cap). Chosen so this cap essentially never truncates a
--- real recipe's list today, while still bounding the pathological case the
--- same way MAX_LISTED_TECHNOLOGIES bounds research's dependency graphs.
--- (Coincidentally also 6 in lib/technology_prerequisites.lua's
--- MAX_LISTED_TECHNOLOGIES -- that's an unrelated number from an unrelated
--- domain; don't derive one from the other.)
+-- The largest number of item ingredients any recipe currently has
+-- (fusion-reactor-equipment; confirmed via RCON against base + Space Age +
+-- elevated-rails + quality + recycler). Entity ingredient_count gives no useful
+-- bound, since every crafting machine except furnaces/recycler reports 65535 as
+-- an "effectively unlimited" sentinel. Set so the cap never truncates a real
+-- recipe's list today, while still bounding an extreme case the way
+-- MAX_LISTED_TECHNOLOGIES bounds research's dependency graphs. That constant is
+-- also 6 by coincidence; don't derive one from the other.
 local MAX_LISTED_INGREDIENTS = 6
 
 local function ingredient_icon(ingredient)
@@ -251,13 +248,13 @@ function TemporaryRequestEditor.open(player, selected_candidate)
     caption = title_caption(target, "normal"),
     -- The truncated title drops the tail of the name, so the full one lives in a
     -- tooltip. That needs the label to receive the mouse, which rules out
-    -- ignored_by_interaction -- the label would otherwise let clicks fall through
+    -- ignored_by_interaction, which would let clicks fall through
     -- to the titlebar flow that drags the frame. It drags the frame itself instead.
     tooltip = target_prototype(target).localised_name,
   })
   title_label.drag_target = frame
   title_label.style.maximal_width = TITLE_MAX_WIDTH
-  -- The ceiling only truncates while the label stays on one line -- frame_title
+  -- The ceiling only truncates while the label stays on one line. frame_title
   -- already is single-line, but the two belong together, so pin it here rather
   -- than lean on that style's default.
   title_label.style.single_line = true
@@ -430,10 +427,10 @@ end
 --- Applies what the player entered: sets, or removes, the temporary request.
 ---
 --- Does nothing at all for an unparseable or negative quantity, which is the same
---- signal the textfield's error background already gives -- no message, because the
---- player is mid-edit rather than mistaken. A quantity of 0, or one the player already
---- holds, removes the request instead of setting it; the decision itself is
---- TemporaryRequestEditorLogic's, which knows nothing about the GUI.
+--- signal the textfield's error background already gives. There is no message,
+--- because the player is mid-edit rather than mistaken. A quantity of 0, or one the
+--- player already holds, removes the request instead of setting it; the decision
+--- itself is TemporaryRequestEditorLogic's, which knows nothing about the GUI.
 ---
 --- The frame closes before the section is touched, so the player sees the editor
 --- dismiss even if writing the slots then finds no requester point.

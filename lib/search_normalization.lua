@@ -108,7 +108,7 @@ local halfwidth_kana = {
 -- Hangul is decomposed to compatibility jamo (U+3131..U+3163) rather than to
 -- conjoining jamo, because compatibility jamo is what the keyboard already
 -- produces for a lone keystroke. Folding onto it means a consonant matches
--- wherever it sits, initial or final -- which is what a half-typed syllable and
+-- wherever it sits, initial or final, which is what a half-typed syllable and
 -- an initials-only (choseong) query both need. Without this, a syllable in
 -- progress and the finished one are unrelated code points (처 U+CC98, 철 U+CCA0)
 -- and incremental search only lands on completed syllables.

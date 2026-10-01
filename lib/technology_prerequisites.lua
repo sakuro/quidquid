@@ -4,25 +4,22 @@ local TechnologyPrerequisites = {}
 
 local INFINITE_LEVEL = 4294967295
 
--- The most prerequisites that could ever actually fit in the queue alongside
--- the target technology itself (queue + prerequisites + target <=
--- MAX_QUEUE_SIZE from lib/actions/research_queue_action.lua), reused here as
--- technology_list_caption's display cap so the number means something
--- concrete rather than being an arbitrary readability guess. (Coincidentally
--- also 6 in lib/temporary_request_editor.lua's MAX_LISTED_INGREDIENTS --
--- that's an unrelated number from an unrelated domain; don't derive one from
--- the other.)
+-- The most prerequisites that could ever fit in the queue alongside the target
+-- technology itself (queue + prerequisites + target <= MAX_QUEUE_SIZE from
+-- lib/actions/research_queue_action.lua), used as technology_list_caption's
+-- display cap. lib/temporary_request_editor.lua's MAX_LISTED_INGREDIENTS is also
+-- 6 by coincidence; don't derive one from the other.
 local MAX_LISTED_TECHNOLOGIES = 6
 
---- True for an infinite technology -- one whose same prototype can be queued again
+--- True for an infinite technology: one whose same prototype can be queued again
 --- for the next level.
 ---
 --- Confirmed via RCON against a real save: a finite technology's max_level always
 --- equals its own level, whether it's single-level (e.g. automation) or one prototype
 --- in an upgrade = true numbered family (e.g. braking-force-4: level = 4, max_level =
---- 4). Only a genuine infinite technology reports a max_level independent of (and
---- always greater than) its current level -- that's what actually makes re-adding the
---- same prototype to the queue mean "the next level."
+--- 4). Only an infinite technology reports a max_level independent of (and always
+--- greater than) its current level, which is what makes re-adding the same prototype
+--- to the queue mean "the next level."
 ---@param technology LuaTechnology  .prototype.max_level is read
 ---@return boolean
 function TechnologyPrerequisites.is_multi_level(technology)
@@ -54,10 +51,6 @@ function TechnologyPrerequisites.technology_name(technology, level)
 end
 
 --- A capped icon list naming technologies, for a tooltip or a message.
----
---- The cap is the most prerequisites that could ever fit in the queue alongside the
---- target itself, so the number means something concrete rather than being a
---- readability guess.
 ---@param technologies table  array of LuaTechnology
 ---@return table  a LocalisedString
 function TechnologyPrerequisites.technology_list_caption(technologies)
@@ -72,8 +65,8 @@ end
 --- Walks the prerequisite graph for what would have to be researched first.
 ---
 --- Prerequisites come back in dependency order, so queueing them in order is valid.
---- Trigger technologies are returned separately because they cannot be queued at all
---- -- the caller reports them instead. Names are sorted at each step, so the order
+--- Trigger technologies are returned separately because they cannot be queued at all,
+--- and the caller reports them instead. Names are sorted at each step, so the order
 --- does not depend on pairs().
 ---@param technology table  a node from TechnologyGraph.build, or a LuaTechnology
 ---@param queued table  name set of already-queued technologies, treated as done

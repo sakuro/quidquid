@@ -14,8 +14,7 @@ end
 ---
 --- A recipe whose categories are all machine-only (e.g. smelting) can never be
 --- hand-crafted, regardless of the force-level get_hand_crafting_disabled_for_recipe
---- flag -- that flag toggles a recipe that otherwise CAN be hand-crafted, it doesn't
---- cover this case.
+--- flag. That flag only toggles a recipe that could otherwise be hand-crafted.
 ---@param recipe LuaRecipe
 ---@param character LuaEntity|nil  false when there is no character at all
 ---@return boolean
@@ -37,15 +36,11 @@ end
 --- Each check here corresponds to a distinct way LuaControl.begin_crafting can fail
 --- silently, or with one of Factorio's own iconless, un-attributed native flying
 --- texts.
----
---- is_available only gates by candidate type (via this action's registered `types`);
---- per-candidate craftability is a runtime fact about this specific item/recipe, so
---- it is resolved here and reported by execute rather than hidden from the tooltip.
 ---@param selected_candidate table
 ---@param player LuaPlayer
 ---@return LuaRecipe|nil  the recipe to craft
 ---@return string|nil  locale key explaining a nil recipe; nil for a recipe candidate
----  with no matching force recipe -- a near-impossible case not worth a message,
+---  with no matching force recipe, a near-impossible case not worth a message
 ---  since RecipeSource builds candidates from prototypes.recipe directly
 function CraftAction.resolve_craftable(selected_candidate, player)
   local recipe = resolve_recipe(selected_candidate, player)
