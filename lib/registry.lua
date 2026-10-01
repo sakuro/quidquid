@@ -28,14 +28,14 @@ end
 --- is a declaration for another contract version or one conflicting with another
 --- mod's, and raising would refuse to load any save with that pair of mods installed.
 --- A malformed declaration has already failed at startup (Declarations.validate).
---- A rejected source claims nothing -- no prefix, no type, and it is left out of
---- `sources` -- so a later declaration for the same type or prefix can still
+--- A rejected source claims nothing (no prefix, no type, and it is left out of
+--- `sources`), so a later declaration for the same type or prefix can still
 --- succeed. Quidquid's own sources are fixed in or out of the default search
 --- (DefaultSearch.FIXED) without consulting settings; an extension's source has
 --- its default-search setting checked here rather than at startup, because a
 --- setting cannot be read in the data stage: a setting of the wrong type or
 --- setting_type rejects the source outright, and so does having no prefix it can
---- actually claim -- none declared, or all already taken -- and no way into the
+--- actually claim (none declared, or all already taken) and no way into the
 --- default search. A prefix already taken by an earlier source is otherwise
 --- skipped while the rest of the registration succeeds; the source is still
 --- reachable, just not under that prefix. See EXTENDING.md "Rejections and
@@ -154,8 +154,8 @@ end
 --- Quidquid's own sources are fixed in or out (DefaultSearch.FIXED) without consulting
 --- settings; a fixed-false source (the calculator) never joins, even if a same-named
 --- setting happens to exist. An extension's source joins only when the player's own
---- default-search setting is on. A source with neither -- prefix-only -- never appears
---- here.
+--- default-search setting is on. A source with neither is prefix-only and never
+--- appears here.
 ---@param player_index uint
 ---@return table  the source definitions in the default search for that player
 function Registry:default_search_sources(player_index)

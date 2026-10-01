@@ -49,7 +49,7 @@ local dictionary_sources = { ItemSource, FluidSource, RecipeSource, TechnologySo
 -- which happens on the first on_tick, so dictionaries must be (re-)registered from
 -- on_init/on_configuration_changed. Both of those already fully reset
 -- storage.__flib.dictionary (flib_dictionary.on_configuration_changed is an alias for
--- .on_init), so re-registering unconditionally here is correct, not redundant.
+-- .on_init), so the dictionaries have to be re-registered on every call here.
 local function register_dictionaries()
   for _, source in ipairs(dictionary_sources) do
     source.register_dictionary()

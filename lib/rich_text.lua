@@ -24,7 +24,7 @@ end
 
 --- The text a search should see in a value that may carry rich text tags.
 ---
---- Tags stay searchable by what they name -- `[item=rail]` reads as `rail` -- because
+--- Tags stay searchable by what they name (`[item=rail]` reads as `rail`) because
 --- player-written names use icons in place of words. The result is shorter than the
 --- original, so each byte records where it came from; tag-derived bytes record false,
 --- which keeps them out of highlighting (the player sees an icon there, not text).

@@ -41,8 +41,8 @@ local CONTENT_WIDTH = 500
 -- The results table sits in a scroll-pane; once there are more results than
 -- VISIBLE_ROWS, a vertical scrollbar appears inside it and would otherwise
 -- overlap the row's rightmost content. Rows (and the table itself) use
--- ROW_WIDTH -- CONTENT_WIDTH minus the scrollbar's own width -- to leave
--- room for it.
+-- ROW_WIDTH (CONTENT_WIDTH minus the scrollbar's own width) to leave room
+-- for it.
 local SCROLLBAR_WIDTH = 36
 local ROW_WIDTH = CONTENT_WIDTH - SCROLLBAR_WIDTH
 local NAME_COLUMN_WIDTH = 300
@@ -224,8 +224,8 @@ end
 --- scales with match count pays that cost only for the rows on screen.
 --- `decorate` is optional, so a source that implements neither it nor anything else
 --- here costs one `RemoteCaller:has` check and is otherwise untouched. `decorate` runs
---- after `search`, so its result -- merged onto each candidate through
---- PaletteLogic.apply_decoration -- wins over whatever `search` already put there. A
+--- after `search`, so its result, merged onto each candidate through
+--- PaletteLogic.apply_decoration, wins over whatever `search` already put there. A
 --- source whose call fails is logged and its candidates left as `search` produced
 --- them, matching how `is_query_valid` handles a broken source.
 ---@param merged table  candidates already trimmed to DISPLAY_LIMIT, as
@@ -282,8 +282,8 @@ end
 
 --- The muted second line under a row's name.
 ---
---- A highlighted internal-name match when the candidate has one, or -- for a candidate
---- with no internal name to search at all, such as the calculator's result -- its plain
+--- A highlighted internal-name match when the candidate has one. A candidate with no
+--- internal name to search at all, such as the calculator's result, gets its plain
 --- secondary_text. highlight() with no ranges already renders a plain string in the same
 --- font, so secondary_text needs no highlighting logic of its own here. A candidate that
 --- also supplies search_internal_prefix gets it prepended as is. The prefix never went
@@ -337,7 +337,7 @@ local MAX_TOOLTIP_ACTIONS = 10
 --- A row's tooltip: the source's own annotation, then one hint per available action.
 ---
 --- The hint count is capped because a LocalisedString array holds at most 20 parameters.
---- An annotation costs 2 slots of its own -- the line plus its leading separator -- and,
+--- An annotation costs 2 slots of its own (the line plus its leading separator) and,
 --- unlike a second-and-later hint, makes even the first hint pay for a separator too, so
 --- the safe budget for hints drops by one whenever an annotation is present.
 ---@param resolved table  input_name -> action definition, as Registry:resolve_actions returns
@@ -992,7 +992,7 @@ end
 
 --- Makes the palette `player.opened` again after another GUI took that over.
 ---
---- When some other GUI -- the temporary-request editor, say -- reassigns player.opened
+--- When some other GUI, such as the temporary-request editor, reassigns player.opened
 --- away from the palette and later closes, player.opened is left nil rather than
 --- reverting. If the palette is still around (pinned), Escape would then hit nothing
 --- opened and fall through to the game's own pause menu instead of closing the palette.

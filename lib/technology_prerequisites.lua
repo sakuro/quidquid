@@ -144,9 +144,8 @@ end
 
 --- Classifies a technology the way vanilla's own tech tree does.
 ---
---- Confirmed over RCON against a real save that prerequisite completion -- not
---- LuaTechnology.enabled, which does not track it -- is what distinguishes those
---- states.
+--- Confirmed over RCON against a real save that prerequisite completion
+--- distinguishes those states; LuaTechnology.enabled does not track it.
 ---@param technology table  a graph node or LuaTechnology
 ---@param queued_names table  name set built by the caller from force.research_queue
 ---@return string  "researched", "available", "conditionally_available" or "not_available"

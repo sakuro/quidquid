@@ -51,8 +51,8 @@ end
 ---
 --- Confirmed over RCON that quality levels aren't contiguous (normal=0, uncommon=1,
 --- rare=2, epic=3, legendary=5) and that a level can repeat (quality-unknown=0, same
---- as normal), so ties -- including an omitted quality_order entry, treated as tying
---- at level 0 -- fall back to quality name for a stable order.
+--- as normal), so ties, including an omitted quality_order entry treated as tying
+--- at level 0, fall back to quality name for a stable order.
 ---@param index table  as returned by merge
 ---@param name string
 ---@param quality_order table|nil  quality name -> tier level, e.g. from
