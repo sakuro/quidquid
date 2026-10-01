@@ -229,8 +229,8 @@ local function check_file(path, found)
 end
 
 -- Returns the listed keys, their order, and whether the file was there at all.
--- A missing or misspelled path yields an empty baseline, which can only make the
--- check stricter -- every violation is then reported -- never weaker.
+-- A missing or misspelled path yields an empty baseline, so every violation is
+-- reported: the mistake can only make the check stricter.
 local function read_baseline(path)
   local listed, order = {}, {}
   local handle = path and io.open(path, "r")

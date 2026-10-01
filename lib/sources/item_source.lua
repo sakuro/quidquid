@@ -34,7 +34,7 @@ end
 -- only separates two figures and carries no value of its own.
 local SEPARATOR = "·"
 -- Muted for the same reason a zero count is, only more so: this one says the number
--- can't be read at all, and -- unlike a zero, which varies per row -- it is the same
+-- can't be read at all, and unlike a zero, which varies per row, it is the same
 -- mark on every row while the player is out of range.
 local OUT_OF_RANGE_TEXT = "—"
 
@@ -85,7 +85,7 @@ end
 --- connected.
 ---
 --- delivering_total/picking_up_total are what robots currently carry to and from the
---- player -- not a shortfall -- and only mean anything once connected: a request can
+--- player, not a shortfall, and only mean anything once connected: a request can
 --- be set while out of range (see LogisticsState.classify), but nothing can be in
 --- transit until a network actually has the player in range.
 ---@param state string  as LogisticsState.classify returns
@@ -166,9 +166,9 @@ end
 
 --- Annotates one candidate from a per-player context.
 ---
---- ctx holds everything per-player -- the logistics state and the merged count indexes
---- -- gathered once per search, which is what keeps this a function of the candidate
---- alone and spec-able without a Factorio runtime.
+--- ctx holds everything per-player (the logistics state and the merged count indexes),
+--- gathered once per search, which keeps this a function of the candidate alone and
+--- spec-able without a Factorio runtime.
 ---@param candidate table  only its `id` is read
 ---@param ctx table  as gather_annotation_context builds it
 ---@return table|nil  { caption, tooltip }, or nil when there is nothing to show
