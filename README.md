@@ -25,9 +25,9 @@ Press `Ctrl/Cmd + K` to open the palette. The search field takes focus and
 results appear as you type. Hovering or clicking a result selects it.
 
 `Enter` moves focus off the search field onto the selected result, after which
-`J` and `K` step through the list. They only move the highlight — every action
-is dispatched against the result under the cursor — and the default bindings are
-all mouse combinations, so running an action means clicking the row you want.
+`J` and `K` step through the list. They only move the highlight. Every action is
+dispatched against the result under the cursor, and the default bindings are all
+mouse combinations, so running an action means clicking the row you want.
 
 The title bar holds a pin button and a cancel button. Pinning keeps the palette
 open after an action runs and refreshes the results, so several actions can be
@@ -50,7 +50,7 @@ outranks the same hit on the internal name.
 Before matching, the query and the name are both folded, which makes these
 differences invisible to the search:
 
-- Case, and accents and other combining marks — `e` matches `é`, `u` matches `ü`
+- Case, and accents and other combining marks: `e` matches `é`, `u` matches `ü`
 - Letters that are not a base plus a mark: `ß` → `ss`, `æ` → `ae`, `œ` → `oe`,
   `ø` → `o`, `ł` → `l`, `đ` → `d`
 - Fullwidth forms and the ideographic space, folded to their ASCII equivalents
@@ -100,10 +100,9 @@ Search for items by name.
 | `Alt` + left click | Open in Factoriopedia |
 | `Alt` + right click | Pipette |
 
-Craft actions only use a recipe with the same name as the selected item. Rather
-than fail silently, Quidquid reports why it cannot craft: no recipe of that
-name, the recipe is not researched yet, it cannot be hand-crafted, or there are
-not enough ingredients.
+Craft actions only use a recipe with the same name as the selected item. When it
+cannot craft, Quidquid reports why: no recipe of that name, the recipe is not
+researched yet, it cannot be hand-crafted, or there are not enough ingredients.
 
 Each result shows the player's inventory count and, once personal logistics
 requests are unlocked and the player is within a logistic network's range, that
@@ -119,8 +118,8 @@ Search for fluids by name.
 | `Alt` + left click | Open in Factoriopedia |
 
 Known limitation: in English, a name starting with the word Fluid cannot be
-typed in lowercase — the space after `fluid` completes the `fluid ` source
-prefix and locks the palette to fluids. Prefixes are case-sensitive, so
+typed in lowercase, because the space after `fluid` completes the `fluid `
+source prefix and locks the palette to fluids. Prefixes are case-sensitive, so
 `Fluid wagon` as it reads is unaffected, and so is `fluidwagon`.
 
 ### Recipes
@@ -149,7 +148,7 @@ Search for technologies by name.
 
 Missing prerequisites are queued ahead of the technology when there is enough
 room; Factorio's research queue holds seven entries. Quidquid reports the
-outcome either way — already queued or researched, the queue is full, there is
+outcome either way: already queued or researched, the queue is full, there is
 no room for the prerequisites, or the technology is unlocked by an in-game
 trigger rather than by research and so cannot be queued at all.
 
@@ -205,23 +204,23 @@ their own entries.
 
 ## Related mods
 
-- [Quidquid: Blueprints](https://mods.factorio.com/mod/quidquid-blueprints) —
-  blueprints, books and planners, to hold, copy or export.
-- [Quidquid: Resources](https://mods.factorio.com/mod/quidquid-resources) —
+- [Quidquid: Blueprints](https://mods.factorio.com/mod/quidquid-blueprints)
+  adds blueprints, books and planners, to hold, copy or export.
+- [Quidquid: Resources](https://mods.factorio.com/mod/quidquid-resources) adds
   charted resource patches, to view, pin or look up.
-- [Quidquid: Surfaces](https://mods.factorio.com/mod/quidquid-surfaces) —
+- [Quidquid: Surfaces](https://mods.factorio.com/mod/quidquid-surfaces) adds
   planets and space platforms, to open in remote view or look up.
 - [Quidquid: Factory Search](https://mods.factorio.com/mod/quidquid-factory-search)
-  — opens [Factory Search](https://mods.factorio.com/mod/FactorySearch) for the
+  opens [Factory Search](https://mods.factorio.com/mod/FactorySearch) for the
   selected entry.
-- [Factory Palette](https://mods.factorio.com/mod/factory-palette) — a command
+- [Factory Palette](https://mods.factorio.com/mod/factory-palette) is a command
   palette that also opens with `Ctrl/Cmd + K`.
-- [Quicksearch](https://mods.factorio.com/mod/Quicksearch) — picks up or crafts
+- [Quicksearch](https://mods.factorio.com/mod/Quicksearch) picks up or crafts
   from the inventory, chests, logistic networks and recipes;
   [Quicksearch Enhanced](https://mods.factorio.com/mod/quicksearch-enhanced)
   extends it for Factorio 2.1.
-- [Quick Item Search](https://mods.factorio.com/mod/QuickItemSearch) — an item
-  search for Factorio 1.1, the model for Quidquid's temporary requests.
+- [Quick Item Search](https://mods.factorio.com/mod/QuickItemSearch) is an item
+  search for Factorio 1.1 and the model for Quidquid's temporary requests.
 
 ## Extending Quidquid
 
