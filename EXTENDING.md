@@ -2,8 +2,8 @@
 
 Other mods can add their own search sources and palette actions. A mod declares
 each one as a `mod-data` prototype in the data stage and implements its behavior
-in a remote interface of its own — no change to Quidquid itself is needed, and
-your code keeps running in your own mod.
+in a remote interface of its own. Quidquid itself needs no change, and your code
+keeps running in your own mod.
 
 The contract is versioned with `contract_version`, currently `4`. A declaration
 whose `contract_version` does not match is skipped, so a future bump disables it
@@ -51,13 +51,12 @@ The `data` of a `quidquid.source` declaration:
 | Field | Required | Meaning |
 | --- | --- | --- |
 | `contract_version` | yes | Must be `4`. |
-| `type` | yes | The candidate type this source produces. Unique across all sources — a later declaration for a type already taken is skipped with a log line. Actions are matched to candidates by this string. |
+| `type` | yes | The candidate type this source produces. Unique across all sources: a later declaration for a type already taken is skipped with a log line. Actions are matched to candidates by this string. |
 | `label` | yes | LocalisedString shown as the source label on each result row. |
-| `prefixes` | no | Prefix words that lock the palette to this source — with `{ "w", "widget" }`, typing `widget ` locks to it. Matched case-sensitively, so `W` and `w` are separate prefixes and either may be claimed on its own. A prefix already taken by an earlier declaration is ignored with a log line. Defaults to none. |
+| `prefixes` | no | Prefix words that lock the palette to this source; with `{ "w", "widget" }`, typing `widget ` locks to it. Matched case-sensitively, so `W` and `w` are separate prefixes and either may be claimed on its own. A prefix already taken by an earlier declaration is ignored with a log line. Defaults to none. |
 | `interface` | yes | Name of your remote interface implementing the functions below. |
 
-Whether a source takes part in the default search is not part of this table —
-see [Default search](#default-search).
+Default-search membership is set separately; see [Default search](#default-search).
 
 ### Interface functions
 
@@ -76,24 +75,23 @@ ties broken by source registration order) and the top 30 rows are shown.
 after the merge and the trim to 30. Set a candidate's presentational fields
 (`annotation`, `label`, `search_display_name`, ...) directly in `search` when computing
 them is cheap per match. Implement `decorate` instead when the per-candidate cost scales
-with the match count rather than with what's displayed — for example, a check that walks
-world state or runs a spatial query, where a query with hundreds of matches would
-otherwise pay that cost hundreds of times to show 30 rows.
+with the match count rather than with what's displayed: a check that walks world state
+or runs a spatial query, for example, would otherwise run hundreds of times for a query
+with hundreds of matches, only to show 30 rows.
 
 ```
 decorate(candidates, player_index) -> decorations
 ```
 
-- Called once per source per render, with only that source's displayed candidates —
-  the same batching `is_query_valid` and `search` get, not once per row.
+- Called once per source per render with all of that source's displayed candidates,
+  batched the same way as `is_query_valid` and `search`.
 - Detected with `RemoteCaller:has(interface, "decorate")`, so it is optional and needs
   no `contract_version` bump.
 - `candidates` is the array of this source's own candidates among the rows about to be
   shown, in display order. Returns an array of the same length: element `i` is either
   `nil` (leave candidate `i` alone) or a table of fields to merge into it.
-- Every key in a returned table is merged into the candidate **except** `type`, `id`
-  and `search_score` — those are silently ignored, even if present, since they are
-  identity and ranking rather than presentation: actions resolve on `type` and `id`,
+- Every key in a returned table is merged into the candidate except `type`, `id`
+  and `search_score`, which are silently ignored. Actions resolve on `type` and `id`,
   and `search_score` has already been used to order the rows on screen.
 - `decorate` runs after `search`, so a field it sets wins over whatever `search` put
   there for that candidate.
@@ -108,10 +106,10 @@ decorate(candidates, player_index) -> decorations
 | `id` | yes | Your identifier for the entry. Handed back to actions verbatim. |
 | `label` | yes | String or LocalisedString naming the entry. |
 | `icon` | yes | SpritePath, rendered as `[img=...]`. |
-| `search_score` | yes | Ranking score, higher first — see [Scoring](#scoring). A candidate without a numeric one raises an error that aborts the entire search, not just that candidate. |
-| `search_display_name` | no | Plain string shown instead of `label` as the name — only a plain string can carry match highlighting. Omitted, `label` is shown. |
+| `search_score` | yes | Ranking score, higher first; see [Scoring](#scoring). A candidate without a numeric one raises an error that aborts the entire search, not just that candidate. |
+| `search_display_name` | no | Plain string shown instead of `label` as the name, since only a plain string can carry match highlighting. Omitted, `label` is shown. |
 | `search_internal_name` | no | Plain string shown as the muted second line (Quidquid's own sources put the prototype name here). Omitted, `secondary_text` takes that line. |
-| `search_internal_prefix` | no | LocalisedString shown before `search_internal_name` on the second line, as is — include any separator. Neither searched nor highlighted. Ignored without a `search_internal_name`. |
+| `search_internal_prefix` | no | LocalisedString shown before `search_internal_name` on the second line, as is, so include any separator yourself. Neither searched nor highlighted. Ignored without a `search_internal_name`. |
 | `search_display_ranges`, `search_internal_ranges` | no | Arrays of tables with `start_byte` and `end_byte`, marking the matched part of the corresponding name in bold. Omitted, that name is shown without highlighting. |
 | `secondary_text` | no | Muted second line for a candidate with no `search_internal_name`. Omitted, such a candidate has no second line. |
 | `numeric` | no | Right-align the name column, for a candidate whose label is a value rather than a name. Defaults to `false`. |
@@ -123,11 +121,11 @@ Candidates from every searched source are sorted together, so `search_score` onl
 works as a ranking if all sources agree on a scale. Quidquid's own sources score
 with `lib/fuzzy_match.lua` (adapted from fzy): an exact match scores `math.huge`,
 a partial match roughly the number of consecutively matched characters, with
-smaller bonuses at word boundaries and a penalty per gap — which can push a thin
+smaller bonuses at word boundaries and a penalty per gap, which can push a thin
 match slightly below zero. A match on the translated name is rewarded with an
 extra 0.5 over the same match on the internal name.
 
-Rather than reproduce that, take it from Quidquid:
+Quidquid exposes the same scoring to other mods:
 
 ```lua
 local quidquid = require("__quidquid__.lib.api")
@@ -171,16 +169,15 @@ Folding does not depend on the player's locale; see the list in the
 
 A renamed entry needs nothing from you: the cache keeps the raw value it
 normalized and compares it on every read. An entry that *disappears* never gets
-that read, so its keys sit in the cache for the rest of the session —
+that read, so its keys sit in the cache for the rest of the session unless
 `quidquid.forget(namespace, id)` drops them. It takes a whole namespace when given
-no `id`, and everything when given neither. This is a memory question, not a
-correctness one; a source over prototypes has nothing to forget.
+no `id`, and everything when given neither. Forgetting only frees memory; a source
+over prototypes has nothing to forget.
 
-Requiring this module needs Quidquid as a hard dependency, not an optional one.
-It is the only file under `__quidquid__` meant to be required from outside;
-everything else there is internal and moves without notice. The module itself is
-experimental until Quidquid reaches 1.0, and it is not covered by
-`contract_version` — that number versions the remote contract above, not this.
+`lib/api.lua` is the only file under `__quidquid__` meant to be required from
+outside; everything else there is internal and moves without notice. The module
+itself is experimental until Quidquid reaches 1.0, and `contract_version` does not
+cover it: that number versions only the remote contract above.
 
 ### Rich text in names
 
@@ -198,19 +195,19 @@ number the way Quidquid's own rows do.
 
 A source may honour Quidquid's `quidquid-include-hidden` setting, a runtime
 per-user boolean read as `player.mod_settings["quidquid-include-hidden"].value`.
-When it is false, leave out what the game keeps out of the player's view — for
-a prototype, `hidden` set. Entries that are merely locked or not yet researched
+When it is false, leave out what the game keeps out of the player's view, such as
+a prototype with `hidden` set. Entries that are merely locked or not yet researched
 are not hidden in this sense and stay listed. The setting's name and type are
 part of the contract.
 
 ### Default search
 
 Whether your source takes part in the default search is a per-player setting
-named `<declaration name>-default-search` — for the `my-mod-widgets` declaration
-below, `my-mod-widgets-default-search`. It must be a `bool-setting` with
-`setting_type = "runtime-per-user"`; `default_value = true` is recommended, so
-a player sees your source without having to opt in. Declare it in
-`settings.lua`:
+named `<declaration name>-default-search`, for example
+`my-mod-widgets-default-search` for the `my-mod-widgets` declaration below. It
+must be a `bool-setting` with `setting_type = "runtime-per-user"`;
+`default_value = true` is recommended, so a player sees your source without
+having to opt in. Declare it in `settings.lua`:
 
 ```lua
 data:extend({
@@ -234,10 +231,9 @@ my-mod-widgets-default-search=...
 ```
 
 A source declared with no such setting is prefix-only: it registers normally
-but never joins the default search. A source with no prefix it can actually
-claim — none declared, or all already taken by an earlier source — and no
-such setting is rejected at registration (see [Rejections and
-failures](#rejections-and-failures)).
+but never joins the default search. If it also has no prefix it can claim
+(none declared, or all already taken by an earlier source), it is rejected at
+registration, since nothing could reach it.
 
 A player who turns the setting off sees your source only after one of its
 prefixes. If it has no prefix it could claim, it is unreachable for that
@@ -312,7 +308,7 @@ The `data` of a `quidquid.action` declaration:
 | `contract_version` | yes | Must be `4`. |
 | `types` | yes | Non-empty array of candidate types this action applies to. |
 | `label` | yes | LocalisedString naming the action in the candidate tooltip. |
-| `hint` | yes | LocalisedString for the key binding shown after the label — see [Tooltip hint](#tooltip-hint). |
+| `hint` | yes | LocalisedString for the key binding shown after the label; see [Tooltip hint](#tooltip-hint). |
 | `input_name` | yes | Name of a custom-input prototype, which must exist by the startup check. Quidquid registers the event handler for it. One action per type and `input_name`; for a pair two declarations claim, the later one is ignored with a log line. |
 | `interface` | yes | Name of your remote interface implementing the functions below. |
 
@@ -320,20 +316,20 @@ The `data` of a `quidquid.action` declaration:
 
 | Function | Required | Contract |
 | --- | --- | --- |
-| `execute(candidate, player_index)` | yes | Performs the action on the selected candidate. May return a message to show the player — see [Messages](#messages). |
+| `execute(candidate, player_index)` | yes | Performs the action on the selected candidate. May return a message to show the player; see [Messages](#messages). |
 | `is_available(player_index)` | no | Return `false` to hide the action. Omitted, the action is always offered for its types. |
 
-`is_available` may only gate on state that is uniform across every candidate of a
+`is_available` may only depend on state that is the same for every candidate of a
 type, such as the player's own state. Whether one particular candidate can be
-acted on is a fact for `execute` to resolve and report to the player — hiding it
-in `is_available` removes the action from the tooltip without saying why.
+acted on is for `execute` to resolve and report to the player. Hiding the action in
+`is_available` instead removes it from the tooltip without saying why.
 
 ### Messages
 
 `execute` may return a message: a table whose first element is a locale key,
 followed by that string's own parameters. Quidquid shows it as flying text at
 the cursor, with the candidate's icon and label put in front of your
-parameters — in the locale string `__1__` is the icon, `__2__` the label, and
+parameters: in the locale string, `__1__` is the icon, `__2__` the label, and
 your first parameter is `__3__`. Return `nil` to show nothing.
 
 A LocalisedString holds at most 20 parameters, so a message carries at most 18
@@ -349,7 +345,7 @@ to be returned from `execute`:
   key saying why not.
 - On `nil`, `run_action` returns `{ locale_key }` (or `{ fallback_locale_key }`
   when `resolve_fn` gave none) as the message.
-- Otherwise it returns whatever `apply_fn(payload, candidate, player)` returns —
+- Otherwise it returns whatever `apply_fn(payload, candidate, player)` returns:
   a message, or `nil`.
 - A player that no longer exists gives `nil` without calling either.
 
@@ -431,33 +427,32 @@ another source already owns, is skipped with a line in the Factorio log, and a
 prefix or type/`input_name` pair already taken is skipped while the rest of the
 declaration still registers.
 
-A source's default-search setting (see [Default search](#default-search)) is
-also checked at registration rather than at startup, since a mod setting cannot
-be read in the data stage. Both are log lines, not startup errors: a setting of
-that name existing under the wrong type or `setting_type` rejects the source
-outright, and so does a source with no prefix it can actually claim — none
-declared, or all already taken by an earlier source — and no such setting; it
-could never be reached either way.
+A source's default-search setting is also checked at registration rather than at
+startup, since a mod setting cannot be read in the data stage. A setting of that
+name with the wrong type or `setting_type` rejects the source with a log line, as
+does a source that has neither the setting nor a prefix it can claim (see
+[Default search](#default-search)).
 
 Quidquid calls `search`, `is_query_valid`, `execute` and `is_available` through
 `pcall`. An error inside them is logged and treated as no results, a valid query,
-nothing done, or unavailable respectively — so a broken source or action looks
+nothing done, or unavailable respectively, so a broken source or action looks
 silently inert in game. A message from `execute` that is not a table starting
 with a string, that carries more than 18 parameters, or that the engine
 rejects as a LocalisedString, is logged and not shown. Check the log.
 
 ## Translated names
 
-Quidquid's translated prototype names are not shared — flib's dictionary state
-lives in each mod's own `storage`. A source that matches on translated names
+Quidquid's translated prototype names are not shared, because flib's dictionary
+state lives in each mod's own `storage`. A source that matches on translated names
 keeps its own dictionary. With flib, create it from `on_init` and
-`on_configuration_changed`, which have to run before flib's first `on_tick`.
+`on_configuration_changed`: flib accepts new dictionaries only before its first
+`on_tick`.
 
 ## Reference implementations
 
 These are Quidquid's own sources and actions, shown as examples. Apart from
-`lib/api.lua`, nothing under `lib/` is a public API — read them, don't require
-them.
+`lib/api.lua`, nothing under `lib/` is a public API, so read them but don't
+require them.
 
 | File | Shows |
 | --- | --- |
