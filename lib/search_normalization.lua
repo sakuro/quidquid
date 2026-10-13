@@ -294,25 +294,29 @@ local function utf8_encode(codepoints)
 end
 
 local function is_removed_mark(codepoint)
-  return (codepoint >= 0x0300 and codepoint <= 0x036F)
-    or (codepoint >= 0x1AB0 and codepoint <= 0x1AFF)
-    or (codepoint >= 0x1DC0 and codepoint <= 0x1DFF)
-    or (codepoint >= 0x20D0 and codepoint <= 0x20FF)
-    or (codepoint >= 0xFE20 and codepoint <= 0xFE2F)
-    or (codepoint >= 0x0591 and codepoint <= 0x05C7)
-    or (codepoint >= 0x0610 and codepoint <= 0x061A)
-    or (codepoint >= 0x064B and codepoint <= 0x065F)
-    or codepoint == 0x0670
-    or (codepoint >= 0x06D6 and codepoint <= 0x06ED)
+  return (codepoint >= 0x0300 and codepoint <= 0x036F) -- Combining Diacritical Marks
+    or (codepoint >= 0x1AB0 and codepoint <= 0x1AFF) -- Combining Diacritical Marks Extended
+    or (codepoint >= 0x1DC0 and codepoint <= 0x1DFF) -- Combining Diacritical Marks Supplement
+    or (codepoint >= 0x20D0 and codepoint <= 0x20FF) -- Combining Diacritical Marks for Symbols
+    or (codepoint >= 0xFE20 and codepoint <= 0xFE2F) -- Combining Half Marks
+    or (codepoint >= 0x0591 and codepoint <= 0x05C7) -- Hebrew cantillation marks and points
+    or (codepoint >= 0x0610 and codepoint <= 0x061A) -- Arabic honorific signs and small marks
+    or (codepoint >= 0x064B and codepoint <= 0x065F) -- Arabic harakat (vowel points)
+    or codepoint == 0x0670 -- Arabic superscript alef
+    or (codepoint >= 0x06D6 and codepoint <= 0x06ED) -- Arabic Quranic annotation marks
 end
 
 local function map_codepoint_once(codepoint)
+  -- Hiragana to katakana
   if codepoint >= 0x3041 and codepoint <= 0x3096 then
     return { codepoint + 0x60 }
+  -- Hiragana iteration marks and digraph yori to their katakana counterparts
   elseif codepoint >= 0x309D and codepoint <= 0x309F then
     return { codepoint + 0x60 }
+  -- Fullwidth ASCII variants to ASCII
   elseif codepoint >= 0xFF01 and codepoint <= 0xFF5E then
     return { codepoint - 0xFEE0 }
+  -- Ideographic space
   elseif codepoint == 0x3000 then
     return { 0x20 }
   end
