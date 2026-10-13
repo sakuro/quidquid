@@ -139,7 +139,7 @@ Other mods can add their own search sources and palette actions by declaring the
 
 Quidquid is licensed under the MIT License. See [`LICENSE.txt`](https://github.com/sakuro/quidquid/blob/main/LICENSE.txt).
 
-The fuzzy matching in [`lib/fuzzy_match.lua`](https://github.com/sakuro/quidquid/blob/main/lib/fuzzy_match.lua) is adapted from [fzy-lua](https://github.com/swarn/fzy-lua) by Seth Warn and is separately licensed under the MIT License; see [`LICENSE.fzy-lua.txt`](https://github.com/sakuro/quidquid/blob/main/LICENSE.fzy-lua.txt).
+The fuzzy matching in [`lib/fuzzy_match.lua`](https://github.com/sakuro/quidquid/blob/main/lib/fuzzy_match.lua) is adapted from [fzy-lua](https://github.com/swarn/fzy-lua) by Seth Warn, modified to work on Unicode code points instead of bytes. It is separately licensed under the MIT License; see [`LICENSE.fzy-lua.txt`](https://github.com/sakuro/quidquid/blob/main/LICENSE.fzy-lua.txt).
 
 The search normalization tables in [`lib/search_mapping.lua`](https://github.com/sakuro/quidquid/blob/main/lib/search_mapping.lua) are generated from the Unicode Character Database, distributed under the Unicode License v3. See [`LICENSE.Unicode-3.0.txt`](https://github.com/sakuro/quidquid/blob/main/LICENSE.Unicode-3.0.txt).
 
