@@ -119,7 +119,7 @@ Requests are stored separately from existing personal logistics requests and are
 
 ### Include hidden entries
 
-Also list what the game itself keeps out of view: prototypes marked hidden, such as internal items and recipes, and the upgrade-technology levels the technology screen does not show as their own tile. Entries that are merely locked or not researched yet are listed either way. Extension mods may honour the setting for their own entries.
+Also list what the game itself keeps out of view, such as internal items and recipes.
 
 ## Related mods
 
