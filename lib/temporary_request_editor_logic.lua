@@ -106,7 +106,8 @@ end
 ---@param get_other_requests function  (name, quality) -> number requested outside the
 ---  temporary section
 ---@return string  "remove_zero", "remove_satisfied", "remove_covered" or "set"
----@return table  array of { name, quality, min } to write; non-empty only for "set"
+---@return table  array of { name, quality, min, others } to write, `others` being the share
+---  already requested elsewhere; non-empty only for "set"
 function TemporaryRequestEditorLogic.plan_confirm(quantity, ingredients, get_item_count, get_other_requests)
   if quantity == 0 then
     return "remove_zero", {}
@@ -122,6 +123,7 @@ function TemporaryRequestEditorLogic.plan_confirm(quantity, ingredients, get_ite
           name = ingredient.name,
           quality = ingredient.quality,
           min = ingredient.amount - others,
+          others = others,
         })
       end
     end

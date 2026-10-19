@@ -101,14 +101,14 @@ describe("TemporaryRequestEditorLogic", function()
       local action, requests = plan(150, iron, {}, {})
 
       assert.are.equal("set", action)
-      assert.are.same({ { name = "iron-plate", quality = "normal", min = 150 } }, requests)
+      assert.are.same({ { name = "iron-plate", quality = "normal", min = 150, others = 0 } }, requests)
     end)
 
     it("requests only the part other requests do not cover", function()
       local action, requests = plan(150, iron, { ["iron-plate:normal"] = 120 }, { ["iron-plate:normal"] = 100 })
 
       assert.are.equal("set", action)
-      assert.are.same({ { name = "iron-plate", quality = "normal", min = 50 } }, requests)
+      assert.are.same({ { name = "iron-plate", quality = "normal", min = 50, others = 100 } }, requests)
     end)
 
     it("removes as satisfied when the amount is already held", function()
@@ -146,7 +146,7 @@ describe("TemporaryRequestEditorLogic", function()
       )
 
       assert.are.equal("set", action)
-      assert.are.same({ { name = "steel-plate", quality = "normal", min = 3 } }, requests)
+      assert.are.same({ { name = "steel-plate", quality = "normal", min = 3, others = 1 } }, requests)
     end)
 
     it("removes as covered, not satisfied, when holdings and requests together suffice", function()

@@ -510,17 +510,23 @@ function TemporaryRequestEditor.confirm(player)
       })
       existing[index] = { value = { name = request.name, quality = request.quality } }
     end
+    local additional = false
+    for _, request in ipairs(requests) do
+      additional = additional or request.others > 0
+    end
     local message
     if target.type == "item" then
       message = {
-        "quidquid.action-item-temporary-request-created",
+        additional and "quidquid.action-item-temporary-request-created-additional"
+          or "quidquid.action-item-temporary-request-created",
         item_caption(target, quality),
         target_prototype(target).localised_name,
         quantity,
       }
     else
       message = {
-        "quidquid.action-recipe-temporary-request-created",
+        additional and "quidquid.action-recipe-temporary-request-created-additional"
+          or "quidquid.action-recipe-temporary-request-created",
         recipe_caption(target, quality),
         target_prototype(target).localised_name,
         quantity,
