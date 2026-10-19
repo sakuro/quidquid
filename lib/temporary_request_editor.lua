@@ -138,21 +138,30 @@ local function existing_amount(player, target, quality)
   if slots == nil then
     return nil
   end
+  local filters = TemporaryRequestAction.requester_point_for(player).filters
+
+  -- The slot holds only what others do not already request; the player entered the total.
+  local function total_requested(name)
+    local index = TemporaryRequestAction.find_or_next_slot_index(slots, name, quality)
+    if index > #slots then
+      return nil
+    end
+    return slots[index].min + TemporaryRequestAction.other_requests(filters, slots, name, quality)
+  end
 
   local ingredients = ingredients_for(player, target)
   if target.type == "item" then
-    local index = TemporaryRequestAction.find_or_next_slot_index(slots, target.name, quality)
-    return index <= #slots and slots[index].min or nil
+    return total_requested(target.name)
   end
 
   local quantities = {}
   for _, ingredient in ipairs(ingredients) do
     if ingredient.type == "item" then
-      local index = TemporaryRequestAction.find_or_next_slot_index(slots, ingredient.name, quality)
-      if index > #slots then
+      local total = total_requested(ingredient.name)
+      if total == nil then
         return nil
       end
-      quantities[ingredient.name] = slots[index].min
+      quantities[ingredient.name] = total
     end
   end
   return TemporaryRequestEditorLogic.recipe_craft_count(quantities, ingredients)
@@ -448,20 +457,6 @@ function TemporaryRequestEditor.confirm(player)
   end
 
   local ingredients = target_ingredients(player, target, quantity, quality)
-  local satisfied = TemporaryRequestEditorLogic.all_ingredients_satisfied(
-    ingredients,
-    function(name, ingredient_quality)
-      return player.character.get_item_count({ name = name, quality = ingredient_quality })
-    end
-  )
-  local action
-  if quantity == 0 then
-    action = "remove_zero"
-  elseif satisfied then
-    action = "remove_satisfied"
-  else
-    action = "set"
-  end
 
   TemporaryRequestEditor.close(player)
   local point = TemporaryRequestAction.requester_point_for(player)
@@ -477,19 +472,43 @@ function TemporaryRequestEditor.confirm(player)
     end
   end
 
+  local filters = point.filters
+  local action, requests = TemporaryRequestEditorLogic.plan_confirm(
+    quantity,
+    ingredients,
+    function(name, ingredient_quality)
+      return player.character.get_item_count({ name = name, quality = ingredient_quality })
+    end,
+    function(name, ingredient_quality)
+      return TemporaryRequestAction.other_requests(filters, existing, name, ingredient_quality)
+    end
+  )
+
   if action == "set" then
     section = section or TemporaryRequestAction.get_or_create_section(point)
     existing = {}
     for i = 1, section.filters_count do
       existing[i] = section.get_slot(i)
     end
+    -- An ingredient that needs no request may still have a slot from an earlier one.
+    local requested = {}
+    for _, request in ipairs(requests) do
+      requested[request.name] = true
+    end
+    local unneeded = {}
     for _, ingredient in ipairs(ingredients) do
-      local index = TemporaryRequestAction.find_or_next_slot_index(existing, ingredient.name, ingredient.quality)
+      if not requested[ingredient.name] then
+        table.insert(unneeded, ingredient)
+      end
+    end
+    clear_ingredient_requests(section, existing, unneeded)
+    for _, request in ipairs(requests) do
+      local index = TemporaryRequestAction.find_or_next_slot_index(existing, request.name, request.quality)
       section.set_slot(index, {
-        value = { type = "item", name = ingredient.name, quality = ingredient.quality },
-        min = ingredient.amount,
+        value = { type = "item", name = request.name, quality = request.quality },
+        min = request.min,
       })
-      existing[index] = { value = { name = ingredient.name, quality = ingredient.quality } }
+      existing[index] = { value = { name = request.name, quality = request.quality } }
     end
     local message
     if target.type == "item" then
@@ -518,49 +537,32 @@ function TemporaryRequestEditor.confirm(player)
   end
   local message
   if target.type == "item" then
-    message = action == "remove_zero"
-        and {
-          "quidquid.action-item-temporary-request-removed",
-          item_caption(target, quality),
-          target_prototype(target).localised_name,
-        }
-      or {
-        "quidquid.action-item-temporary-request-already-satisfied",
-        item_caption(target, quality),
-        target_prototype(target).localised_name,
-      }
+    local key = ({
+      remove_zero = "removed",
+      remove_satisfied = "already-satisfied",
+      remove_covered = "already-covered",
+    })[action]
+    message = {
+      "quidquid.action-item-temporary-request-" .. key,
+      item_caption(target, quality),
+      target_prototype(target).localised_name,
+    }
+  elseif action == "remove_zero" then
+    message = {
+      "quidquid.action-recipe-temporary-request-removed",
+      recipe_caption(target, quality),
+      target_prototype(target).localised_name,
+      ingredient_caption(ingredients),
+    }
   else
-    if quality_system_active() then
-      message = action == "remove_zero"
-          and {
-            "quidquid.action-recipe-temporary-request-removed",
-            recipe_caption(target, quality),
-            target_prototype(target).localised_name,
-            ingredient_caption(ingredients),
-          }
-        or {
-          "quidquid.action-recipe-temporary-request-already-satisfied",
-          recipe_caption(target, quality),
-          target_prototype(target).localised_name,
-          quantity,
-          ingredient_caption(ingredients),
-        }
-    else
-      message = action == "remove_zero"
-          and {
-            "quidquid.action-recipe-temporary-request-removed",
-            recipe_caption(target, quality),
-            target_prototype(target).localised_name,
-            ingredient_caption(ingredients),
-          }
-        or {
-          "quidquid.action-recipe-temporary-request-already-satisfied",
-          recipe_caption(target, quality),
-          target_prototype(target).localised_name,
-          quantity,
-          ingredient_caption(ingredients),
-        }
-    end
+    message = {
+      action == "remove_satisfied" and "quidquid.action-recipe-temporary-request-already-satisfied"
+        or "quidquid.action-recipe-temporary-request-already-covered",
+      recipe_caption(target, quality),
+      target_prototype(target).localised_name,
+      quantity,
+      ingredient_caption(ingredients),
+    }
   end
   player.create_local_flying_text({ text = message, create_at_cursor = true })
 end

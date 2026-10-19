@@ -71,6 +71,23 @@ function TemporaryRequestAction.combined_target(filters, item_name, quality)
   return 0
 end
 
+--- What the rest of the player's requests ask for, apart from this mod's own slot.
+---
+--- Factorio adds every section's request together, so a temporary slot is on top of
+--- whatever is already requested. `filters` includes that slot, which is therefore
+--- taken back out.
+---@param filters table  as for combined_target
+---@param own_slots table  plain array of this mod's section slots, already extracted
+---  by the caller
+---@param item_name string
+---@param quality string
+---@return number
+function TemporaryRequestAction.other_requests(filters, own_slots, item_name, quality)
+  local index = TemporaryRequestAction.find_or_next_slot_index(own_slots, item_name, quality)
+  local own = index <= #own_slots and own_slots[index].min or 0
+  return math.max(0, TemporaryRequestAction.combined_target(filters, item_name, quality) - own)
+end
+
 --- The player's character requester point, or nil when there is no character.
 ---
 --- Also nil while force.character_logistic_requests is off, even in range. See
