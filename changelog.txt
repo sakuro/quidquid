@@ -1,4 +1,9 @@
 ---------------------------------------------------------------------------------------------------
+Version: Unreleased
+  Changes:
+    - A temporary request's quantity is the total to hold: only the part existing personal logistics requests do not already cover is requested, so the request is removed once that total is in the inventory
+    - Nothing is created when existing requests already cover the quantity, and the message says so; a request added on top of existing ones is reported as additional
+---------------------------------------------------------------------------------------------------
 Version: 0.12.1
 Date: 2026-09-30
   Bugfixes:
