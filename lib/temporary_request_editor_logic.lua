@@ -67,22 +67,19 @@ end
 --- Derives a recipe's operation count from existing per-ingredient request
 --- quantities.
 ---
---- The smallest complete count is used, so every ingredient is available for that
---- many operations.
+--- The smallest count among the requested ingredients is used. An ingredient with no
+--- request is skipped rather than failing the lookup: Confirm writes no slot for an
+--- ingredient the player already holds in full, so a missing one is expected.
 ---@param existing_quantities table  item name -> requested quantity
 ---@param ingredients table|nil  shaped like LuaRecipePrototype.ingredients
----@return number|nil  nil when any of the recipe's ingredient requests is missing
+---@return number|nil  nil when none of the recipe's ingredients is requested
 function TemporaryRequestEditorLogic.recipe_craft_count(existing_quantities, ingredients)
   local craft_count = nil
   for _, ingredient in ipairs(ingredients or {}) do
-    if ingredient.type == "item" then
-      local quantity = existing_quantities[ingredient.name]
-      if quantity ~= nil then
-        local count = math.floor(quantity / ingredient.amount)
-        craft_count = craft_count == nil and count or math.min(craft_count, count)
-      else
-        return nil
-      end
+    local quantity = ingredient.type == "item" and existing_quantities[ingredient.name] or nil
+    if quantity ~= nil then
+      local count = math.floor(quantity / ingredient.amount)
+      craft_count = craft_count == nil and count or math.min(craft_count, count)
     end
   end
   return craft_count
