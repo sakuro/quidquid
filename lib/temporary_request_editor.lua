@@ -526,6 +526,7 @@ function TemporaryRequestEditor.confirm(player)
     for _, request in ipairs(requests) do
       additional = additional or request.others > 0
     end
+    -- Names `requests`, not `ingredients`: an ingredient already held gets no slot.
     local message
     if target.type == "item" then
       message = {
@@ -542,7 +543,7 @@ function TemporaryRequestEditor.confirm(player)
         recipe_caption(target, quality),
         target_prototype(target).localised_name,
         quantity,
-        ingredient_caption(ingredients),
+        ingredient_caption(requests),
       }
     end
     player.create_local_flying_text({ text = message, create_at_cursor = true })
