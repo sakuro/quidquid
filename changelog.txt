@@ -1,7 +1,7 @@
 ---------------------------------------------------------------------------------------------------
 Version: Unreleased
   Changes:
-    - A temporary request's quantity is added on top of the existing personal logistics requests; it is refused and removed by the same measure, the inventory holding both, where it used to be refused at the quantity alone
+    - A temporary request is now refused only once the inventory holds the existing personal logistics requests plus the entered quantity; previously it was refused once the inventory held the entered quantity alone
     - A temporary request added on top of existing ones is reported as additional, and its quantity field is labelled as an additional quantity
 ---------------------------------------------------------------------------------------------------
 Version: 0.12.1
