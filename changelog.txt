@@ -1,5 +1,6 @@
 ---------------------------------------------------------------------------------------------------
-Version: Unreleased
+Version: 0.13.0
+Date: 2026-10-19
   Changes:
     - A temporary request is now refused only once the inventory holds the existing personal logistics requests plus the entered quantity; previously it was refused once the inventory held the entered quantity alone
     - A temporary request added on top of existing ones is reported as additional, and its quantity field is labelled as an additional quantity
