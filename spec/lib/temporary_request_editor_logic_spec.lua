@@ -81,42 +81,75 @@ describe("TemporaryRequestEditorLogic", function()
     end)
   end)
 
-  describe(".all_ingredients_satisfied", function()
-    it("requires every ingredient at the requested quality and amount", function()
-      local inventory = {
-        ["iron-plate:rare"] = 6,
-        ["copper-plate:rare"] = 2,
-      }
+  describe(".plan_confirm", function()
+    local function plan(quantity, ingredients, held, others)
+      return TemporaryRequestEditorLogic.plan_confirm(quantity, ingredients, function(name, quality)
+        return held[name .. ":" .. quality] or 0
+      end, function(name, quality)
+        return others[name .. ":" .. quality] or 0
+      end)
+    end
+
+    local iron = { { name = "iron-plate", amount = 150, quality = "normal" } }
+
+    it("removes when the entered quantity is 0, whatever is held", function()
+      assert.are.equal("remove_zero", (plan(0, {}, {}, {})))
+      assert.are.equal("remove_zero", (plan(0, iron, { ["iron-plate:normal"] = 80 }, {})))
+    end)
+
+    it("requests the whole quantity when nothing else requests the item", function()
+      local action, requests = plan(150, iron, {}, {})
+
+      assert.are.equal("set", action)
+      assert.are.same({ { name = "iron-plate", quality = "normal", min = 150, others = 0 } }, requests)
+    end)
+
+    it("requests the quantity on top of what other requests ask for", function()
+      local action, requests = plan(150, iron, { ["iron-plate:normal"] = 120 }, { ["iron-plate:normal"] = 100 })
+
+      assert.are.equal("set", action)
+      assert.are.same({ { name = "iron-plate", quality = "normal", min = 150, others = 100 } }, requests)
+    end)
+
+    it("still requests when the quantity alone is held but the sum is not", function()
+      local action = plan(150, iron, { ["iron-plate:normal"] = 150 }, { ["iron-plate:normal"] = 100 })
+
+      assert.are.equal("set", action)
+    end)
+
+    it("removes as satisfied when the sum of other requests and the quantity is held", function()
+      local action, requests = plan(150, iron, { ["iron-plate:normal"] = 250 }, { ["iron-plate:normal"] = 100 })
+
+      assert.are.equal("remove_satisfied", action)
+      assert.are.same({}, requests)
+    end)
+
+    it("removes as satisfied when the quantity is held and nothing else requests the item", function()
+      assert.are.equal("remove_satisfied", (plan(150, iron, { ["iron-plate:normal"] = 150 }, {})))
+    end)
+
+    it("ignores other requests of a different quality", function()
+      local action, requests = plan(150, iron, { ["iron-plate:normal"] = 150 }, { ["iron-plate:rare"] = 500 })
+
+      assert.are.equal("remove_satisfied", action)
+      assert.are.same({}, requests)
+    end)
+
+    it("requests only the ingredients whose sum is not yet held", function()
       local ingredients = {
-        { name = "iron-plate", amount = 6, quality = "rare" },
-        { name = "copper-plate", amount = 2, quality = "rare" },
+        { name = "iron-plate", amount = 6, quality = "normal" },
+        { name = "copper-plate", amount = 2, quality = "normal" },
+        { name = "steel-plate", amount = 4, quality = "normal" },
       }
+      local action, requests = plan(
+        1,
+        ingredients,
+        { ["iron-plate:normal"] = 6, ["copper-plate:normal"] = 5, ["steel-plate:normal"] = 4 },
+        { ["copper-plate:normal"] = 2, ["steel-plate:normal"] = 1 }
+      )
 
-      assert.is_true(TemporaryRequestEditorLogic.all_ingredients_satisfied(ingredients, function(name, quality)
-        return inventory[name .. ":" .. quality] or 0
-      end))
-    end)
-  end)
-
-  describe(".decide_confirm_action", function()
-    it("returns remove_zero when the entered quantity is 0", function()
-      assert.are.equal("remove_zero", TemporaryRequestEditorLogic.decide_confirm_action(0, 0))
-    end)
-
-    it("returns remove_zero when quantity is 0 even if already_have is positive", function()
-      assert.are.equal("remove_zero", TemporaryRequestEditorLogic.decide_confirm_action(0, 80))
-    end)
-
-    it("returns remove_satisfied when already holding exactly the entered quantity", function()
-      assert.are.equal("remove_satisfied", TemporaryRequestEditorLogic.decide_confirm_action(50, 50))
-    end)
-
-    it("returns remove_satisfied when already holding more than the entered quantity", function()
-      assert.are.equal("remove_satisfied", TemporaryRequestEditorLogic.decide_confirm_action(50, 80))
-    end)
-
-    it("returns set when holding less than the entered quantity", function()
-      assert.are.equal("set", TemporaryRequestEditorLogic.decide_confirm_action(50, 10))
+      assert.are.equal("set", action)
+      assert.are.same({ { name = "steel-plate", quality = "normal", min = 4, others = 1 } }, requests)
     end)
   end)
 

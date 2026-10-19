@@ -113,7 +113,7 @@ Select an item or recipe, enter the desired quantity, and confirm with the butto
 
 For recipes the quantity is a number of crafting operations, and the request covers every item ingredient for that many operations.
 
-Requests are stored separately from existing personal logistics requests and are removed automatically once the requested amount is in the player's inventory.
+Requests are stored separately from existing personal logistics requests, and the quantity is added on top of them. A request is removed automatically once the inventory holds the existing requests plus the requested quantity.
 
 ## Settings
 
@@ -129,7 +129,7 @@ Also list what the game itself keeps out of view, such as internal items and rec
 - [Quidquid: Factory Search](https://mods.factorio.com/mod/quidquid-factory-search) opens [Factory Search](https://mods.factorio.com/mod/FactorySearch) for the selected entry.
 - [Factory Palette](https://mods.factorio.com/mod/factory-palette) is a command palette that also opens with `Ctrl/Cmd + K`.
 - [Quicksearch](https://mods.factorio.com/mod/Quicksearch) picks up or crafts from the inventory, chests, logistic networks and recipes; [Quicksearch Enhanced](https://mods.factorio.com/mod/quicksearch-enhanced) extends it for Factorio 2.1.
-- [Quick Item Search](https://mods.factorio.com/mod/QuickItemSearch) is an item search for Factorio 1.1 and the model for Quidquid's temporary requests.
+- [Quick Item Search](https://mods.factorio.com/mod/QuickItemSearch) is an item search for Factorio 1.1 and the inspiration for Quidquid's temporary requests.
 
 ## Extending Quidquid
 

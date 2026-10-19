@@ -88,6 +88,32 @@ describe("TemporaryRequestAction", function()
     end)
   end)
 
+  describe(".other_requests", function()
+    local filters = { { name = "iron-plate", quality = "normal", count = 250 } }
+
+    it("takes this mod's own slot out of the combined target", function()
+      local own_slots = { { value = { name = "iron-plate", quality = "normal" }, min = 150 } }
+
+      assert.are.equal(100, TemporaryRequestAction.other_requests(filters, own_slots, "iron-plate", "normal"))
+    end)
+
+    it("is the whole combined target when this mod has no slot for the item", function()
+      local own_slots = { { value = { name = "copper-plate", quality = "normal" }, min = 150 } }
+
+      assert.are.equal(250, TemporaryRequestAction.other_requests(filters, own_slots, "iron-plate", "normal"))
+    end)
+
+    it("is 0 when nothing is requested", function()
+      assert.are.equal(0, TemporaryRequestAction.other_requests({}, {}, "iron-plate", "normal"))
+    end)
+
+    it("never goes below 0", function()
+      local own_slots = { { value = { name = "iron-plate", quality = "normal" }, min = 300 } }
+
+      assert.are.equal(0, TemporaryRequestAction.other_requests(filters, own_slots, "iron-plate", "normal"))
+    end)
+  end)
+
   describe(".resolve_requestable", function()
     it("is always requestable for an item candidate", function()
       local requestable, reason_locale_key = TemporaryRequestAction.resolve_requestable(

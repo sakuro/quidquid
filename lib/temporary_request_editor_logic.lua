@@ -88,38 +88,46 @@ function TemporaryRequestEditorLogic.recipe_craft_count(existing_quantities, ing
   return craft_count
 end
 
---- True when the player already holds every ingredient in the quantity requested.
+--- Decides what Confirm should do for the entered quantity, and which slots to write.
 ---
---- The count comes in as a function rather than a table so this stays independent of
---- where the caller reads inventories from.
+--- The entered quantity is an addition to whatever is already requested: Factorio adds
+--- every section's request together, so the slot asks for exactly that quantity and
+--- the target becomes the existing requests plus it. The temporary request therefore
+--- disappears once the player holds that sum, and an ingredient already held at that
+--- level needs no slot.
+---
+--- The counts come in as functions rather than tables so this stays independent of
+--- where the caller reads inventories and logistic points from. Knows nothing about
+--- GUI or LuaLogisticSection; the caller maps each outcome to the actual
+--- set_slot/clear_slot call and flying-text message.
+---@param quantity number
 ---@param ingredients table  array of { name, amount, quality }
----@param get_item_count function  (name, quality) -> number
----@return boolean
-function TemporaryRequestEditorLogic.all_ingredients_satisfied(ingredients, get_item_count)
+---@param get_item_count function  (name, quality) -> number held
+---@param get_other_requests function  (name, quality) -> number requested outside the
+---  temporary section
+---@return string  "remove_zero", "remove_satisfied" or "set"
+---@return table  array of { name, quality, min, others } to write, `others` being what is
+---  already requested elsewhere; non-empty only for "set"
+function TemporaryRequestEditorLogic.plan_confirm(quantity, ingredients, get_item_count, get_other_requests)
+  if quantity == 0 then
+    return "remove_zero", {}
+  end
+  local requests = {}
   for _, ingredient in ipairs(ingredients) do
-    if get_item_count(ingredient.name, ingredient.quality) < ingredient.amount then
-      return false
+    local others = get_other_requests(ingredient.name, ingredient.quality)
+    if get_item_count(ingredient.name, ingredient.quality) < others + ingredient.amount then
+      table.insert(requests, {
+        name = ingredient.name,
+        quality = ingredient.quality,
+        min = ingredient.amount,
+        others = others,
+      })
     end
   end
-  return true
-end
-
---- Decides what Confirm should do, given the entered quantity and how many the
---- player currently holds of the selected item+quality.
----
---- Knows nothing about GUI or LuaLogisticSection; the caller maps each outcome to
---- the actual set_slot/clear_slot call and flying-text message.
----@param quantity number
----@param already_have number
----@return string  "remove_zero", "remove_satisfied" or "set"
-function TemporaryRequestEditorLogic.decide_confirm_action(quantity, already_have)
-  if quantity == 0 then
-    return "remove_zero"
+  if #requests > 0 then
+    return "set", requests
   end
-  if already_have >= quantity then
-    return "remove_satisfied"
-  end
-  return "set"
+  return "remove_satisfied", {}
 end
 
 --- True when a parsed quantity is acceptable as a temporary-request quantity: a
