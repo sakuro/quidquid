@@ -150,10 +150,9 @@ local function existing_amount(player, target, quality)
   for _, ingredient in ipairs(ingredients) do
     if ingredient.type == "item" then
       local index = TemporaryRequestAction.find_or_next_slot_index(slots, ingredient.name, quality)
-      if index > #slots then
-        return nil
+      if index <= #slots then
+        quantities[ingredient.name] = slots[index].min
       end
-      quantities[ingredient.name] = slots[index].min
     end
   end
   return TemporaryRequestEditorLogic.recipe_craft_count(quantities, ingredients)

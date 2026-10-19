@@ -73,8 +73,18 @@ describe("TemporaryRequestEditorLogic", function()
       )
     end)
 
-    it("returns nil when an ingredient request does not exist", function()
-      assert.is_nil(TemporaryRequestEditorLogic.recipe_craft_count({ ["iron-plate"] = 6 }, {
+    it("skips an ingredient that has no request", function()
+      assert.are.equal(
+        2,
+        TemporaryRequestEditorLogic.recipe_craft_count({ ["iron-plate"] = 6 }, {
+          { type = "item", name = "iron-plate", amount = 3 },
+          { type = "item", name = "copper-plate", amount = 1 },
+        })
+      )
+    end)
+
+    it("returns nil when no ingredient is requested", function()
+      assert.is_nil(TemporaryRequestEditorLogic.recipe_craft_count({}, {
         { type = "item", name = "iron-plate", amount = 3 },
         { type = "item", name = "copper-plate", amount = 1 },
       }))
