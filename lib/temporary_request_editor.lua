@@ -13,6 +13,7 @@ local INPUT_TABLE_NAME = "quidquid-temporary-request-editor-input-table"
 local QUALITY_ROW_NAME = "quidquid-temporary-request-editor-quality-row"
 local QUALITY_BUTTON_PREFIX = "quidquid-temporary-request-editor-quality-"
 local QUANTITY_ROW_NAME = "quidquid-temporary-request-editor-quantity-row"
+local QUANTITY_LABEL_NAME = "quidquid-temporary-request-editor-quantity-label"
 local TEXTFIELD_NAME = "quidquid-temporary-request-editor-textfield"
 local MINUS_BUTTON_NAME = "quidquid-temporary-request-editor-minus-button"
 local PLUS_BUTTON_NAME = "quidquid-temporary-request-editor-plus-button"
@@ -156,6 +157,27 @@ local function existing_amount(player, target, quality)
     end
   end
   return TemporaryRequestEditorLogic.recipe_craft_count(quantities, ingredients)
+end
+
+--- The quantity field's label: "additional" once something else already requests part
+--- of the target, since the quantity then adds to that rather than standing alone.
+local function quantity_label_caption(player, target, quality)
+  local point = TemporaryRequestAction.requester_point_for(player)
+  local additional = false
+  if point ~= nil then
+    local slots = existing_section_slots(player) or {}
+    local filters = point.filters
+    for _, ingredient in ipairs(ingredients_for(player, target)) do
+      if
+        ingredient.type == "item"
+        and TemporaryRequestAction.other_requests(filters, slots, ingredient.name, quality) > 0
+      then
+        additional = true
+      end
+    end
+  end
+  local key = target.type == "item" and "requested-quantity" or "craft-count"
+  return { "quidquid.temporary-request-editor-" .. key .. (additional and "-additional" or "") .. "-label" }
 end
 
 local QUANTITY_VARIABLES = { k = 1000, M = 1000000 }
@@ -322,10 +344,8 @@ function TemporaryRequestEditor.open(player, selected_candidate)
 
   input_table.add({
     type = "label",
-    caption = {
-      target.type == "item" and "quidquid.temporary-request-editor-requested-quantity-label"
-        or "quidquid.temporary-request-editor-craft-count-label",
-    },
+    name = QUANTITY_LABEL_NAME,
+    caption = quantity_label_caption(player, target, "normal"),
   })
   local quantity_row = input_table.add({ type = "flow", name = QUANTITY_ROW_NAME, direction = "horizontal" })
   quantity_row.style.horizontally_stretchable = true
@@ -404,6 +424,7 @@ local function select_quality(player, quality)
       radio.toggled = radio.tags.quidquid_quality == quality
     end
   end
+  content[INPUT_TABLE_NAME][QUANTITY_LABEL_NAME].caption = quantity_label_caption(player, target, quality)
   local quantity = existing_amount(player, target, quality)
   if quantity == nil then
     quantity = target.type == "item" and prototypes.item[target.name].stack_size or 1
